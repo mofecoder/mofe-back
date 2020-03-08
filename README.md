@@ -1,24 +1,20 @@
-# README
+# CafeCoder Provisional Backend
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## How to run
 
-Things you may want to cover:
+Ruby version: 2.6.3
 
-* Ruby version
+Run this commands:
+```shell script
 
-* System dependencies
+# If not installed:
+$ gem install bundler
 
-* Configuration
+$ bundle install
+$ bundle exec rails server -b 0.0.0.0 -p 4000 -e development 
+```
 
-* Database creation
+Access to http://localhost:4000
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+## Rules
+ブランチ名は、 feature/#(Issue Number)
