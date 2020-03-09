@@ -10,17 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_08_072023) do
+ActiveRecord::Schema.define(version: 2020_03_09_111003) do
 
-  create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name", null: false
+    t.datetime "start_at"
+    t.datetime "end_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["slug"], name: "index_contests_on_slug", unique: true
   end
 
-  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name"
     t.bigint "contest_id", null: false
@@ -36,7 +38,21 @@ ActiveRecord::Schema.define(version: 2020_03_08_072023) do
     t.index ["slug"], name: "index_problems_on_slug", unique: true
   end
 
-  create_table "testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.bigint "problem_id", null: false
+    t.string "path", null: false
+    t.string "status", null: false
+    t.integer "point"
+    t.integer "execution_time"
+    t.string "execution_memory"
+    t.string "lang", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["problem_id"], name: "index_submits_on_problem_id"
+  end
+
+  create_table "testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "problem_id", null: false
     t.string "name", null: false
     t.integer "points", null: false
@@ -46,7 +62,7 @@ ActiveRecord::Schema.define(version: 2020_03_08_072023) do
     t.index ["problem_id"], name: "index_testcase_sets_on_problem_id"
   end
 
-  create_table "testcase_testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcase_testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "testcase_id", null: false
     t.bigint "testcase_set_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -55,7 +71,7 @@ ActiveRecord::Schema.define(version: 2020_03_08_072023) do
     t.index ["testcase_set_id"], name: "index_testcase_testcase_sets_on_testcase_set_id"
   end
 
-  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "name"
     t.text "input", size: :long, null: false
     t.text "output", size: :long, null: false
@@ -65,6 +81,7 @@ ActiveRecord::Schema.define(version: 2020_03_08_072023) do
   end
 
   add_foreign_key "problems", "contests"
+  add_foreign_key "submits", "problems"
   add_foreign_key "testcase_sets", "problems"
   add_foreign_key "testcase_testcase_sets", "testcase_sets"
   add_foreign_key "testcase_testcase_sets", "testcases"
