@@ -3,10 +3,10 @@ Rails.application.routes.draw do
   namespace :api do
     resources :contests, param: :slug, only: [:index, :show] do
       resource :submits, only: [:show] do
-        resource :all, only: [:show]
+        get "all" => "alls#show"
       end
       resources :tasks, param: :slug, only: [:show] do
-        resource :submit, only: [:create]
+        post "submit" => "submits#create"
       end
     end
   end
