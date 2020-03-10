@@ -5,7 +5,7 @@ class Api::SubmitsController < ApplicationController
     return Rails.root.join("submit_sources", SecureRandom.uuid)
   end
 
-  def show
+  def me
     contest_slug = params[:contest_slug]
     user_id = 1
     # :contest_slugからsubmitを抽出する
@@ -14,6 +14,14 @@ class Api::SubmitsController < ApplicationController
                   .where("contests.slug = ? and user_id = ?", contest_slug, user_id)
     
   end
+
+  def all
+    contest_slug = params[:contest_slug]
+    render json: Submit.joins(problem: :contest)
+                  .select("submits.*, problems.id, problems.contest_id, contests.id, contests.slug")
+                  .where("contests.slug = ?", contest_slug)
+  end
+  
 
   def create
     @problem = Problem.find_by!(slug: params[:task_slug])
