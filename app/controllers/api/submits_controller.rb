@@ -10,7 +10,7 @@ class Api::SubmitsController < ApplicationController
     user_id = 1
     # :contest_slugからsubmitを抽出する
     render json: Submit.joins(problem: :contest)
-                  .select("submits.*, problems.id, problems.contest_id, contests.id, contests.slug")
+                  .select("submits.*, problems.id, problems.contest_id, problems.slug AS problems_slug, contests.id, contests.slug AS contests_slug")
                   .where("contests.slug = ? and user_id = ?", contest_slug, user_id)
     
   end
@@ -18,7 +18,7 @@ class Api::SubmitsController < ApplicationController
   def all
     contest_slug = params[:contest_slug]
     render json: Submit.joins(problem: :contest)
-                  .select("submits.*, problems.id, problems.contest_id, contests.id, contests.slug")
+                  .select("submits.*, problems.id, problems.contest_id, problems.slug AS problems_slug, contests.id, contests.slug AS contests_slug")
                   .where("contests.slug = ?", contest_slug)
   end
   
