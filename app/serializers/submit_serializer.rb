@@ -1,3 +1,9 @@
 class SubmitSerializer < ActiveModel::Serializer
-  attributes :user_id, :problem_slug, :status, :point, :execution_time, :execution_memory, :lang, :path
+  attributes :user_id, :task, :status, :point, :execution_time, :execution_memory, :lang
+
+  def task
+    ContestTaskSerializer::new(
+        object.problem
+    )
+  end
 end

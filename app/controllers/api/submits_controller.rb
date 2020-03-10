@@ -1,16 +1,11 @@
 class Api::SubmitsController < ApplicationController
 
-  # pathを生やす
-  def make_path
-    return Rails.root.join("submit_sources", SecureRandom.uuid)
-  end
-
   def me
     contest_slug = params[:contest_slug]
     user_id = 1
     # :contest_slugからsubmitを抽出する
-    my_submits =  Submit.joins(problem: :contest)
-                  .select("submits.*, problems.id, problems.contest_id, problems.slug AS problem_slug, contests.id, contests.slug AS contest_slug")
+    my_submits = Submit.joins(problem: :contest)
+                  .select("submits.*, problems.*, contests.id, contests.slug AS contest_slug")
                   .where("contests.slug = ?", contest_slug)
                   .search_by_user_id(user_id)
     
@@ -20,7 +15,7 @@ class Api::SubmitsController < ApplicationController
   def all
     contest_slug = params[:contest_slug]
     all_submits = Submit.joins(problem: :contest)
-                  .select("submits.*, problems.id, problems.contest_id, problems.slug AS problem_slug, contests.id, contests.slug AS contest_slug")
+                  .select("submits.*, problems.*, contests.id, contests.slug AS contest_slug")
                   .where("contests.slug = ?", contest_slug)
     
     render json: all_submits
@@ -44,16 +39,18 @@ class Api::SubmitsController < ApplicationController
 
     @submit.save
 
-    submited_code = request.body.read
+    submitted_code = request.body.read
 
     File.open(save_path, 'w') do |fp|
-      fp.puts submited_code
+      fp.puts submitted_code
     end
-
-    redirect_to action: :show, contest_slug: params[:contest_slug]
-
   end
 
+  private
 
+  # pathを生やす
+  def make_path
+    Rails.root.join("submit_sources", SecureRandom.uuid)
+  end
 end
 
