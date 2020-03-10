@@ -1,6 +1,7 @@
 class Problem < ApplicationRecord
   belongs_to :contest
   has_many :testcase_sets
+  has_many :submits
 
   def samples
     testcase_sets.find_by!(problem_id: id, is_sample: 1).testcases.map do |m|
