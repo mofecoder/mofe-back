@@ -5,5 +5,4 @@ Rails.application.routes.draw do
       resources :tasks, param: :slug, only: [:show]
     end
   end
-  match '*path' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
 end
