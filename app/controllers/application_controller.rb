@@ -8,6 +8,6 @@ class ApplicationController < ActionController::API
   end
 
   def render_500(e = nil)
-    render template: e, status: 500
+    render json: e, status: 500
   end
 end
