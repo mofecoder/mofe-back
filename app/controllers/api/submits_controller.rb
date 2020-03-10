@@ -5,7 +5,6 @@ class Api::SubmitsController < ApplicationController
     user_id = 1
     # :contest_slugからsubmitを抽出する
     my_submits = Submit.joins(problem: :contest)
-                  .select("submits.*, problems.*, contests.id, contests.slug AS contest_slug")
                   .where("contests.slug = ?", contest_slug)
                   .search_by_user_id(user_id)
     
@@ -15,7 +14,6 @@ class Api::SubmitsController < ApplicationController
   def all
     contest_slug = params[:contest_slug]
     all_submits = Submit.joins(problem: :contest)
-                  .select("submits.*, problems.*, contests.id, contests.slug AS contest_slug")
                   .where("contests.slug = ?", contest_slug)
     
     render json: all_submits
