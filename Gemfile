@@ -44,3 +44,8 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 
 gem 'rack-cors'
+
+# ログイン関連
+gem 'devise'
+gem 'devise_token_auth'
+gem 'devise-i18n'
