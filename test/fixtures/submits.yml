@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 
+  path: MyString
+  status: MyString
+  point: 1
+  execution_time: 1
+  execution_memory: MyString
+  lang: MyString
+
+two:
+  user_id: 
+  path: MyString
+  status: MyString
+  point: 1
+  execution_time: 1
+  execution_memory: MyString
+  lang: MyString
