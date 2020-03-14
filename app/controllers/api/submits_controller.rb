@@ -4,21 +4,23 @@ class Api::SubmitsController < ApplicationController
     contest_slug = params[:contest_slug]
     user_id = 1
     # :contest_slugからsubmitを抽出する
-    my_submits = Submit.joins(problem: :contest)
-                  .where("contests.slug = ?", contest_slug)
-                  .search_by_user_id(user_id)
-    
+    my_submits = Submit.preload(:problem)
+                     .joins(problem: :contest)
+                     .where("contests.slug = ?", contest_slug)
+                     .search_by_user_id(user_id)
+
     render json: my_submits
   end
 
   def all
     contest_slug = params[:contest_slug]
-    all_submits = Submit.joins(problem: :contest)
-                  .where("contests.slug = ?", contest_slug)
-    
+    all_submits = Submit.preload(:problem)
+                      .joins(problem: :contest)
+                      .where("contests.slug = ?", contest_slug)
+
     render json: all_submits
   end
-  
+
 
   def create
     @problem = Problem.find_by!(slug: params[:task_slug])
@@ -51,4 +53,3 @@ class Api::SubmitsController < ApplicationController
     Rails.root.join("submit_sources", SecureRandom.uuid)
   end
 end
-
