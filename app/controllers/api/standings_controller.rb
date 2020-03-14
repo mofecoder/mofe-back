@@ -7,7 +7,9 @@ class Api::StandingsController < ApplicationController
                   .select('user_id, problem_id, status, point, submits.created_at')
                   .order(created_at: :asc)
 
-    problems = Problem.joins(:contest).where('contests.slug': params[:contest_slug]).map { |p| [p.id, p] }.to_h
+    problems = Problem.joins(:contest)
+                   .where('contests.slug': params[:contest_slug])
+                   .map { |p| [p.id, p] }.to_h
 
     # @type [Hash]
     users = {}
@@ -102,11 +104,10 @@ class Api::StandingsController < ApplicationController
     time = nil
 
     submits.each do |submit|
-      if submit.status == 'WJ' || submit.status == 'WR'
+      if %w(WJ WR IE CE).include?(submit.status)
         next
       end
-      if submit.status == 'WA' || submit.status == 'RE' || submit.status == 'OLE' ||
-          submit.status == 'MLE' || submit.status == 'TLE'
+      if %w(WA RE OLE MLE TLE).include?(submit.status)
         now_pena += 1
       end
       if submit.point > max_point
