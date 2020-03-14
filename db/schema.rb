@@ -39,7 +39,7 @@ ActiveRecord::Schema.define(version: 2020_03_14_040140) do
     t.index ["slug"], name: "index_problems_on_slug", unique: true
   end
 
-  create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "user_id", null: false
     t.bigint "problem_id", null: false
     t.string "path", null: false
@@ -91,9 +91,10 @@ ActiveRecord::Schema.define(version: 2020_03_14_040140) do
     t.string "explanation", limit: 2048
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.index ["problem_id"], name: "index_testcase_sets_on_problem_id"
   end
 
-  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -126,6 +127,4 @@ ActiveRecord::Schema.define(version: 2020_03_14_040140) do
   add_foreign_key "problems", "contests"
   add_foreign_key "submits", "problems"
   add_foreign_key "testcase_sets", "problems"
-  add_foreign_key "testcase_testcase_sets", "testcase_sets"
-  add_foreign_key "testcase_testcase_sets", "testcases"
 end
