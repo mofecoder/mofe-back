@@ -7,23 +7,24 @@ class Api::SubmitsController < ApplicationController
     contest_slug = params[:contest_slug]
     user_id = current_user.id
     # :contest_slugからsubmitを抽出する
-    my_submits = Submit.joins(problem: :contest)
-                  .where("contests.slug = ?", contest_slug)
-                  .search_by_user_id(user_id)
-                  .order(created_at: :desc)
-    
+    my_submits = Submit.preload(:problem)
+                     .joins(problem: :contest)
+                     .where("contests.slug = ?", contest_slug)
+                     .search_by_user_id(user_id)
+                     .order(created_at: :desc)
     render json: my_submits
   end
 
   def all
     contest_slug = params[:contest_slug]
-    all_submits = Submit.joins(problem: :contest)
-                  .where("contests.slug = ?", contest_slug)
-                  .order(created_at: :desc)
+    all_submits = Submit.preload(:problem)
+                      .joins(problem: :contest)
+                      .where("contests.slug = ?", contest_slug)
+                      .order(created_at: :desc)
     
     render json: all_submits
   end
-  
+
 
   def create
     if current_user.nil?
@@ -58,4 +59,3 @@ class Api::SubmitsController < ApplicationController
     "submit_sources/#{SecureRandom.uuid}"
   end
 end
-
