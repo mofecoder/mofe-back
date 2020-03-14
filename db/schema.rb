@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_13_234837) do
+ActiveRecord::Schema.define(version: 2020_03_14_040140) do
 
   create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "slug", null: false
@@ -27,12 +27,12 @@ ActiveRecord::Schema.define(version: 2020_03_13_234837) do
     t.string "slug", null: false
     t.string "name"
     t.bigint "contest_id", null: false
-    t.string "position", null: false
-    t.string "difficulty", null: false
-    t.string "statement", null: false
-    t.string "constraints", null: false
-    t.string "input_format", null: false
-    t.string "output_format", null: false
+    t.string "position", limit: 4, null: false
+    t.string "difficulty", limit: 16, null: false
+    t.string "statement", limit: 4096, null: false
+    t.string "constraints", limit: 2048, null: false
+    t.string "input_format", limit: 1024, null: false
+    t.string "output_format", limit: 1024, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["contest_id"], name: "index_problems_on_contest_id"
@@ -43,7 +43,7 @@ ActiveRecord::Schema.define(version: 2020_03_13_234837) do
     t.integer "user_id", null: false
     t.bigint "problem_id", null: false
     t.string "path", null: false
-    t.string "status", null: false
+    t.string "status", limit: 16, null: false
     t.integer "point"
     t.integer "execution_time"
     t.integer "execution_memory"
@@ -56,7 +56,7 @@ ActiveRecord::Schema.define(version: 2020_03_13_234837) do
   create_table "testcase_results", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "submit_id", null: false
     t.bigint "testcase_id", null: false
-    t.string "status", null: false
+    t.string "status", limit: 16, null: false
     t.integer "execution_time", null: false
     t.integer "execution_memory", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -88,7 +88,7 @@ ActiveRecord::Schema.define(version: 2020_03_13_234837) do
     t.string "name"
     t.text "input", size: :long, null: false
     t.text "output", size: :long, null: false
-    t.string "explanation"
+    t.string "explanation", limit: 2048
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
