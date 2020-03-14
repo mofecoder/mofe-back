@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class User < ActiveRecord::Base
+  has_many :submits
+
   def login=(login)
-    puts 'set', login
     @login = login
   end
 
   def login
-    puts 'get', @login || self.name || self.email
     @login || self.name || self.email
   end
 

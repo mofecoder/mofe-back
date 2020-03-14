@@ -15,6 +15,11 @@ class ApplicationController < ActionController::API
     self.role == 'admin'
   end
 
+  # @return [User]
+  def current_user
+    current_api_user
+  end
+
   private
 
   def configure_permitted_parameters

@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       resources :tasks, param: :slug, only: [:show] do
         post "submit" => "submits#create"
       end
+      get 'standings' => 'standings#index'
     end
   end
   match '*path' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
