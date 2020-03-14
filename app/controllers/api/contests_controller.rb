@@ -8,7 +8,7 @@ class Api::ContestsController < ApplicationController
   end
 
   def show
-    render json: @contest
+    render json: @contest, serializer: ContestDescSerializer
   end
 
   private
