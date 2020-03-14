@@ -1,4 +1,5 @@
 class Api::SubmitsController < ApplicationController
+  before_action :authenticate_user!, except: [:all]
 
   def me
     if current_user.nil?

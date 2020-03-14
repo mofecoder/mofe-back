@@ -20,6 +20,15 @@ class ApplicationController < ActionController::API
     current_api_user
   end
 
+  def authenticate_user!
+    authenticate_api_user!
+  end
+
+  # @return [TrueClass | FalseClass]
+  def user_signed_in?
+    api_user_signed_in?
+  end
+
   private
 
   def configure_permitted_parameters
