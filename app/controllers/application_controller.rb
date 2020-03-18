@@ -20,6 +20,12 @@ class ApplicationController < ActionController::API
     authenticate_api_user!
   end
 
+  def authenticate_admin_user!
+    unless current_user.admin?
+      render json: { error: 'Forbidden' }, status: :forbidden
+    end
+  end
+
   # @return [TrueClass | FalseClass]
   def user_signed_in?
     api_user_signed_in?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_14_093939) do
+ActiveRecord::Schema.define(version: 2020_03_17_155418) do
 
   create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "slug", null: false
@@ -25,10 +25,11 @@ ActiveRecord::Schema.define(version: 2020_03_14_093939) do
   end
 
   create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "slug", null: false
+    t.string "slug"
     t.string "name"
     t.bigint "contest_id"
-    t.string "position", limit: 4, null: false
+    t.bigint "writer_user_id", default: 1, null: false
+    t.string "position", limit: 4
     t.string "difficulty", limit: 16, null: false
     t.string "statement", limit: 4096, null: false
     t.string "constraints", limit: 2048, null: false
@@ -38,6 +39,7 @@ ActiveRecord::Schema.define(version: 2020_03_14_093939) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["contest_id"], name: "index_problems_on_contest_id"
     t.index ["slug"], name: "index_problems_on_slug", unique: true
+    t.index ["writer_user_id"], name: "index_problems_on_writer_user_id"
   end
 
   create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -125,6 +127,7 @@ ActiveRecord::Schema.define(version: 2020_03_14_093939) do
   end
 
   add_foreign_key "problems", "contests"
+  add_foreign_key "problems", "users", column: "writer_user_id"
   add_foreign_key "submits", "problems"
   add_foreign_key "testcase_sets", "problems"
   add_foreign_key "testcase_testcase_sets", "testcase_sets"
