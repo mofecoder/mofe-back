@@ -11,10 +11,6 @@ class ApplicationController < ActionController::API
     render json: { status: 500, error: e }, status: 500
   end
 
-  def admin?
-    self.role == 'admin'
-  end
-
   # @return [User]
   def current_user
     current_api_user
@@ -22,6 +18,12 @@ class ApplicationController < ActionController::API
 
   def authenticate_user!
     authenticate_api_user!
+  end
+
+  def authenticate_admin_user!
+    unless current_user.admin?
+      render json: { error: 'Forbidden' }, status: :forbidden
+    end
   end
 
   # @return [TrueClass | FalseClass]
@@ -33,6 +35,6 @@ class ApplicationController < ActionController::API
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
-    devise_parameter_sanitizer.permit(:sign_in, keys: [:email, :name, :password])
+    devise_parameter_sanitizer.permit(:sign_in, keys: [:name])
   end
 end

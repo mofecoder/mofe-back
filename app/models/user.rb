@@ -11,6 +11,13 @@ class User < ActiveRecord::Base
     @login || self.name || self.email
   end
 
+  def admin?
+    self.role == 'admin'
+  end
+
+  def writer?
+    self.role == 'writer'
+  end
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
