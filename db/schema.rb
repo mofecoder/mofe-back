@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_14_052536) do
+ActiveRecord::Schema.define(version: 2020_03_19_153251) do
 
   create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "slug", null: false
@@ -27,8 +27,9 @@ ActiveRecord::Schema.define(version: 2020_03_14_052536) do
   create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name"
-    t.bigint "contest_id", null: false
-    t.string "position", limit: 4, null: false
+    t.bigint "contest_id"
+    t.bigint "writer_user_id", default: 2, null: false
+    t.string "position", limit: 4
     t.string "difficulty", limit: 16, null: false
     t.string "statement", limit: 4096, null: false
     t.string "constraints", limit: 2048, null: false
@@ -85,13 +86,15 @@ ActiveRecord::Schema.define(version: 2020_03_14_052536) do
     t.index ["testcase_set_id"], name: "index_testcase_testcase_sets_on_testcase_set_id"
   end
 
-  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "problem_id", default: 1, null: false
     t.string "name"
     t.text "input", size: :long, null: false
     t.text "output", size: :long, null: false
     t.string "explanation", limit: 2048
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.index ["problem_id"], name: "index_testcases_on_problem_id"
   end
 
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
@@ -129,4 +132,5 @@ ActiveRecord::Schema.define(version: 2020_03_14_052536) do
   add_foreign_key "testcase_sets", "problems"
   add_foreign_key "testcase_testcase_sets", "testcase_sets"
   add_foreign_key "testcase_testcase_sets", "testcases"
+  add_foreign_key "testcases", "problems"
 end
