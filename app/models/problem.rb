@@ -4,8 +4,10 @@ class Problem < ApplicationRecord
   has_many :testcase_sets
   has_many :submits
 
+  validates :slug, uniqueness: true, allow_nil: true
+
   def samples
-    testcase_sets.find_by!(problem_id: id, is_sample: 1).testcases.map do |m|
+    testcase_sets.find_by(problem_id: id, is_sample: 1)&.testcases&.map do |m|
       {
           input: m.input,
           output: m.output,
