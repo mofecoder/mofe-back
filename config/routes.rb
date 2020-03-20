@@ -9,6 +9,12 @@ Rails.application.routes.draw do
       get "submits/all" => "submits#all"
       resources :tasks, param: :slug, only: [:show] do
         post "submit" => "submits#create"
+        put 'remove_from_contest' => 'tasks#remove_from_contest'
+        resources :testcases, only: [] do
+          collection do
+            post 'upload'
+          end
+        end
       end
       get 'standings' => 'standings#index'
     end
