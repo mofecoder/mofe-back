@@ -52,3 +52,6 @@ gem 'devise-i18n'
 
 # Zipファイル
 gem 'rubyzip'
+
+# 論理削除
+gem 'paranoia'
