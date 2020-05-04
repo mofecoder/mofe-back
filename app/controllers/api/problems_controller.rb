@@ -5,11 +5,11 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems
   def index
-    unless current_user.admin?
+    unless current_user.admin? || current_user.writer?
       render json: {error: 'Forbidden'}, status: :forbidden
       return
     end
-    problems = Problem.where(contest_id: nil)
+    problems = Problem.includes(:writer_user, :contest)
     problems.where!(writer_user_id: current_user.id) unless current_user.admin?
 
     render json: problems
@@ -21,23 +21,30 @@ class Api::ProblemsController < ApplicationController
       render json: {error: 'Forbidden'}, status: :forbidden
       return
     end
-    if @problem.contest_id.present?
-      render json: { error: 'この問題は既にコンテストに所属しています。'}, status: :conflict,
-             location: "/api/contests/#{@problem.contest.slug}/tasks/#{@problem.slug}"
-      return
-    end
+
     render json: @problem, serializer: ProblemDetailSerializer
   end
 
   # POST /problems
   def create
-    @problem = Problem.new(problem_params)
-    @problem.writer_user_id = current_user.id
+    ActiveRecord::Base.transaction do
+      @problem = Problem.new(problem_params)
+      @problem.writer_user_id = current_user.id
 
-    if @problem.save
-      render serializer: ProblemDetailSerializer, status: :created
-    else
-      render json: @problem.errors, status: :unprocessable_entity
+      if @problem.save
+        @problem.testcase_sets.create(
+            name: 'sample',
+            is_sample: true
+        )
+        @problem.testcase_sets.create(
+            name: 'all',
+            is_sample: false
+        )
+
+        render serializer: ProblemDetailSerializer, status: :created
+      else
+        render json: @problem.errors, status: :unprocessable_entity
+      end
     end
   end
 

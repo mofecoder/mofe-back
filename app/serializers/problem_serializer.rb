@@ -1,7 +1,11 @@
-class ProblemSerializer < ActiveModel::Serializer
-  attributes :id, :name, :difficulty, :writer_user
+class ProblemSerializer < UnsetProblemSerializer
+  attributes :contest
 
-  def writer_user
-    User.find(object.writer_user_id).name
+  def contest
+    return nil if object.contest_id.nil?
+    {
+        name: object.contest.name,
+        slug: object.contest.slug
+    }
   end
 end

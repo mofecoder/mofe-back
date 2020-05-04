@@ -8,7 +8,7 @@ class Api::SubmitsController < ApplicationController
     contest_slug = params[:contest_slug]
     user_id = current_user.id
     # :contest_slugからsubmitを抽出する
-    my_submits = Submit.preload(:problem)
+    my_submits = Submit.preload(:problem, :user)
                      .joins(problem: :contest)
                      .where("contests.slug = ?", contest_slug)
                      .search_by_user_id(user_id)
