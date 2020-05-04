@@ -116,6 +116,8 @@ GEM
     nokogiri (1.10.9-x64-mingw32)
       mini_portile2 (~> 2.4.0)
     orm_adapter (0.5.0)
+    paranoia (2.4.2)
+      activerecord (>= 4.0, < 6.1)
     puma (4.3.3)
       nio4r (~> 2.0)
     rack (2.2.2)
@@ -157,6 +159,7 @@ GEM
       actionpack (>= 5.0)
       railties (>= 5.0)
     ruby_dep (1.5.0)
+    rubyzip (2.0.0)
     spring (2.1.0)
     spring-watcher-listen (2.0.1)
       listen (>= 2.7, < 4.0)
@@ -195,9 +198,11 @@ DEPENDENCIES
   devise_token_auth
   listen (>= 3.0.5, < 3.2)
   mysql2 (>= 0.4.4)
+  paranoia
   puma (~> 4.1)
   rack-cors
   rails (~> 6.0.2, >= 6.0.2.1)
+  rubyzip
   spring
   spring-watcher-listen (~> 2.0.0)
   tzinfo-data
