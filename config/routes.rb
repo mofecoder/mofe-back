@@ -13,8 +13,11 @@ Rails.application.routes.draw do
       end
     end
     resources :contests, param: :slug, except: [:destroy] do
-      get "submits" => "submits#me"
-      get "submits/all" => "submits#all"
+      resources :submits, only: [:index, :show] do
+        collection do
+          get 'all'
+        end
+      end
       resources :tasks, param: :slug, only: [:show] do
         post "submit" => "submits#create"
         put 'remove_from_contest' => 'tasks#remove_from_contest'

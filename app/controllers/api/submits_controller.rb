@@ -1,7 +1,7 @@
 class Api::SubmitsController < ApplicationController
-  before_action :authenticate_user!, except: [:all]
+  before_action :authenticate_user!, except: [:all, :show]
 
-  def me
+  def index
     if current_user.nil?
       render status: 401
     end
@@ -26,6 +26,26 @@ class Api::SubmitsController < ApplicationController
     render json: all_submits
   end
 
+  def show
+    submit = Submit.includes(:testcase_results).find(params[:id])
+    contest = submit.problem.contest
+
+    if contest.slug != params[:contest_slug]
+      render status: 404
+      return
+    end
+
+    if current_user.nil? || submit.user_id != current_user.id
+      unless contest.end_at.past?
+        render json: {
+            error: 'この提出は非公開です'
+        }, status: :forbidden
+        return
+      end
+    end
+
+    render json: submit, serializer: SubmitDetailSerializer
+  end
 
   def create
     if current_user.nil?
@@ -39,18 +59,13 @@ class Api::SubmitsController < ApplicationController
     @submit.problem_id = @problem.id
     @submit.path = save_path
     @submit.lang = request.headers[:lang]
-    @submit.status = request.headers[:status]
-    @submit.execution_time = 1.0
-    @submit.execution_memory = 256
-    @submit.point = 200
-
-    @submit.save
+    @submit.status = 'WJ'
 
     submitted_code = request.body.read
-
     File.open(save_path, 'w') do |fp|
       fp.puts submitted_code
     end
+    @submit.save!
   end
 
   private
