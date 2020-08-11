@@ -44,6 +44,7 @@ class Api::SubmitsController < ApplicationController
       end
     end
 
+
     render json: submit, serializer: SubmitDetailSerializer
   end
 
@@ -61,10 +62,8 @@ class Api::SubmitsController < ApplicationController
     @submit.lang = request.headers[:lang]
     @submit.status = 'WJ'
 
-    submitted_code = request.body.read
-    File.open(save_path, 'w') do |fp|
-      fp.puts submitted_code
-    end
+    source = request.body.read
+    Utils::GoogleCloudStorageClient::upload_source(save_path, source)
     @submit.save!
   end
 

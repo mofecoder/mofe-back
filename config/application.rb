@@ -19,6 +19,8 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+ENV['SSL_CERT_FILE'] = './cacert.pem'
+
 module CafecoderBackRails
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -35,5 +37,6 @@ module CafecoderBackRails
     config.api_only = true
 
     config.i18n.default_locale = :ja
+    config.autoload_paths += %W(#{config.root}/lib)
   end
 end

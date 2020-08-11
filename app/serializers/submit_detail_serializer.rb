@@ -1,6 +1,6 @@
 class SubmitDetailSerializer < SubmitSerializer
   attributes :source
   def source
-    File.open(object.path).read
+    Utils::GoogleCloudStorageClient::get_source(object.path).read
   end
 end
