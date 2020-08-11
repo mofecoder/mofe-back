@@ -51,5 +51,5 @@ production:
   <<: *default
   database: p6jav_cafecoder_prod
   username: p6jav_cafecoder
-  password: <%= ENV['CAFECODER_DATABASE_PASSWORD'] %>
-  host: public.p6jav.tyo1.database-hosting.conoha.io
+  password: "<%= ENV['CAFECODER_DATABASE_PASSWORD'] %>"
+  host: "<%= ENV['DATABASE_URL'] %>"
