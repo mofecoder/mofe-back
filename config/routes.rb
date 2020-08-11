@@ -39,5 +39,6 @@ Rails.application.routes.draw do
       resources :testcase_sets, only: [:create, :destroy]
     end
   end
-  match '*path' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
+  match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
+  match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
 end
