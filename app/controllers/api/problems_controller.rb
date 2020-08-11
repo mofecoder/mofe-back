@@ -34,10 +34,12 @@ class Api::ProblemsController < ApplicationController
       if @problem.save
         @problem.testcase_sets.create(
             name: 'sample',
+            points: 0,
             is_sample: true
         )
         @problem.testcase_sets.create(
             name: 'all',
+            points: 100,
             is_sample: false
         )
 
