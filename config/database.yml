@@ -49,6 +49,7 @@ test:
 #
 production:
   <<: *default
-  database: cafecoder_back_rails_production
-  username: cafecoder_back_rails
-  password: <%= ENV['CAFECODER_BACK_RAILS_DATABASE_PASSWORD'] %>
+  username: p6jav_cafecoder
+  password: "<%= ENV['CAFECODER_DATABASE_PASSWORD'] %>"
+  host: "<%= ENV['DATABASE_URL'] %>"
+  database: p6jav_cafecoder_prod
