@@ -35,7 +35,7 @@ class Api::SubmitsController < ApplicationController
       return
     end
 
-    if current_user.nil? || submit.user_id != current_user.id
+    if current_user.nil? || (!current_user.admin? && submit.user_id != current_user.id)
       unless contest.end_at.past?
         render json: {
             error: 'この提出は非公開です'
