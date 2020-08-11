@@ -1,9 +1,11 @@
 class Api::StandingsController < ApplicationController
   def index
     # TODO: ペナルティを設定できるようにする
-    started_at = Contest.find_by!(slug: params[:contest_slug]).start_at
+    contest = Contest.find_by!(slug: params[:contest_slug])
+    started_at = contest.start_at
     submits = Submit.joins(problem: :contest).includes(:user)
                   .where('contests.slug': params[:contest_slug])
+                  .where(created_at: started_at..contest.end_at)
                   .select('user_id, problem_id, status, point, submits.created_at')
                   .order(created_at: :asc)
 
@@ -31,6 +33,10 @@ class Api::StandingsController < ApplicationController
       problems.each do |id, _|
         # @type [Array<Submit>] s
         s = group[id]
+        if s.nil?
+          ls << {}
+          next
+        end
         tmp = aggregate(s)
         tmp[:time] = (tmp[:time] - started_at).to_i
 
@@ -79,10 +85,10 @@ class Api::StandingsController < ApplicationController
     end
 
     res.sort! do |a, b|
-      if a[:score] == b[:score]
-        b[:time] <=> a[:time]
+      if a[:result][:score] == b[:result][:score]
+        b[:result][:time] <=> a[:result][:time]
       else
-        b[:score] <=> a[:score]
+        b[:result][:score] <=> a[:result][:score]
       end
     end
 
