@@ -2,6 +2,7 @@
 
 class User < ActiveRecord::Base
   has_many :submits
+  has_many :writer_problems, class_name: 'Problem', foreign_key: 'writer_user_id'
 
   def login=(login)
     @login = login

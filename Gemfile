@@ -55,3 +55,5 @@ gem 'rubyzip'
 
 # 論理削除
 gem 'paranoia'
+
+gem 'google-cloud-storage'

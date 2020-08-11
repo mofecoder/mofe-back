@@ -1,5 +1,6 @@
 class Problem < ApplicationRecord
   belongs_to :contest, optional: true
+  belongs_to :writer_user, class_name: 'User'
   has_many :testcases
   has_many :testcase_sets
   has_many :submits
