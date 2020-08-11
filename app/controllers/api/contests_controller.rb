@@ -5,7 +5,7 @@ class Api::ContestsController < ApplicationController
   before_action :set_contest, except: [:index, :create]
 
   def index
-    render json: Contest.all.as_json(only: [:slug, :name, :start_at, :end_at])
+    render json: Contest.all.order(start_at: :desc).as_json(only: [:slug, :name, :start_at, :end_at])
   end
 
   def show
