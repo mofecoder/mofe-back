@@ -37,6 +37,6 @@ module CafecoderBackRails
     config.api_only = true
 
     config.i18n.default_locale = :ja
-    config.autoload_paths += %W(#{config.root}/lib)
+    config.autoload_paths += %W(#{Rails.root}/lib)
   end
 end
