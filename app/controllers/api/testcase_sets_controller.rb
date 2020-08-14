@@ -2,6 +2,10 @@ class Api::TestcaseSetsController < ApplicationController
   before_action :authenticate_user!
   before_action :authenticate_writer!
 
+  def show
+    render json: TestcaseSet.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample])
+  end
+
   def create
     name = params[:testcase_set][:name]
     points = params[:testcase_set][:points]
@@ -18,6 +22,13 @@ class Api::TestcaseSetsController < ApplicationController
     render status: :created
   end
 
+  def update
+    set = TestcaseSet.find(params[:id])
+    unless set.update(update_params)
+      render json: { error: set.errors }, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     set = TestcaseSet.find(params[:id])
     if set.name == 'all' || set.name == 'sample'
@@ -31,11 +42,15 @@ class Api::TestcaseSetsController < ApplicationController
     def authenticate_writer!
       @problem = Problem.find(params[:problem_id])
       unless current_user.admin? || current_user.writer? && @problem.writer_user_id == current_user.id
-        render json: {error: 'Forbidden'}, status: :forbidden
+        render_403
       end
     end
 
     def create_params
-      params.required(:testcase).permit(:name, :points, :is_sample)
+      params.required(:testcase_set).permit(:name, :points, :is_sample)
+    end
+
+    def update_params
+      params.required(:testcase_set).permit(:name, :points)
     end
 end
