@@ -19,6 +19,16 @@ class Api::SubmitsController < ApplicationController
 
   def all
     contest_slug = params[:contest_slug]
+    # @type [Contest]
+    contest = Contest.find_by!(slug: contest_slug)
+
+    unless contest.end_at.past? || (user_signed_in? && current_user.admin?)
+      render json: {
+          error: '権限がありません。'
+      }, status: :forbidden
+      return
+    end
+
     all_submits = Submit.preload(:problem)
                       .joins(problem: :contest)
                       .where("contests.slug = ?", contest_slug)
@@ -36,7 +46,7 @@ class Api::SubmitsController < ApplicationController
       return
     end
 
-    if current_user.nil? || (!current_user.admin? && submit.user_id != current_user.id)
+    if !user_signed_in? || (!current_user.admin? && submit.user_id != current_user.id)
       unless contest.end_at.past?
         render json: {
             error: 'この提出は非公開です'
