@@ -22,7 +22,7 @@ class ApplicationController < ActionController::API
 
   def authenticate_admin_user!
     unless current_user.admin?
-      render json: { error: 'Forbidden' }, status: :forbidden
+      render json: { error: '権限がありません。' }, status: :forbidden
     end
   end
 

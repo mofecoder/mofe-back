@@ -3,7 +3,8 @@ class Api::SubmitsController < ApplicationController
 
   def index
     if current_user.nil?
-      render status: 401
+      render status: :unauthorized
+      return
     end
     contest_slug = params[:contest_slug]
     user_id = current_user.id
@@ -31,7 +32,7 @@ class Api::SubmitsController < ApplicationController
     contest = submit.problem.contest
 
     if contest.slug != params[:contest_slug]
-      render status: 404
+      render status: :not_found
       return
     end
 
@@ -50,17 +51,16 @@ class Api::SubmitsController < ApplicationController
 
   def create
     if current_user.nil?
-      render status: 401
+      render status: :unauthorized
     end
-    @problem = Problem.find_by!(slug: params[:task_slug])
+    problem = Problem.find_by!(slug: params[:task_slug])
     save_path = make_path
 
-    # ちゃんとバリデーションした方が良さそう？
-    @submit = current_user.submits.new
-    @submit.problem_id = @problem.id
-    @submit.path = save_path
-    @submit.lang = request.headers[:lang]
-    @submit.status = 'WJ'
+    submit = current_user.submits.new
+    submit.problem_id = problem.id
+    submit.path = save_path
+    submit.lang = request.headers[:lang]
+    submit.status = 'WJ'
 
     source = request.body.read
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
