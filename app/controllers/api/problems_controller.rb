@@ -5,10 +5,6 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems
   def index
-    unless current_user.admin? || current_user.writer?
-      render json: {error: 'Forbidden'}, status: :forbidden
-      return
-    end
     problems = Problem.includes(:writer_user, :contest)
     problems.where!(writer_user_id: current_user.id) unless current_user.admin?
 
@@ -17,11 +13,6 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems/1
   def show
-    unless current_user.admin? || @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
-      return
-    end
-
     render json: @problem, serializer: ProblemDetailSerializer
   end
 
@@ -53,7 +44,7 @@ class Api::ProblemsController < ApplicationController
   # PATCH/PUT /problems/1
   def update
     unless current_user.admin? || @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
       return
     end
     if @problem.update(problem_params)
@@ -77,7 +68,7 @@ class Api::ProblemsController < ApplicationController
 
   def authenticate_writer!
     unless current_user.admin? || current_user.writer?
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
     end
   end
 end

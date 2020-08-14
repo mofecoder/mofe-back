@@ -10,6 +10,10 @@ class Api::TasksController < ApplicationController
 
   def show
     contest = Contest.find_by!(slug: params[:contest_slug])
+    unless contest.end_at.past? || (user_signed_in? && current_user.admin?)
+      render_403
+      return
+    end
     task = Problem
                .includes(testcase_sets: {testcase_testcase_sets: :testcase})
                .find_by!(contest_id: contest.id, slug: params[:slug])

@@ -23,14 +23,13 @@ class Api::SubmitsController < ApplicationController
     contest = Contest.find_by!(slug: contest_slug)
 
     unless contest.end_at.past? || (user_signed_in? && current_user.admin?)
-      render json: {
-          error: '権限がありません。'
-      }, status: :forbidden
+      render_403
       return
     end
 
     all_submits = Submit.preload(:problem)
                       .joins(problem: :contest)
+                      .includes(:user)
                       .where("contests.slug = ?", contest_slug)
                       .order(created_at: :desc)
     
@@ -38,7 +37,7 @@ class Api::SubmitsController < ApplicationController
   end
 
   def show
-    submit = Submit.includes(:testcase_results).find(params[:id])
+    submit = Submit.includes(testcase_results: :testcase).find(params[:id])
     contest = submit.problem.contest
 
     if contest.slug != params[:contest_slug]
