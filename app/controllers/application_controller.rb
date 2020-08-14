@@ -11,6 +11,10 @@ class ApplicationController < ActionController::API
     render json: { status: 500, error: e }, status: 500
   end
 
+  def render_403
+    render json: { error: '権限がありません。' }, status: :forbidden
+  end
+
   # @return [User]
   def current_user
     current_api_user
@@ -22,7 +26,7 @@ class ApplicationController < ActionController::API
 
   def authenticate_admin_user!
     unless current_user.admin?
-      render json: { error: '権限がありません。' }, status: :forbidden
+      render_403
     end
   end
 

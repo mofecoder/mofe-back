@@ -168,7 +168,7 @@ class Api::TestcasesController < ApplicationController
   def authenticate_writer!
     @problem = Problem.find(params[:problem_id])
     unless current_user.admin? || current_user.writer? && @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
     end
   end
 
