@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::API
   before_action :configure_permitted_parameters, if: :devise_controller?
+  rescue_from ActionController::RoutingError, with: :render_404
 
   include DeviseTokenAuth::Concerns::SetUserByToken
 
