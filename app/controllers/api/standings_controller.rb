@@ -30,10 +30,10 @@ class Api::StandingsController < ApplicationController
       score_sum = 0
       time_max = 0
       penalty = 0
-      problems.each do |id, _|
+      problems.each do |id, problem|
         # @type [Array<Submit>] s
         s = group[id]
-        if s.nil?
+        if s.nil? || user_id == problem.writer_user_id
           ls << {}
           next
         end
