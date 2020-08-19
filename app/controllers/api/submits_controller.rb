@@ -62,7 +62,19 @@ class Api::SubmitsController < ApplicationController
     if current_user.nil?
       render status: :unauthorized
     end
+
     problem = Problem.find_by!(slug: params[:task_slug])
+    unless problem.contest.end_at.past?
+      unless user_signed_in?
+        render_403
+        return
+      end
+      unless current_user.admin? || problem.writer_user_id == current_user.id
+        render_403
+        return
+      end
+    end
+
     save_path = make_path
 
     submit = current_user.submits.new
