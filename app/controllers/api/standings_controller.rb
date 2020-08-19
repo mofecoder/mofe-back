@@ -38,6 +38,10 @@ class Api::StandingsController < ApplicationController
           next
         end
         tmp = aggregate(s)
+        if tmp.nil?
+          ls << {}
+          next
+        end
         tmp[:time] = (tmp[:time] - started_at).to_i
 
         if tmp[:score] > 0
@@ -102,7 +106,7 @@ class Api::StandingsController < ApplicationController
   private
 
   # @param [Array<Submit>] submits
-  # @return [Hash]
+  # @return [Hash, nil]
   def aggregate(submits)
     confirmed_pena = 0
     now_pena = 0
@@ -123,7 +127,7 @@ class Api::StandingsController < ApplicationController
       end
     end
 
-    {
+    max_point == -1 ? nil : {
         score: max_point,
         time: time,
         penalty: confirmed_pena
