@@ -90,7 +90,7 @@ class Api::StandingsController < ApplicationController
 
     res.sort! do |a, b|
       if a[:result][:score] == b[:result][:score]
-        b[:result][:time] <=> a[:result][:time]
+        a[:result][:time] <=> b[:result][:time]
       else
         b[:result][:score] <=> a[:result][:score]
       end
