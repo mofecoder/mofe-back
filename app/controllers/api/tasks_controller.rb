@@ -13,7 +13,7 @@ class Api::TasksController < ApplicationController
     task = Problem
            .includes(testcase_sets: {testcase_testcase_sets: :testcase})
            .find_by!(contest_id: contest.id, slug: params[:slug])
-    unless contest.end_at.past?
+    if contest.start_at.future?
       unless user_signed_in?
         render_403
         return

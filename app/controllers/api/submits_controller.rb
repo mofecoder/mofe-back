@@ -64,7 +64,7 @@ class Api::SubmitsController < ApplicationController
     end
 
     problem = Problem.find_by!(slug: params[:task_slug])
-    unless problem.contest.end_at.past?
+    if problem.contest.start_at.future?
       unless user_signed_in?
         render_403
         return
