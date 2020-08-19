@@ -85,7 +85,7 @@ class Api::SubmitsController < ApplicationController
 
     source = request.body.read
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
-    @submit.save!
+    submit.save!
   end
 
   private
