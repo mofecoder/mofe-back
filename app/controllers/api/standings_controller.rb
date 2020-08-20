@@ -11,6 +11,7 @@ class Api::StandingsController < ApplicationController
 
     problems = Problem.joins(:contest)
                    .where('contests.slug': params[:contest_slug])
+                   .order(:position)
                    .map { |p| [p.id, p] }.to_h
 
     # @type [Hash]
