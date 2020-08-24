@@ -1,12 +1,16 @@
 class SubmitDetailSerializer < SubmitSerializer
-  attributes :source, :testcase_results
+  attributes :source, :sample_count, :testcase_results
 
   def source
     Utils::GoogleCloudStorageClient::get_source(object.path).read
   end
 
+  def sample_count
+    @instance_options[:samples]&.length
+  end
+
   def testcase_results
-    if @instance_options[:in_contest] or true
+    if @instance_options[:in_contest]
       samples = []
       not_samples = []
       object.testcase_results_in_contest.each do |testcase_result|

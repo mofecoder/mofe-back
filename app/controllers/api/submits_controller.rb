@@ -61,12 +61,13 @@ class Api::SubmitsController < ApplicationController
                   .joins(:testcases)
                   .pluck(:testcase_id)
 
-    require('set')
+    in_contest = contest.end_at.future? && !current_user&.admin?
 
+    require('set')
     render json: submit,
            serializer: SubmitDetailSerializer,
-           in_contest: contest.end_at.future? && !current_user&.admin?,
-           samples: Set.new(samples)
+           in_contest: in_contest,
+           samples: in_contest ? Set.new(samples) : nil
   end
 
   def create
