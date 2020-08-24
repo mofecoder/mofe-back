@@ -6,6 +6,6 @@ class SubmitDetailSerializer < SubmitSerializer
   end
 
   def testcase_results
-    object.testcase_results
+    TestcaseResultSerializer::new(object.testcase_results)
   end
 end

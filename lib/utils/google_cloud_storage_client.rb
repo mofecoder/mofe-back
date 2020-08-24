@@ -22,7 +22,6 @@ module Utils::GoogleCloudStorageClient
   end
 
   def self.get_source(file_name)
-    p file_name
     @bucket.file(file_name).download
   end
 end
