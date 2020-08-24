@@ -2,7 +2,7 @@ class SubmitDetailSerializer < SubmitSerializer
   attributes :source, :sample_count, :testcase_results
 
   def source
-    Utils::GoogleCloudStorageClient::get_source(object.path).read
+    Utils::GoogleCloudStorageClient::get_source(object.path).read.force_encoding("UTF-8")
   end
 
   def sample_count
