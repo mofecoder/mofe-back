@@ -1,4 +1,4 @@
 class TestcaseResult < ApplicationRecord
-  belongs_to :submit, dependent: :destroy
-  belongs_to :testcase, dependent: :destroy
+  belongs_to :submit
+  belongs_to :testcase
 end

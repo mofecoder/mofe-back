@@ -135,7 +135,7 @@ class Api::TestcasesController < ApplicationController
 
         input = inputs[name].gsub(/\r\n|\r/, "\n")
         output = outputs[name].gsub(/\r\n|\r/, "\n")
-        @problem.testcases.create(name: name, input: input, output: output)
+        testcase = @problem.testcases.create(name: name, input: input, output: output)
       end
     end
 
@@ -149,7 +149,7 @@ class Api::TestcasesController < ApplicationController
     testcase = @problem.testcases.find(params[:id])
     testcase_set_id = params[:testcase_set_id]
     @problem.testcase_sets.find(testcase_set_id)
-    s = testcase.testcase_testcase_sets.find_by(testcase_set_id: testcase_set_id)
+    s = TestcaseTestcaseSet.find_by(testcase_id: testcase.id, testcase_set_id: testcase_set_id)
 
     if params[:state]
       return if s.present?
