@@ -45,7 +45,10 @@ class Api::SubmitsController < ApplicationController
       return
     end
 
-    if !user_signed_in? || (!current_user.admin? && submit.user_id != current_user.id)
+    is_admin_or_writer = user_signed_in? &&
+        (current_user.admin? || submit.problem.writer_user_id == current_user.id)
+
+    if !user_signed_in? || (!is_admin_or_writer && submit.user_id != current_user.id)
       unless contest.end_at.past?
         render json: {
             error: 'この提出は非公開です'
@@ -61,7 +64,7 @@ class Api::SubmitsController < ApplicationController
                   .joins(:testcases)
                   .pluck(:testcase_id)
 
-    in_contest = contest.end_at.future? && !current_user&.admin?
+    in_contest = contest.end_at.future? && !is_admin_or_writer
 
     require('set')
     render json: submit,
