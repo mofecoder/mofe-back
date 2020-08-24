@@ -71,7 +71,6 @@ class Api::TestcasesController < ApplicationController
 
   def upload
     file_path = "./tmp/#{SecureRandom.uuid}.zip"
-    p params
     # @type [ActionDispatch::Http::UploadedFile]
     file = params[:file]
     File.open(file_path, 'wb') do |f|

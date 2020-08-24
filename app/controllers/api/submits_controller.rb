@@ -32,7 +32,7 @@ class Api::SubmitsController < ApplicationController
                       .includes(:user)
                       .where("contests.slug = ?", contest_slug)
                       .order(created_at: :desc)
-    
+
     render json: all_submits
   end
 
@@ -54,8 +54,19 @@ class Api::SubmitsController < ApplicationController
       end
     end
 
+    samples = submit
+                  .problem
+                  .testcase_sets
+                  .where(is_sample: 1)
+                  .joins(:testcases)
+                  .pluck(:testcase_id)
 
-    render json: submit, serializer: SubmitDetailSerializer
+    require('set')
+
+    render json: submit,
+           serializer: SubmitDetailSerializer,
+           in_contest: contest.end_at.future? && !current_user&.admin?,
+           samples: Set.new(samples)
   end
 
   def create
