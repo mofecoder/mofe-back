@@ -8,13 +8,20 @@ class Api::SubmitsController < ApplicationController
     end
     contest_slug = params[:contest_slug]
     user_id = current_user.id
+
+    problem_ids = Contest.find_by!(slug: contest_slug).problems.pluck(:id)
+
     # :contest_slugからsubmitを抽出する
-    my_submits = Submit.preload(:problem, :user)
+    my_submits = Submit.includes(:problem, :user)
                      .joins(problem: :contest)
                      .where("contests.slug = ?", contest_slug)
                      .search_by_user_id(user_id)
-                     .order(created_at: :desc)
-    render json: my_submits
+
+    submit_ids = my_submits.pluck(:id)
+    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
+    testcase_count = Testcase.where(problem_id: problem_ids).group(:problem_id).count
+
+    render json: my_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
   end
 
   def all
@@ -27,13 +34,16 @@ class Api::SubmitsController < ApplicationController
       return
     end
 
-    all_submits = Submit.preload(:problem)
+    problem_ids = contest.problems.pluck(:id)
+    all_submits = Submit.includes(:problem, :user)
                       .joins(problem: :contest)
-                      .includes(:user)
                       .where("contests.slug = ?", contest_slug)
-                      .order(created_at: :desc)
 
-    render json: all_submits
+    submit_ids = all_submits.pluck(:id)
+    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
+    testcase_count = Testcase.where(problem_id: problem_ids).group(:problem_id).count
+
+    render json: all_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
   end
 
   def show
