@@ -1,6 +1,13 @@
 require 'google/cloud/storage'
+require "logger"
 
 module Utils::GoogleCloudStorageClient
+  lgr = Logger.new $stderr
+  lgr.level = Logger::WARN
+
+  # Set the Google API Client logger
+  Google::Apis.logger = lgr
+
   @storage = Google::Cloud::Storage.new(
       project_id: Rails.application.credentials.gcs[:project_id],
       credentials: {

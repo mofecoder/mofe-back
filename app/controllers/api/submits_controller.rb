@@ -47,6 +47,7 @@ class Api::SubmitsController < ApplicationController
   end
 
   def show
+    #@type [Submit]
     submit = Submit.includes(testcase_results: :testcase).find(params[:id])
     contest = submit.problem.contest
 
@@ -75,12 +76,18 @@ class Api::SubmitsController < ApplicationController
                   .pluck(:testcase_id)
 
     in_contest = contest.end_at.future? && !is_admin_or_writer
+    result_counts = {}
+    result_counts[submit.id] = submit.testcase_results.count
+    testcase_count = {}
+    testcase_count[submit.problem.id] = submit.problem.testcases.count
 
     require('set')
     render json: submit,
            serializer: SubmitDetailSerializer,
            in_contest: in_contest,
-           samples: in_contest ? Set.new(samples) : nil
+           samples: in_contest ? Set.new(samples) : nil,
+           result_counts: result_counts,
+           testcase_count: testcase_count
   end
 
   def create
