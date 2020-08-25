@@ -5,7 +5,7 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems
   def index
-    problems = Problem.includes(:writer_user, :contest)
+    problems = Problem.includes(:writer_user, :contest).order(id: :desc)
     problems.where!(writer_user_id: current_user.id) unless current_user.admin?
 
     render json: problems
