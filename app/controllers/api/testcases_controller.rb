@@ -89,13 +89,12 @@ class Api::TestcasesController < ApplicationController
       zip.each do |entry|
         next unless entry.ftype == :'file'
 
-        match_input = /\Ainput\/([\w_]+)\.txt\z/.match(entry.name)
-        match_output = /\Aoutput\/([\w_]+)\.txt\z/.match(entry.name)
-
+        match_input = /\Ainput\/([\w_-]+)\.txt\z/.match(entry.name)
+        match_output = /\Aoutput\/([\w_-]+)\.txt\z/.match(entry.name)
         if match_input.present?
-          inputs[match_input[1]] = entry.get_input_stream.read
+          inputs[match_input[1].gsub(/-/, '_')] = entry.get_input_stream.read
         elsif match_output.present?
-          outputs[match_output[1]] = entry.get_input_stream.read
+          outputs[match_output[1].gsub(/-/, '_')] = entry.get_input_stream.read
         end
       end
     rescue
@@ -121,6 +120,7 @@ class Api::TestcasesController < ApplicationController
     end
 
     existing_testcase_names = Set.new @problem.testcases.pluck(:name)
+    all_testcase_set = @problem.testcases.find_by!(name: 'all')
 
     ActiveRecord::Base.transaction do
       common_filename.each do |name|
@@ -135,7 +135,9 @@ class Api::TestcasesController < ApplicationController
 
         input = inputs[name].gsub(/\r\n|\r/, "\n")
         output = outputs[name].gsub(/\r\n|\r/, "\n")
+        # @type [Testcase]
         testcase = @problem.testcases.create(name: name, input: input, output: output)
+        testcase.testcase_testcase_sets.create(testcase_set_id: all_testcase_set.id)
       end
     end
 

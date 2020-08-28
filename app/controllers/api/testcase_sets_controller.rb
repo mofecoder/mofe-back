@@ -9,8 +9,8 @@ class Api::TestcaseSetsController < ApplicationController
   def create
     name = params[:testcase_set][:name]
     points = params[:testcase_set][:points]
-    unless @problem.testcase_sets.find_by(problem_id: params[:problem_id], name: name).nil?
-      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: 400
+    if @problem.testcase_sets.find_by(problem_id: params[:problem_id], name: name).present?
+      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
       return
     end
 
@@ -24,15 +24,27 @@ class Api::TestcaseSetsController < ApplicationController
 
   def update
     set = TestcaseSet.find(params[:id])
-    unless set.update(update_params)
-      render json: { error: set.errors }, status: :unprocessable_entity
+    param = update_params
+    name = param[:name]
+
+    if set.name != name && (set.name == 'all' || set.name == 'sample')
+      render json: { error: "このテストケースは名前を変更できません。"}, status: :bad_request
+      return
     end
+
+    if @problem.testcase_sets.find_by(problem_id: params[:problem_id], name: name).present?
+      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
+      return
+    end
+
+    set.update!(param)
   end
 
   def destroy
     set = TestcaseSet.find(params[:id])
     if set.name == 'all' || set.name == 'sample'
-      render json: { error: "このテストケースは削除できません。"}
+      render json: { error: "このテストケースは削除できません。"}, status: :bad_request
+      return
     end
     set.destroy!
   end
