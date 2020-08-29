@@ -24,10 +24,15 @@ class Api::SubmitsController < ApplicationController
       submit_updated_at = submit.updated_at
 
       # @type [Array<ActiveSupport::TimeWithZone>]
-      c_testcases = all_testcases[submit.problem_id].map { |x| x.created_at }
-      idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
 
-      testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+      if c_testcases.nil?
+        testcase_count[submit.id] = 0
+      else
+        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+
+        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+      end
     end
 
     submit_ids = my_submits.pluck(:id)
@@ -60,10 +65,15 @@ class Api::SubmitsController < ApplicationController
       submit_updated_at = submit.updated_at
 
       # @type [Array<ActiveSupport::TimeWithZone>]
-      c_testcases = all_testcases[submit.problem_id].map { |x| x.created_at }
-      idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
 
-      testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+      if c_testcases.nil?
+        testcase_count[submit.id] = 0
+      else
+        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+
+        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+      end
     end
 
     submit_ids = all_submits.pluck(:id)
