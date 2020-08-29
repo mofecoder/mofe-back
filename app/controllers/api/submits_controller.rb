@@ -10,16 +10,28 @@ class Api::SubmitsController < ApplicationController
     user_id = current_user.id
 
     problem_ids = Contest.find_by!(slug: contest_slug).problems.pluck(:id)
-
-    # :contest_slugからsubmitを抽出する
     my_submits = Submit.includes(:problem, :user)
                      .joins(problem: :contest)
                      .where("contests.slug = ?", contest_slug)
                      .search_by_user_id(user_id)
 
+    # problemId -> testcase.created_at
+    all_testcases = get_testcases(problem_ids)
+
+    testcase_count = {}
+    my_submits.each do |submit|
+      # submit.updated_at > testcase.created_at
+      submit_updated_at = submit.updated_at
+
+      # @type [Array<ActiveSupport::TimeWithZone>]
+      c_testcases = all_testcases[submit.problem_id].map { |x| x.created_at }
+      idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+
+      testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+    end
+
     submit_ids = my_submits.pluck(:id)
     result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-    testcase_count = Testcase.where(problem_id: problem_ids).group(:problem_id).count
 
     render json: my_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
   end
@@ -39,9 +51,23 @@ class Api::SubmitsController < ApplicationController
                       .joins(problem: :contest)
                       .where("contests.slug = ?", contest_slug)
 
+    # problemId -> testcase.created_at
+    all_testcases = get_testcases(problem_ids)
+
+    testcase_count = {}
+    all_submits.each do |submit|
+      # submit.updated_at > testcase.created_at
+      submit_updated_at = submit.updated_at
+
+      # @type [Array<ActiveSupport::TimeWithZone>]
+      c_testcases = all_testcases[submit.problem_id].map { |x| x.created_at }
+      idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+
+      testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+    end
+
     submit_ids = all_submits.pluck(:id)
     result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-    testcase_count = Testcase.where(problem_id: problem_ids).group(:problem_id).count
 
     render json: all_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
   end
@@ -77,11 +103,13 @@ class Api::SubmitsController < ApplicationController
 
     in_contest = contest.end_at.future? && !is_admin_or_writer
     r_count = submit.testcase_results.count
-    t_count =submit.problem.testcases.count
+    t_count = submit.problem.testcases
+                  .where('created_at < ?', submit.updated_at)
+                  .count
     result_counts = {}
     result_counts[submit.id] = r_count
     testcase_count = {}
-    testcase_count[submit.problem.id] = t_count
+    testcase_count[submit.id] = t_count
 
     require('set')
     render json: submit,
@@ -124,6 +152,14 @@ class Api::SubmitsController < ApplicationController
   end
 
   private
+
+  def get_testcases(problem_ids)
+    Testcase.where(problem_id: problem_ids)
+        .select(:problem_id, :created_at)
+        .order(:created_at)
+        .to_a
+        .group_by { |t| t.problem_id }
+  end
 
   # pathを生やす
   def make_path
