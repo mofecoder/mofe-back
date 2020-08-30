@@ -10,7 +10,8 @@ class Api::SubmitsController < ApplicationController
     user_id = current_user.id
 
     problem_ids = Contest.find_by!(slug: contest_slug).problems.pluck(:id)
-    my_submits = Submit.includes(:problem, :user)
+    my_submits = Submit.includes(problem: :testcase_sets)
+                     .includes(:user)
                      .joins(problem: :contest)
                      .where("contests.slug = ?", contest_slug)
                      .search_by_user_id(user_id)
@@ -52,7 +53,8 @@ class Api::SubmitsController < ApplicationController
     end
 
     problem_ids = contest.problems.pluck(:id)
-    all_submits = Submit.includes(:problem, :user)
+    all_submits = Submit.includes(problem: :testcase_sets)
+                      .includes(:user)
                       .joins(problem: :contest)
                       .where("contests.slug = ?", contest_slug)
 
