@@ -38,7 +38,7 @@ class Api::TestcaseSetsController < ApplicationController
         return
       end
     end
-    
+
     set.update!(param)
   end
 

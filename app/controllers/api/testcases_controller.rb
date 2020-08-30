@@ -8,7 +8,7 @@ class Api::TestcasesController < ApplicationController
 
   def index
     # @type [Array<TestcaseSet>]
-    testcase_sets = @problem.testcase_sets.order(is_sample: :desc, points: :desc).to_a
+    testcase_sets = @problem.testcase_sets.order(is_sample: :desc, name: :asc).to_a
     # @type [Array<Testcase>]
     testcases = @problem.testcases.includes(:testcase_sets).to_a
 
