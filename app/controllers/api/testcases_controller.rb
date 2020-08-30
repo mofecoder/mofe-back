@@ -57,7 +57,10 @@ class Api::TestcasesController < ApplicationController
       render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: 400
       return
     end
-    testcase = @problem.testcases.create(create_params)
+    testcase = @problem.testcases.new(create_params)
+    testcase.input_data = params[:testcase][:input]
+    testcase.output_data = params[:testcase][:output]
+    testcase.save!
     set = TestcaseSet.find_by(problem_id: @problem.id, name: 'all')
     TestcaseTestcaseSet.create(testcase_id: testcase.id, testcase_set_id: set.id)
     render status: :created
@@ -120,7 +123,7 @@ class Api::TestcasesController < ApplicationController
     end
 
     existing_testcase_names = Set.new @problem.testcases.pluck(:name)
-    all_testcase_set = @problem.testcases.find_by!(name: 'all')
+    all_testcase_set = @problem.testcase_sets.find_by!(name: 'all')
 
     ActiveRecord::Base.transaction do
       common_filename.each do |name|
@@ -136,7 +139,9 @@ class Api::TestcasesController < ApplicationController
         input = inputs[name].gsub(/\r\n|\r/, "\n")
         output = outputs[name].gsub(/\r\n|\r/, "\n")
         # @type [Testcase]
-        testcase = @problem.testcases.create(name: name, input: input, output: output)
+        testcase = @problem.testcases.create(name: name)
+        testcase.input_data = input
+        testcase.output_data = output
         testcase.testcase_testcase_sets.create(testcase_set_id: all_testcase_set.id)
       end
     end
@@ -174,6 +179,6 @@ class Api::TestcasesController < ApplicationController
   end
 
   def create_params
-    params.required(:testcase).permit(:name, :input, :output, :explanation)
+    params.required(:testcase).permit(:name, :explanation)
   end
 end

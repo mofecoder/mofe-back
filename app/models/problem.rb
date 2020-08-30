@@ -12,10 +12,11 @@ class Problem < ApplicationRecord
     return set unless set
     set
       .testcases
+      .includes(:problem)
       .order(:id)
       .map do |m| {
-          input: m.input,
-          output: m.output,
+          input: m.input_data(true),
+          output: m.output_data(true),
           explanation: m.explanation
       }
     end

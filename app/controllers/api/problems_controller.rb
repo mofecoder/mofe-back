@@ -20,6 +20,7 @@ class Api::ProblemsController < ApplicationController
   def create
     ActiveRecord::Base.transaction do
       @problem = Problem.new(problem_params)
+      @problem.uuid = SecureRandom.uuid
       @problem.writer_user_id = current_user.id
 
       if @problem.save
