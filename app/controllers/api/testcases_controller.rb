@@ -109,7 +109,7 @@ class Api::TestcasesController < ApplicationController
 
     # 共通するファイル名
     message = []
-    common_filename = Set.new(inputs.keys + outputs.keys)
+    common_filename = Set.new(inputs.keys & outputs.keys)
     unless ok && common_filename.any?
       render json: {error: 'zipファイルの形式が正しくありません。'}, status: :bad_request
       return
