@@ -27,16 +27,18 @@ class Api::TestcaseSetsController < ApplicationController
     param = update_params
     name = param[:name]
 
-    if set.name != name && (set.name == 'all' || set.name == 'sample')
-      render json: { error: "このテストケースは名前を変更できません。"}, status: :bad_request
-      return
-    end
+    if set.name != name
+      if set.name == 'all' || set.name == 'sample'
+        render json: { error: "このテストケースは名前を変更できません。"}, status: :bad_request
+        return
+      end
 
-    if @problem.testcase_sets.find_by(problem_id: params[:problem_id], name: name).present?
-      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
-      return
+      if @problem.testcase_sets.exists?(problem_id: params[:problem_id], name: name)
+        render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
+        return
+      end
     end
-
+    
     set.update!(param)
   end
 
