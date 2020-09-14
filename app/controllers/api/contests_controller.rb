@@ -10,7 +10,8 @@ class Api::ContestsController < ApplicationController
 
   def show
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
-    render json: contest, serializer: ContestDetailSerializer
+    include_tasks = contest.start_at.past? || (user_signed_in? && current_user.admin?)
+    render json: contest, serializer: ContestDetailSerializer, include_tasks: include_tasks
   end
 
   def create

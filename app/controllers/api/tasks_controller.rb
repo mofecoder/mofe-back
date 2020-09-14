@@ -11,8 +11,18 @@ class Api::TasksController < ApplicationController
   def show
     contest = Contest.find_by!(slug: params[:contest_slug])
     task = Problem
-               .includes(testcase_sets: {testcase_testcase_sets: :testcase})
-               .find_by!(contest_id: contest.id, slug: params[:slug])
+           .includes(testcase_sets: {testcase_testcase_sets: :testcase})
+           .find_by!(contest_id: contest.id, slug: params[:slug])
+    if contest.start_at.future?
+      unless user_signed_in?
+        render_403
+        return
+      end
+      unless current_user.admin? || task.writer_user_id == current_user.id
+        render_403
+        return
+      end
+    end
     render json: task, serializer: TaskSerializer
   end
 

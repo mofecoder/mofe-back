@@ -5,11 +5,7 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems
   def index
-    unless current_user.admin? || current_user.writer?
-      render json: {error: 'Forbidden'}, status: :forbidden
-      return
-    end
-    problems = Problem.includes(:writer_user, :contest)
+    problems = Problem.includes(:writer_user, :contest).order(id: :desc)
     problems.where!(writer_user_id: current_user.id) unless current_user.admin?
 
     render json: problems
@@ -17,11 +13,6 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems/1
   def show
-    unless current_user.admin? || @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
-      return
-    end
-
     render json: @problem, serializer: ProblemDetailSerializer
   end
 
@@ -29,15 +20,18 @@ class Api::ProblemsController < ApplicationController
   def create
     ActiveRecord::Base.transaction do
       @problem = Problem.new(problem_params)
+      @problem.uuid = SecureRandom.uuid
       @problem.writer_user_id = current_user.id
 
       if @problem.save
         @problem.testcase_sets.create(
             name: 'sample',
+            points: 0,
             is_sample: true
         )
         @problem.testcase_sets.create(
             name: 'all',
+            points: 100,
             is_sample: false
         )
 
@@ -51,7 +45,7 @@ class Api::ProblemsController < ApplicationController
   # PATCH/PUT /problems/1
   def update
     unless current_user.admin? || @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
       return
     end
     if @problem.update(problem_params)
@@ -75,7 +69,7 @@ class Api::ProblemsController < ApplicationController
 
   def authenticate_writer!
     unless current_user.admin? || current_user.writer?
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
     end
   end
 end

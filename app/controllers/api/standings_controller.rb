@@ -11,6 +11,7 @@ class Api::StandingsController < ApplicationController
 
     problems = Problem.joins(:contest)
                    .where('contests.slug': params[:contest_slug])
+                   .order(:position)
                    .map { |p| [p.id, p] }.to_h
 
     # @type [Hash]
@@ -21,8 +22,8 @@ class Api::StandingsController < ApplicationController
     end
 
     res = []
-    solved = problems.to_a.map { |d| [d[0], 0]}.to_h
-    trying = problems.to_a.map { |d| [d[0], 0]}.to_h
+    solved = problems.to_a.map { |d| [d[0], 0] }.to_h
+    trying = problems.to_a.map { |d| [d[0], 0] }.to_h
     # @type [Array<Submit>] value
     users.each do |user_id, value|
       ls = []
@@ -30,14 +31,18 @@ class Api::StandingsController < ApplicationController
       score_sum = 0
       time_max = 0
       penalty = 0
-      problems.each do |id, _|
+      problems.each do |id, problem|
         # @type [Array<Submit>] s
         s = group[id]
-        if s.nil?
+        if s.nil? || user_id == problem.writer_user_id
           ls << {}
           next
         end
         tmp = aggregate(s)
+        if tmp.nil?
+          ls << {}
+          next
+        end
         tmp[:time] = (tmp[:time] - started_at).to_i
 
         if tmp[:score] > 0
@@ -86,9 +91,21 @@ class Api::StandingsController < ApplicationController
 
     res.sort! do |a, b|
       if a[:result][:score] == b[:result][:score]
-        b[:result][:time] <=> a[:result][:time]
+        a[:result][:time] <=> b[:result][:time]
       else
         b[:result][:score] <=> a[:result][:score]
+      end
+    end
+
+    if res.length > 0
+      res[0][:rank] = 1
+      1.upto(res.length - 1) do |i|
+        if res[i - 1][:result][:score] == res[i][:result][:score] &&
+            res[i - 1][:result][:time] == res[i][:result][:time]
+          res[i][:rank] = res[i - 1][:rank]
+        else
+          res[i][:rank] = i + 1
+        end
       end
     end
 
@@ -101,32 +118,32 @@ class Api::StandingsController < ApplicationController
 
   private
 
-  # @param [Array<Submit>] submits
-  # @return [Hash]
-  def aggregate(submits)
-    confirmed_pena = 0
-    now_pena = 0
-    max_point = -1
-    time = nil
+    # @param [Array<Submit>] submits
+    # @return [Hash, nil]
+    def aggregate(submits)
+      confirmed_pena = 0
+      now_pena = 0
+      max_point = -1
+      time = nil
 
-    submits.each do |submit|
-      if %w(WJ WR IE CE).include?(submit.status)
-        next
+      submits.each do |submit|
+        if %w(WJ WR IE CE).include?(submit.status)
+          next
+        end
+        if %w(WA RE OLE MLE TLE).include?(submit.status)
+          now_pena += 1
+        end
+        if submit.point > max_point
+          max_point = submit.point
+          confirmed_pena = now_pena
+          time = submit.created_at
+        end
       end
-      if %w(WA RE OLE MLE TLE).include?(submit.status)
-        now_pena += 1
-      end
-      if submit.point > max_point
-        max_point = submit.point
-        confirmed_pena = now_pena
-        time = submit.created_at
-      end
+
+      max_point == -1 ? nil : {
+          score: max_point,
+          time: time,
+          penalty: confirmed_pena
+      }
     end
-
-    {
-        score: max_point,
-        time: time,
-        penalty: confirmed_pena
-    }
-  end
 end

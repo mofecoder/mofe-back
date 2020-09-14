@@ -3,7 +3,7 @@ class Api::Manage::ProblemsController < ApplicationController
   # GET /problems
   def unset_problems
     unless current_user.admin?
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
       return
     end
     problems = Problem.includes(:writer_user).where(contest_id: nil)

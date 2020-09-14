@@ -36,7 +36,7 @@ Rails.application.routes.draw do
           patch 'change_state'
         end
       end
-      resources :testcase_sets, only: [:create, :destroy]
+      resources :testcase_sets, only: [:create, :show, :update, :destroy]
     end
   end
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]

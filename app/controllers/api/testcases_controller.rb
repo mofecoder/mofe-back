@@ -8,7 +8,7 @@ class Api::TestcasesController < ApplicationController
 
   def index
     # @type [Array<TestcaseSet>]
-    testcase_sets = @problem.testcase_sets.order(is_sample: :desc, points: :desc).to_a
+    testcase_sets = @problem.testcase_sets.order(is_sample: :desc, name: :asc).to_a
     # @type [Array<Testcase>]
     testcases = @problem.testcases.includes(:testcase_sets).to_a
 
@@ -57,7 +57,10 @@ class Api::TestcasesController < ApplicationController
       render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: 400
       return
     end
-    testcase = @problem.testcases.create(create_params)
+    testcase = @problem.testcases.new(create_params)
+    testcase.input_data = params[:testcase][:input]
+    testcase.output_data = params[:testcase][:output]
+    testcase.save!
     set = TestcaseSet.find_by(problem_id: @problem.id, name: 'all')
     TestcaseTestcaseSet.create(testcase_id: testcase.id, testcase_set_id: set.id)
     render status: :created
@@ -89,13 +92,12 @@ class Api::TestcasesController < ApplicationController
       zip.each do |entry|
         next unless entry.ftype == :'file'
 
-        match_input = /\Ainput\/([\w_]+)\.txt\z/.match(entry.name)
-        match_output = /\Aoutput\/([\w_]+)\.txt\z/.match(entry.name)
-
+        match_input = /\Ainput\/([\w_-]+)\.txt\z/.match(entry.name)
+        match_output = /\Aoutput\/([\w_-]+)\.txt\z/.match(entry.name)
         if match_input.present?
-          inputs[match_input[1]] = entry.get_input_stream.read
+          inputs[match_input[1].gsub(/-/, '_')] = entry.get_input_stream.read
         elsif match_output.present?
-          outputs[match_output[1]] = entry.get_input_stream.read
+          outputs[match_output[1].gsub(/-/, '_')] = entry.get_input_stream.read
         end
       end
     rescue
@@ -107,7 +109,7 @@ class Api::TestcasesController < ApplicationController
 
     # 共通するファイル名
     message = []
-    common_filename = Set.new(inputs.keys + outputs.keys)
+    common_filename = Set.new(inputs.keys & outputs.keys)
     unless ok && common_filename.any?
       render json: {error: 'zipファイルの形式が正しくありません。'}, status: :bad_request
       return
@@ -121,6 +123,7 @@ class Api::TestcasesController < ApplicationController
     end
 
     existing_testcase_names = Set.new @problem.testcases.pluck(:name)
+    all_testcase_set = @problem.testcase_sets.find_by!(name: 'all')
 
     ActiveRecord::Base.transaction do
       common_filename.each do |name|
@@ -135,7 +138,11 @@ class Api::TestcasesController < ApplicationController
 
         input = inputs[name].gsub(/\r\n|\r/, "\n")
         output = outputs[name].gsub(/\r\n|\r/, "\n")
-        @problem.testcases.create(name: name, input: input, output: output)
+        # @type [Testcase]
+        testcase = @problem.testcases.create(name: name)
+        testcase.input_data = input
+        testcase.output_data = output
+        testcase.testcase_testcase_sets.create(testcase_set_id: all_testcase_set.id)
       end
     end
 
@@ -149,7 +156,7 @@ class Api::TestcasesController < ApplicationController
     testcase = @problem.testcases.find(params[:id])
     testcase_set_id = params[:testcase_set_id]
     @problem.testcase_sets.find(testcase_set_id)
-    s = testcase.testcase_testcase_sets.find_by(testcase_set_id: testcase_set_id)
+    s = TestcaseTestcaseSet.find_by(testcase_id: testcase.id, testcase_set_id: testcase_set_id)
 
     if params[:state]
       return if s.present?
@@ -167,11 +174,11 @@ class Api::TestcasesController < ApplicationController
   def authenticate_writer!
     @problem = Problem.find(params[:problem_id])
     unless current_user.admin? || current_user.writer? && @problem.writer_user_id == current_user.id
-      render json: {error: 'Forbidden'}, status: :forbidden
+      render_403
     end
   end
 
   def create_params
-    params.required(:testcase).permit(:name, :input, :output, :explanation)
+    params.required(:testcase).permit(:name, :explanation)
   end
 end

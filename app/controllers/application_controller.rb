@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::API
   before_action :configure_permitted_parameters, if: :devise_controller?
+  rescue_from ActionController::RoutingError, with: :render_404
 
   include DeviseTokenAuth::Concerns::SetUserByToken
 
@@ -9,6 +10,10 @@ class ApplicationController < ActionController::API
 
   def render_500(e = nil)
     render json: { status: 500, error: e }, status: 500
+  end
+
+  def render_403
+    render json: { error: '権限がありません。' }, status: :forbidden
   end
 
   # @return [User]
@@ -22,7 +27,7 @@ class ApplicationController < ActionController::API
 
   def authenticate_admin_user!
     unless current_user.admin?
-      render json: { error: 'Forbidden' }, status: :forbidden
+      render_403
     end
   end
 
