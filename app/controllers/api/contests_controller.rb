@@ -5,12 +5,13 @@ class Api::ContestsController < ApplicationController
   before_action :set_contest, except: [:index, :create]
 
   def index
-    render json: Contest.all.as_json(only: [:slug, :name, :start_at, :end_at])
+    render json: Contest.all.order(start_at: :desc).as_json(only: [:slug, :name, :start_at, :end_at])
   end
 
   def show
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
-    render json: contest, serializer: ContestDetailSerializer
+    include_tasks = contest.start_at.past? || (user_signed_in? && current_user.admin?)
+    render json: contest, serializer: ContestDetailSerializer, include_tasks: include_tasks
   end
 
   def create

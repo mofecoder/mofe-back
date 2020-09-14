@@ -8,10 +8,15 @@ class Problem < ApplicationRecord
   validates :slug, uniqueness: true, allow_nil: true
 
   def samples
-    testcase_sets.find_by(problem_id: id, is_sample: 1)&.testcases&.map do |m|
-      {
-          input: m.input,
-          output: m.output,
+    set = testcase_sets.find_by(problem_id: id, is_sample: 1)
+    return set unless set
+    set
+      .testcases
+      .includes(:problem)
+      .order(:id)
+      .map do |m| {
+          input: m.input_data(true),
+          output: m.output_data(true),
           explanation: m.explanation
       }
     end
