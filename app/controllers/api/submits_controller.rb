@@ -96,8 +96,11 @@ class Api::SubmitsController < ApplicationController
       return
     end
 
-    is_admin_or_writer = user_signed_in? &&
-        (current_user.admin? || submit.problem.writer_user_id == current_user.id)
+    is_admin_or_writer = user_signed_in? && (
+      current_user.admin? ||
+      submit.problem.writer_user_id == current_user.id ||
+      submit.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists?
+    )
 
     if !user_signed_in? || (!is_admin_or_writer && submit.user_id != current_user.id)
       unless contest.end_at.past?

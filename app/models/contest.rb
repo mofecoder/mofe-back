@@ -9,6 +9,8 @@ class Contest < ApplicationRecord
   end
 
   def is_writer_or_tester(user)
+    return false if user.nil?
+
     return true if user.admin?
 
     writers = self.problems.pluck(:writer_user_id)
