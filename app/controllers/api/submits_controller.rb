@@ -47,9 +47,11 @@ class Api::SubmitsController < ApplicationController
     # @type [Contest]
     contest = Contest.find_by!(slug: contest_slug)
 
-    unless contest.end_at.past? || (user_signed_in? && current_user.admin?)
-      render_403
-      return
+    unless contest.end_at.past?
+      unless user_signed_in? && contest.is_writer_or_tester(current_user)
+        render_403
+        return
+      end
     end
 
     problem_ids = contest.problems.pluck(:id)
@@ -139,12 +141,20 @@ class Api::SubmitsController < ApplicationController
     end
 
     problem = Problem.find_by!(slug: params[:task_slug])
+    _submit(problem, request.body.read)
+  end
+
+  private
+
+  def _submit(problem, source)
     if problem.contest.start_at.future?
       unless user_signed_in?
         render_403
         return
       end
-      unless current_user.admin? || problem.writer_user_id == current_user.id
+      if !current_user.admin? &&
+          problem.writer_user_id != current_user.id &&
+          problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
         render_403
         return
       end
@@ -158,12 +168,9 @@ class Api::SubmitsController < ApplicationController
     submit.lang = request.headers[:lang]
     submit.status = 'WJ'
 
-    source = request.body.read
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
     submit.save!
   end
-
-  private
 
   def get_testcases(problem_ids)
     Testcase.where(problem_id: problem_ids)

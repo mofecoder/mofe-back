@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_30_065702) do
+ActiveRecord::Schema.define(version: 2020_09_15_074315) do
 
   create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "slug", null: false
@@ -107,6 +107,17 @@ ActiveRecord::Schema.define(version: 2020_08_30_065702) do
     t.index ["problem_id"], name: "index_testcases_on_problem_id"
   end
 
+  create_table "tester_relations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "problem_id", null: false
+    t.bigint "tester_user_id", null: false
+    t.boolean "approved", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+    t.index ["problem_id"], name: "index_tester_relations_on_problem_id"
+    t.index ["tester_user_id"], name: "index_tester_relations_on_tester_user_id"
+  end
+
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
@@ -145,4 +156,6 @@ ActiveRecord::Schema.define(version: 2020_08_30_065702) do
   add_foreign_key "testcase_testcase_sets", "testcase_sets"
   add_foreign_key "testcase_testcase_sets", "testcases"
   add_foreign_key "testcases", "problems"
+  add_foreign_key "tester_relations", "problems"
+  add_foreign_key "tester_relations", "users", column: "tester_user_id"
 end

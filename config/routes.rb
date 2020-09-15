@@ -37,6 +37,9 @@ Rails.application.routes.draw do
         end
       end
       resources :testcase_sets, only: [:create, :show, :update, :destroy]
+      resource :tester_relations, only: [:create] do
+      end
+      delete 'tester_relations', to: 'tester_relations#destroy'
     end
   end
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]

@@ -18,7 +18,9 @@ class Api::TasksController < ApplicationController
         render_403
         return
       end
-      unless current_user.admin? || task.writer_user_id == current_user.id
+      if !current_user.admin? &&
+          task.writer_user_id != current_user.id &&
+          task.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
         render_403
         return
       end

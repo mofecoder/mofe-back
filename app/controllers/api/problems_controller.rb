@@ -1,5 +1,4 @@
 class Api::ProblemsController < ApplicationController
-  before_action :set_problem, only: [:show, :update]
   before_action :authenticate_user!
   before_action :authenticate_writer!
 
@@ -13,7 +12,14 @@ class Api::ProblemsController < ApplicationController
 
   # GET /problems/1
   def show
-    render json: @problem, serializer: ProblemDetailSerializer
+    problem = Problem.includes(:testers).find(params[:id])
+    if !current_user.admin? &&
+        problem.writer_user_id != current_user.id &&
+        problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
+      render_403
+      return
+    end
+    render json: problem, serializer: ProblemDetailSerializer
   end
 
   # POST /problems
@@ -48,19 +54,16 @@ class Api::ProblemsController < ApplicationController
       render_403
       return
     end
-    if @problem.update(problem_params)
+
+    problem = Problem.find(params[:id])
+    if problem.update(problem_params)
       render serializer: ProblemDetailSerializer
     else
-      render json: @problem.errors, status: :unprocessable_entity
+      render json: problem.errors, status: :unprocessable_entity
     end
   end
 
   private
-
-  # Use callbacks to share common setup or constraints between actions.
-  def set_problem
-    @problem = Problem.find(params[:id])
-  end
 
   # Only allow a trusted parameter "white list" through.
   def problem_params
