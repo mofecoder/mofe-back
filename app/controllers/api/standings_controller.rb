@@ -14,9 +14,15 @@ class Api::StandingsController < ApplicationController
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
 
+    require 'set'
+
+    writers = Set.new(contest.problems.pluck(:writer_user_id) +
+        TesterRelation.where(problem: contest.problems).pluck(:tester_user_id))
+
     # @type [Hash]
     users = {}
     submits.each do |submit|
+      next if writers.include?(submit.user_id)
       users[submit.user_id] = [] if users[submit.user_id].nil?
       users[submit.user_id] << submit
     end
