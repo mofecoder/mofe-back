@@ -4,7 +4,7 @@ class Api::ClarificationsController < ApplicationController
 
 
   def index
-    clarifications = @contest.clarifications.includes(:problem, :user)
+    clarifications = @contest.clarifications.includes(:problem, :user).order(updated_at: :desc)
 
     if !user_signed_in?
       problems = []
