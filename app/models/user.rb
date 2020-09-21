@@ -5,6 +5,7 @@ class User < ActiveRecord::Base
   has_many :writer_problems, class_name: 'Problem', foreign_key: 'writer_user_id'
   has_many :tester_relations, foreign_key: :tester_user_id, dependent: :destroy
   has_many :tester_problems, through: :tester_relations, source: :user
+  has_many :clarifications
 
   def login=(login)
     @login = login

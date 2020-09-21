@@ -6,6 +6,7 @@ class Problem < ApplicationRecord
   has_many :submits
   has_many :tester_relations, dependent: :destroy
   has_many :testers, through: :tester_relations, source: :user
+  has_many :clarifications
 
   validates :slug, uniqueness: true, allow_nil: true
 

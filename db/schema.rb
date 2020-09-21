@@ -10,7 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_09_15_074315) do
+ActiveRecord::Schema.define(version: 2020_09_20_152509) do
+
+  create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "contest_id", null: false
+    t.bigint "problem_id"
+    t.bigint "user_id", null: false
+    t.string "question", null: false
+    t.string "answer"
+    t.boolean "publish", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+    t.index ["contest_id"], name: "index_clarifications_on_contest_id"
+    t.index ["problem_id"], name: "index_clarifications_on_problem_id"
+    t.index ["user_id"], name: "index_clarifications_on_user_id"
+  end
 
   create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "slug", null: false
