@@ -139,7 +139,7 @@ class Api::StandingsController < ApplicationController
         if %w(WA RE OLE MLE TLE).include?(submit.status)
           now_pena += 1
         end
-        if submit.point > max_point
+        if (submit.point || 0) > max_point
           max_point = submit.point
           confirmed_pena = now_pena
           time = submit.created_at
