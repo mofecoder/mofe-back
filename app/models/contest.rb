@@ -3,6 +3,7 @@ class Contest < ApplicationRecord
   include ActiveModel::Model
 
   has_many :problems, -> { order(:position) }
+  has_many :clarifications
 
   def to_param
     slug
