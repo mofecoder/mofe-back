@@ -19,7 +19,7 @@ class Api::ClarificationsController < ApplicationController
                              .or(clarifications.where(problem_id: problems))
                              .or(clarifications.where(user_id: current_user.id))
       else
-        clarifications.where!(publish: true)
+        clarifications = clarifications.where(publish: true)
             .or(clarifications.where(user_id: current_user.id))
       end
     end
