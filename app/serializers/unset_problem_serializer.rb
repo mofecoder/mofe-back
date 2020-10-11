@@ -2,6 +2,6 @@ class UnsetProblemSerializer < ActiveModel::Serializer
   attributes :id, :name, :difficulty, :writer_user
 
   def writer_user
-    User.find(object.writer_user_id).name
+    object.writer_user.name
   end
 end
