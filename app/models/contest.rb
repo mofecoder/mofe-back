@@ -4,9 +4,15 @@ class Contest < ApplicationRecord
 
   has_many :problems, -> { order(:position) }
   has_many :clarifications
+  has_many :registrations
 
   def to_param
     slug
+  end
+
+  # @param [User] user
+  def registered?(user)
+    user.present? && (user.admin? || self.registrations.exists?(user_id: user.id))
   end
 
   def is_writer_or_tester(user)

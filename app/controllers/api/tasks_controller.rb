@@ -9,23 +9,31 @@ class Api::TasksController < ApplicationController
   end
 
   def show
+    # @type [Contest]
     contest = Contest.find_by!(slug: params[:contest_slug])
     task = Problem
            .includes(testcase_sets: {testcase_testcase_sets: :testcase})
            .find_by!(contest_id: contest.id, slug: params[:slug])
-    if contest.start_at.future?
-      unless user_signed_in?
-        render_403
-        return
-      end
-      if !current_user.admin? &&
-          task.writer_user_id != current_user.id &&
-          task.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
-        render_403
-        return
+
+    ok = true
+
+    if contest.end_at.future?
+      ok = contest.start_at.past? && contest.registered?(current_user)
+
+      if !ok && user_signed_in? && (
+        current_user.admin? ||
+        task.writer_user_id == current_user.id ||
+        task.tester_relations.exists?(tester_user_id: current_user.id, approved: true)
+      )
+        ok = true
       end
     end
-    render json: task, serializer: TaskSerializer
+
+    if ok
+      render json: task, serializer: TaskSerializer
+    else
+      render_403
+    end
   end
 
   def remove_from_contest

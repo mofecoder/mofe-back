@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         put 'set_task'
       end
       resources :clarifications, only: [:index, :show, :create, :update]
+      post 'register'
     end
     resources :problems, except: [:destroy] do
       resources :testcases, only: [:index, :show, :create, :destroy] do

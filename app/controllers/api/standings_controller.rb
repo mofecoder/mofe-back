@@ -1,7 +1,8 @@
 class Api::StandingsController < ApplicationController
   def index
     # TODO: ペナルティを設定できるようにする
-    contest = Contest.find_by!(slug: params[:contest_slug])
+    # @type [Contest]
+    contest = Contest.includes(registrations: :user).find_by!(slug: params[:contest_slug])
     started_at = contest.start_at
     submits = Submit.joins(problem: :contest).includes(:user)
                   .where('contests.slug': params[:contest_slug])
@@ -21,10 +22,15 @@ class Api::StandingsController < ApplicationController
 
     # @type [Hash]
     users = {}
+    user_table = {}
+    contest.registrations.each do |registration|
+      users[registration.user_id] = []
+      user_table[registration.user_id] = registration.user
+    end
+
     submits.each do |submit|
       next if writers.include?(submit.user_id)
-      users[submit.user_id] = [] if users[submit.user_id].nil?
-      users[submit.user_id] << submit
+      users[submit.user_id] << submit if users[submit.user_id].present?
     end
 
     res = []
@@ -73,7 +79,7 @@ class Api::StandingsController < ApplicationController
       end
 
       res << {
-          user_name: value[0].user.name,
+          user_name: user_table[user_id].name,
           result: {
               score: score_sum,
               time: time_max,

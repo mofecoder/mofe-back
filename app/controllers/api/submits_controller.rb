@@ -141,6 +141,7 @@ class Api::SubmitsController < ApplicationController
   def create
     if current_user.nil?
       render status: :unauthorized
+      return
     end
 
     problem = Problem.find_by!(slug: params[:task_slug])
@@ -158,6 +159,11 @@ class Api::SubmitsController < ApplicationController
       if !current_user.admin? &&
           problem.writer_user_id != current_user.id &&
           problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
+        render_403
+        return
+      end
+    elsif problem.contest.end_at.future?
+      unless contest.registered?(current_user)
         render_403
         return
       end
