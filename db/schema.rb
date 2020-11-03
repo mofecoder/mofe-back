@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_09_20_152509) do
+ActiveRecord::Schema.define(version: 2020_10_11_131109) do
 
-  create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "contest_id", null: false
     t.bigint "problem_id"
     t.bigint "user_id", null: false
@@ -27,11 +27,12 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["user_id"], name: "index_clarifications_on_user_id"
   end
 
-  create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "contests", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name", null: false
     t.string "description", limit: 4096
     t.integer "penalty_time", default: 0, null: false
+    t.boolean "need_registration", default: true, null: false
     t.datetime "start_at"
     t.datetime "end_at"
     t.datetime "created_at", precision: 6, null: false
@@ -40,7 +41,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["slug"], name: "index_contests_on_slug", unique: true
   end
 
-  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "slug"
     t.string "name"
     t.bigint "contest_id"
@@ -60,7 +61,17 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["writer_user_id"], name: "index_problems_on_writer_user_id"
   end
 
-  create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "registrations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "contest_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+    t.index ["contest_id"], name: "index_registrations_on_contest_id"
+    t.index ["user_id"], name: "index_registrations_on_user_id"
+  end
+
+  create_table "submits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "user_id", null: false
     t.bigint "problem_id", null: false
     t.string "path", null: false
@@ -76,7 +87,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["problem_id"], name: "index_submits_on_problem_id"
   end
 
-  create_table "testcase_results", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcase_results", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "submit_id", null: false
     t.bigint "testcase_id", null: false
     t.string "status", limit: 16, null: false
@@ -89,7 +100,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["testcase_id"], name: "index_testcase_results_on_testcase_id"
   end
 
-  create_table "testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "problem_id", null: false
     t.string "name", null: false
     t.integer "points", null: false
@@ -100,7 +111,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["problem_id"], name: "index_testcase_sets_on_problem_id"
   end
 
-  create_table "testcase_testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcase_testcase_sets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "testcase_id", null: false
     t.bigint "testcase_set_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -110,7 +121,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["testcase_set_id"], name: "index_testcase_testcase_sets_on_testcase_set_id"
   end
 
-  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "testcases", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "problem_id", default: 1, null: false
     t.string "name"
     t.text "input", size: :long
@@ -122,7 +133,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["problem_id"], name: "index_testcases_on_problem_id"
   end
 
-  create_table "tester_relations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "tester_relations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "problem_id", null: false
     t.bigint "tester_user_id", null: false
     t.boolean "approved", null: false
@@ -133,7 +144,7 @@ ActiveRecord::Schema.define(version: 2020_09_20_152509) do
     t.index ["tester_user_id"], name: "index_tester_relations_on_tester_user_id"
   end
 
-  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
     t.string "encrypted_password", default: "", null: false
