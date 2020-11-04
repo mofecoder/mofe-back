@@ -1,5 +1,5 @@
 class ContestDetailSerializer < ContestSerializer
-  attributes :description, :penalty_time, :tasks, :is_writer_or_tester
+  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered
 
   def tasks
     return nil unless @instance_options[:include_tasks]
@@ -11,5 +11,9 @@ class ContestDetailSerializer < ContestSerializer
 
   def is_writer_or_tester
     object.is_writer_or_tester(@instance_options[:user])
+  end
+
+  def registered
+    @instance_options[:registered] || false
   end
 end
