@@ -163,7 +163,7 @@ class Api::SubmitsController < ApplicationController
         return
       end
     elsif problem.contest.end_at.future?
-      unless contest.registered?(current_user)
+      unless problem.contest.registered?(current_user)
         render_403
         return
       end
