@@ -30,7 +30,7 @@ class Api::StandingsController < ApplicationController
 
     submits.each do |submit|
       next if writers.include?(submit.user_id)
-      users[submit.user_id] << submit if users[submit.user_id].present?
+      users[submit.user_id] << submit unless users[submit.user_id].nil?
     end
 
     res = []
