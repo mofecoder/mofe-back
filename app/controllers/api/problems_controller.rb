@@ -50,12 +50,12 @@ class Api::ProblemsController < ApplicationController
 
   # PATCH/PUT /problems/1
   def update
-    unless current_user.admin? || @problem.writer_user_id == current_user.id
+    problem = Problem.find(params[:id])
+    unless current_user.admin? || problem.writer_user_id == current_user.id
       render_403
       return
     end
 
-    problem = Problem.find(params[:id])
     if problem.update(problem_params)
       render serializer: ProblemDetailSerializer
     else
