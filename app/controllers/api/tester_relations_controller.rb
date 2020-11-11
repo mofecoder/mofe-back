@@ -26,19 +26,15 @@ class Api::TesterRelationsController < ApplicationController
   end
 
   def destroy
-    unless current_user.admin? || @problem.writer_user_id == current_user.id
-      render_403
-    end
-
     user = User.find_by!(name: params[:user_name])
     @problem.tester_relations.find_by!(tester_user_id: user.id).destroy
   end
-
+  6
   private
 
   def set_problem
     @problem = Problem.find(params[:problem_id])
-    unless current_user.admin? || problem.writer_user_id == current_user.id
+    unless current_user.admin? || @problem.writer_user_id == current_user.id
       render_403
     end
   end
