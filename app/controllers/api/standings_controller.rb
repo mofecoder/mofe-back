@@ -145,8 +145,9 @@ class Api::StandingsController < ApplicationController
         if %w(WA RE OLE MLE TLE).include?(submit.status)
           now_pena += 1
         end
-        if (submit.point || 0) > max_point
-          max_point = submit.point
+        score = submit.point || 0
+        if score > max_point
+          max_point = score
           confirmed_pena = now_pena
           time = submit.created_at
         end
