@@ -43,6 +43,11 @@ Rails.application.routes.draw do
       end
       delete 'tester_relations', to: 'tester_relations#destroy'
     end
+    resources :users, only: [:update] do
+      collection do
+        post 'update_rating'
+      end
+    end
   end
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
   match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]

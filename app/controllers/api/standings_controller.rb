@@ -78,8 +78,14 @@ class Api::StandingsController < ApplicationController
         ls << tmp
       end
 
+      user = user_table[user_id]
+
       res << {
-          user_name: user_table[user_id].name,
+          user: {
+            name: user.name,
+            atcoder_id: user.atcoder_id,
+            atcoder_rating: user.atcoder_rating
+          },
           result: {
               score: score_sum,
               time: time_max,
