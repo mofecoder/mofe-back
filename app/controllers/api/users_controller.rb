@@ -14,7 +14,7 @@ class Api::UsersController < ApplicationController
     param = user_update_param
     rating = 0
 
-    if atc.present?
+    if params[:atcoder_id].present?
       begin
         rating = get_rating(param[:atcoder_id])
       end
