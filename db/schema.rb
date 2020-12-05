@@ -10,7 +10,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_11_124217) do
+ActiveRecord::Schema.define(version: 2020_12_05_081335) do
+
+  create_table "_Migration", primary_key: "revision", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.text "name", null: false
+    t.text "datamodel", size: :long, null: false
+    t.text "status", null: false
+    t.integer "applied", null: false
+    t.integer "rolled_back", null: false
+    t.text "datamodel_steps", size: :long, null: false
+    t.text "database_migration", size: :long, null: false
+    t.text "errors", size: :long, null: false
+    t.datetime "started_at", precision: 3, null: false
+    t.datetime "finished_at", precision: 3
+  end
+
+  create_table "balances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "balance_type", null: false
+    t.string "name"
+    t.boolean "publish_name"
+    t.string "destination"
+    t.integer "amount", null: false
+    t.date "date", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+  end
 
   create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -38,6 +63,18 @@ ActiveRecord::Schema.define(version: 2020_10_11_124217) do
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
     t.index ["slug"], name: "index_contests_on_slug", unique: true
+  end
+
+  create_table "donation_informations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "amount", null: false
+    t.string "publish_name"
+    t.string "note", null: false
+    t.string "destination", null: false
+    t.datetime "processed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
   end
 
   create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
@@ -162,6 +199,8 @@ ActiveRecord::Schema.define(version: 2020_10_11_124217) do
     t.string "unconfirmed_email"
     t.string "role", default: "member", null: false
     t.string "name"
+    t.string "atcoder_id", limit: 16
+    t.integer "atcoder_rating"
     t.string "email"
     t.text "tokens"
     t.datetime "created_at", precision: 6, null: false
