@@ -6,7 +6,7 @@ class Api::UsersController < ApplicationController
   before_action :authenticate_admin_user!, only: [:update_rating]
 
   def update
-    if !current_user.admin? && params[:id] != current_user.id
+    if !current_user.admin? && User.find(params[:id]).id != current_user.id
       render_403
       return
     end
