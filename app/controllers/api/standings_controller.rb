@@ -3,6 +3,7 @@ class Api::StandingsController < ApplicationController
     # TODO: ペナルティを設定できるようにする
     # @type [Contest]
     contest = Contest.includes(registrations: :user).find_by!(slug: params[:contest_slug])
+    penalty_time = contest.penalty_time
     started_at = contest.start_at
     submits = Submit.joins(problem: :contest).includes(:user)
                   .where('contests.slug': params[:contest_slug])
@@ -88,7 +89,7 @@ class Api::StandingsController < ApplicationController
           },
           result: {
               score: score_sum,
-              time: time_max,
+              time: time_max + penalty * penalty_time,
               penalty: penalty == 0 ? nil : penalty
           },
           problems: ls
