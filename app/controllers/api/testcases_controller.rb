@@ -73,8 +73,18 @@ class Api::TestcasesController < ApplicationController
   end
 
   def update
+    # @type [Testcase]
     testcase = @problem.testcases.find(params[:id])
-    testcase.update!(update_params)
+    testcase.update(create_params)
+    input = params[:testcase][:input]
+    output = params[:testcase][:output]
+    if testcase.input || testcase.output
+      testcase.input = input
+      testcase.output = output
+    end
+    testcase.input_data = input
+    testcase.output_data = output
+    testcase.save!
   end
 
   def upload
@@ -185,9 +195,5 @@ class Api::TestcasesController < ApplicationController
 
   def create_params
     params.required(:testcase).permit(:name, :explanation)
-  end
-
-  def update_params
-    params.require(:testcase).permit(:name, :explanation, :input, :output)
   end
 end
