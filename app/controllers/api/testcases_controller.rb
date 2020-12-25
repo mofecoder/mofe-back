@@ -72,6 +72,11 @@ class Api::TestcasesController < ApplicationController
     testcase.destroy!
   end
 
+  def update
+    testcase = @problem.testcases.find(params[:id])
+    testcase.update!(update_params)
+  end
+
   def upload
     file_path = "./tmp/#{SecureRandom.uuid}.zip"
     # @type [ActionDispatch::Http::UploadedFile]
@@ -180,5 +185,9 @@ class Api::TestcasesController < ApplicationController
 
   def create_params
     params.required(:testcase).permit(:name, :explanation)
+  end
+
+  def update_params
+    params.require(:testcase).permit(:name, :explanation, :input, :output)
   end
 end
