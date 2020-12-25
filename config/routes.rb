@@ -30,7 +30,7 @@ Rails.application.routes.draw do
       post 'register'
     end
     resources :problems, except: [:destroy] do
-      resources :testcases, only: [:index, :show, :create, :destroy] do
+      resources :testcases, only: [:index, :show, :create, :destroy, :update] do
         collection do
           post 'upload'
         end
