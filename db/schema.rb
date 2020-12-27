@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_05_081335) do
+ActiveRecord::Schema.define(version: 2020_12_27_133128) do
 
   create_table "_Migration", primary_key: "revision", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.text "name", null: false
@@ -85,6 +85,7 @@ ActiveRecord::Schema.define(version: 2020_12_05_081335) do
     t.string "position", limit: 4
     t.string "uuid"
     t.string "difficulty", limit: 16, null: false
+    t.integer "execution_time_limit", default: 2000, null: false
     t.string "statement", limit: 4096, null: false
     t.string "constraints", limit: 2048, null: false
     t.string "input_format", limit: 1024, null: false
