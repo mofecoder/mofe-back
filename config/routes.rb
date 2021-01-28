@@ -48,6 +48,7 @@ Rails.application.routes.draw do
         post 'update_rating'
       end
     end
+    resources :posts
   end
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
   match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
