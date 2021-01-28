@@ -1,12 +1,11 @@
 class Api::PostsController < ApplicationController
   def index
-    posts = Post.all
+    posts = Post.all.order(id: :desc)
 
     unless current_user&.admin?
       posts.where!(public_status: 'public')
     end
 
-    puts params[:count].present?
     if params[:count].present?
       posts.limit!(params[:count])
     end
