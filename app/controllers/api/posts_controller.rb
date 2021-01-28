@@ -6,7 +6,6 @@ class Api::PostsController < ApplicationController
       posts.where!(public_status: 'public')
     end
 
-    puts params[:count].present?
     if params[:count].present?
       posts.limit!(params[:count])
     end
