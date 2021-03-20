@@ -22,7 +22,7 @@ module Utils::GoogleCloudStorageClient
           client_x509_cert_url: Rails.application.credentials.gcs[:client_x509_cert_url]
       }
   )
-  @source_bucket = @storage.bucket('cafecoder-submit-source')
+  @source_bucket = @storage.bucket('cafecoder-source')
   @testcase_bucket = @storage.bucket('cafecoder-testcase')
 
   def self.upload_source(file_name, file_content)
