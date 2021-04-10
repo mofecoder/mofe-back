@@ -42,6 +42,7 @@ Rails.application.routes.draw do
       resource :tester_relations, only: [:create] do
       end
       delete 'tester_relations', to: 'tester_relations#destroy'
+      post 'checker' => 'problems#update_checker'
     end
     resources :users, only: [:update] do
       collection do

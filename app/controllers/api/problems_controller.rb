@@ -28,6 +28,7 @@ class Api::ProblemsController < ApplicationController
       @problem = Problem.new(problem_params)
       @problem.uuid = SecureRandom.uuid
       @problem.writer_user_id = current_user.id
+      @problem.checker_path = 'checker_sources/wcmp.cpp'
 
       if @problem.save
         @problem.testcase_sets.create(
@@ -61,6 +62,30 @@ class Api::ProblemsController < ApplicationController
     else
       render json: problem.errors, status: :unprocessable_entity
     end
+  end
+
+  def update_checker
+    problem = Problem.find(params[:problem_id])
+
+    if params[:type].nil?
+      file_path = "./tmp/#{SecureRandom.uuid}.zip"
+      # @type [ActionDispatch::Http::UploadedFile]
+      file = params[:file]
+
+      path = "checker_sources/#{problem.uuid}"
+
+      Utils::GoogleCloudStorageClient::upload_source(path, file.read)
+
+      FileUtils.rm_f file_path
+
+      puts path
+      problem.checker_path = path
+    else
+      puts params[:type]
+      problem.checker_path = "checker_sources/#{params[:type]}"
+    end
+
+    problem.save
   end
 
   private
