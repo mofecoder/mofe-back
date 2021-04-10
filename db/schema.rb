@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_01_28_100339) do
+ActiveRecord::Schema.define(version: 2021_03_20_075120) do
 
   create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -49,7 +49,16 @@ ActiveRecord::Schema.define(version: 2021_01_28_100339) do
     t.datetime "deleted_at"
   end
 
-  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "posts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "content", null: false
+    t.string "public_status", default: "private"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+  end
+
+  create_table "problems", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "slug"
     t.string "name"
     t.bigint "contest_id"
@@ -62,6 +71,7 @@ ActiveRecord::Schema.define(version: 2021_01_28_100339) do
     t.string "constraints", limit: 2048, null: false
     t.string "input_format", limit: 1024, null: false
     t.string "output_format", limit: 1024, null: false
+    t.string "checker_path"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
