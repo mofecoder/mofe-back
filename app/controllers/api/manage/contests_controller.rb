@@ -7,6 +7,6 @@ class Api::Manage::ContestsController < ApplicationController
   end
 
   def show
-    render json: Contest.find_by!(slug: params[:slug]), serializer: Manage::ContestSerializer
+    render json: Contest.find_by!(slug: params[:slug]), serializer: Manage::ContestSerializer, show_editorial: true
   end
 end

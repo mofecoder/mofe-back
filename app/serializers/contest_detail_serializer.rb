@@ -18,10 +18,10 @@ class ContestDetailSerializer < ContestSerializer
   end
 
   def editorial
-     if @instance_options[:show_editorial]
-       object.editorial_url
-     else
-       nil
-     end
+    if @instance_options[:show_editorial]
+      object.editorial_url
+    else
+      nil
+    end
   end
 end
