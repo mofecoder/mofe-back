@@ -10,7 +10,9 @@ class SubmitDetailSerializer < SubmitSerializer
   end
 
   def testcase_results
-    if @instance_options[:hide_results]
+    completed = @instance_options[:result_counts][object.id] || 0
+    all = @instance_options[:testcase_count][object.id]
+    if completed != all || @instance_options[:hide_results]
       []
     elsif @instance_options[:in_contest]
       samples = []
