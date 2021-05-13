@@ -5,7 +5,11 @@ class Api::ContestsController < ApplicationController
   before_action :set_contest, except: [:index, :create, :register]
 
   def index
-    render json: Contest.all.order(start_at: :desc).as_json(only: [:slug, :name, :start_at, :end_at])
+    now = DateTime::now
+    during = Contest.all.where('`start_at` <= ? AND `end_at` > ?', now, now).order(:end_at)
+    future = Contest.all.where('`start_at` > ?', now).order(:start_at)
+    past = Contest.all.where('`end_at` <= ?', now).order(end_at: :desc)
+    render json: (during + future + past).as_json(only: [:slug, :name, :start_at, :end_at])
   end
 
   def show
@@ -14,8 +18,9 @@ class Api::ContestsController < ApplicationController
     include_tasks = contest.end_at.past? ||
       (contest.start_at.past? && contest.registered?(current_user)) ||
       (user_signed_in? && current_user.admin?)
+    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin?)
     render json: contest, serializer: ContestDetailSerializer,
-           include_tasks: include_tasks, user: current_user,
+           include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
            registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id)
   end
 
@@ -94,7 +99,7 @@ class Api::ContestsController < ApplicationController
 
   # @return [ActionController::Parameters]
   def contest_update_params
-    params.require(:contest).permit(:name, :description, :penalty_time, :start_at, :end_at)
+    params.require(:contest).permit(:name, :description, :penalty_time, :start_at, :end_at, :editorial_url)
   end
 
   # @return [ActionController::Parameters]
