@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       end
       resources :clarifications, only: [:index, :show, :create, :update]
       post 'register'
+      post 'rejudge'
     end
     resources :problems, except: [:destroy] do
       resources :testcases, only: [:index, :show, :create, :destroy, :update] do
@@ -44,9 +45,12 @@ Rails.application.routes.draw do
       delete 'tester_relations', to: 'tester_relations#destroy'
       post 'checker' => 'problems#update_checker'
     end
-    resources :users, only: [:update] do
+    resources :users, only: [:index, :update] do
       collection do
         post 'update_rating'
+      end
+      resource do
+        patch 'update_admin' => 'users#update_admin'
       end
     end
     resources :posts

@@ -1,8 +1,8 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :update, :register]
+  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge]
   before_action :authenticate_admin_user!, only: [:create, :update]
-  before_action :set_contest, except: [:index, :create, :register]
+  before_action :set_contest, except: [:index, :create, :register, :rejudge]
 
   def index
     now = DateTime::now
@@ -15,13 +15,34 @@ class Api::ContestsController < ApplicationController
   def show
     # @type [Contest]
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
-    include_tasks = contest.end_at.past? ||
+    include_flag = contest.end_at.past? ||
       (contest.start_at.past? && contest.registered?(current_user)) ||
       (user_signed_in? && current_user.admin?)
+
+    writer_or_tester = []
+    if current_user&.admin?
+      writer_or_tester = contest.problems
+    elsif contest.is_writer_or_tester(current_user)
+      problems = contest.problems.includes(:tester_relations)
+      problems.each do |problem|
+        if current_user == problem.writer_user || problem.tester_relations.exists?(tester_user_id: current_user.id)
+          writer_or_tester.push(problem)
+        end
+      end
+    end
+
+    include_tasks = nil
+    if include_flag
+      include_tasks = contest.problems
+    elsif writer_or_tester.present?
+      include_tasks = writer_or_tester
+    end
+
     show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin?)
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
-           registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id)
+           registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id),
+           written: writer_or_tester.map { |u| { id: u.id, slug: u.slug} }
   end
 
   def create
@@ -90,6 +111,25 @@ class Api::ContestsController < ApplicationController
     else
       render json: { error: 'すでに参加登録されています。' }, status: :conflict
     end
+  end
+
+  def rejudge
+    ids = params[:submit_ids]
+    contest = Contest.find_by!(slug: params[:contest_slug])
+    unless contest.is_writer_or_tester(current_user)
+      render_403
+      return
+    end
+    submits = Submit.where(id: ids).includes(problem: :tester_relations)
+    submits.each do |submit|
+      unless current_user.admin? ||
+          submit.problem.writer_user == current_user ||
+          submit.problem.tester_relations.exists?(tester_user_id: current_user.id)
+        render json: { error: "提出 #{submit.id} に対する権限がありません。" }, status: :forbidden
+        return
+      end
+    end
+    submits.update_all(status: 'WR')
   end
 
   private
