@@ -1,10 +1,10 @@
 class ContestDetailSerializer < ContestSerializer
-  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial
+  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks
 
   def tasks
-    return nil unless @instance_options[:include_tasks]
+    return nil if @instance_options[:include_tasks].nil?
     ActiveModel::Serializer::CollectionSerializer.new(
-        object.problems,
+        @instance_options[:include_tasks],
         serializer: ContestTaskSerializer
     )
   end
@@ -23,5 +23,9 @@ class ContestDetailSerializer < ContestSerializer
     else
       nil
     end
+  end
+
+  def written_tasks
+    @instance_options[:written]
   end
 end

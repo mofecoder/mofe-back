@@ -24,7 +24,6 @@ class Api::ClarificationsController < ApplicationController
       end
     end
 
-    # clarifications
     render json: clarifications, problems: problems
   end
 
