@@ -20,14 +20,22 @@ class Api::ContestsController < ApplicationController
       (user_signed_in? && current_user.admin?)
 
     writer_or_tester = []
+    writer_or_tester_tasks = []
     if current_user&.admin?
-      writer_or_tester = contest.problems
+      writer_or_tester = contest.problems.map { |p| { id: p.id, slug: p.slug, role: 'admin' }}
     elsif contest.is_writer_or_tester(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
-        if current_user == problem.writer_user || problem.tester_relations.exists?(tester_user_id: current_user.id)
-          writer_or_tester.push(problem)
+        role = ''
+        if current_user == problem.writer_user
+          role = 'writer'
+        elsif problem.tester_relations.exists?(tester_user_id: current_user.id)
+          role = 'tester'
+        else
+          next
         end
+        writer_or_tester.push({ id: problem.id, slug: problem.slug, role: role })
+        writer_or_tester_tasks.push(problem)
       end
     end
 
@@ -35,14 +43,14 @@ class Api::ContestsController < ApplicationController
     if include_flag
       include_tasks = contest.problems
     elsif writer_or_tester.present?
-      include_tasks = writer_or_tester
+      include_tasks = writer_or_tester_tasks
     end
 
     show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin?)
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
            registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id),
-           written: writer_or_tester.map { |u| { id: u.id, slug: u.slug} }
+           written: writer_or_tester
   end
 
   def create
