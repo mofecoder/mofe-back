@@ -1,7 +1,7 @@
 class Submit < ApplicationRecord
   belongs_to :problem
   belongs_to :user
-  has_many :testcase_results, -> { order(:testcase_id) }
+  has_many :testcase_results, -> { joins(:testcase).order(:name) }
   has_many :testcase_results_in_contest,
            -> { order(:status) },
            class_name: 'TestcaseResult'
