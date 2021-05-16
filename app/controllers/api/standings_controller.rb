@@ -32,7 +32,7 @@ class Api::StandingsController < ApplicationController
     #@type [Hash]
     problem_score_table = {}
     problems.each do |problem|
-      problem_score_table[problem.id] = problem.testcase_sets.to_a.sum(&:points)
+      problem_score_table[problem[0]] = problem[1].testcase_sets.to_a.sum(&:points)
     end
 
     submits.each do |submit|
