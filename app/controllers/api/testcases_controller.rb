@@ -10,7 +10,7 @@ class Api::TestcasesController < ApplicationController
     # @type [Array<TestcaseSet>]
     testcase_sets = @problem.testcase_sets.order(is_sample: :desc, name: :asc).to_a
     # @type [Array<Testcase>]
-    testcases = @problem.testcases.includes(:testcase_sets).to_a
+    testcases = @problem.testcases.order(:name).includes(:testcase_sets).to_a
 
     # @type [Hash<Hash>]
     tmp = {}
