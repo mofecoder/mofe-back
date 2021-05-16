@@ -11,7 +11,7 @@ class Api::StandingsController < ApplicationController
                   .select('user_id, problem_id, status, point, submits.created_at')
                   .order(created_at: :asc)
 
-    problems = Problem.joins(:contest)
+    problems = Problem.joins(:contest, :testcase_sets)
                    .where('contests.slug': params[:contest_slug])
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
@@ -27,6 +27,12 @@ class Api::StandingsController < ApplicationController
     contest.registrations.each do |registration|
       users[registration.user_id] = []
       user_table[registration.user_id] = registration.user
+    end
+
+    #@type [Hash]
+    problem_score_table = {}
+    problems.each do |problem|
+      problem_score_table[problem.id] = problem.testcase_sets.to_a.sum(&:points)
     end
 
     submits.each do |submit|
@@ -64,7 +70,7 @@ class Api::StandingsController < ApplicationController
           score_sum += tmp[:score]
 
           tmp[:penalty] = nil if tmp[:penalty] == 0
-          solved[id] += 1
+          solved[id] += 1 if tmp[:score] == problem_score_table[problem.id]
         elsif tmp[:penalty] > 0
           tmp = {
               penalty: tmp[:penalty]
@@ -158,6 +164,10 @@ class Api::StandingsController < ApplicationController
           confirmed_pena = now_pena
           time = submit.created_at
         end
+      end
+
+      if max_point == 0
+        confirmed_pena = now_pena
       end
 
       max_point == -1 ? nil : {
