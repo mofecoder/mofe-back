@@ -3,7 +3,16 @@ require 'json'
 
 class Api::UsersController < ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_admin_user!, only: [:update_rating]
+  before_action :authenticate_admin_user!, only: [:index, :update_admin, :update_rating]
+
+  def index
+    render json: User.all.as_json(only: [:id, :name, :role, :created_at])
+  end
+
+  def update_admin
+    user = User.find(params[:user_id])
+    user.update!(user_update_admin_param)
+  end
 
   def update
     if !current_user.admin? && User.find(params[:id]).id != current_user.id
@@ -37,6 +46,10 @@ class Api::UsersController < ApplicationController
 
   def user_update_param
     params.require(:user).permit(:atcoder_id)
+  end
+
+  def user_update_admin_param
+    params.require(:user).permit(:atcoder_id, :role)
   end
 
   def get_rating(atcoder_id)

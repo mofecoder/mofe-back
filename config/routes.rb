@@ -45,9 +45,12 @@ Rails.application.routes.draw do
       delete 'tester_relations', to: 'tester_relations#destroy'
       post 'checker' => 'problems#update_checker'
     end
-    resources :users, only: [:update] do
+    resources :users, only: [:index, :update] do
       collection do
         post 'update_rating'
+      end
+      resource do
+        patch 'update_admin' => 'users#update_admin'
       end
     end
     resources :posts

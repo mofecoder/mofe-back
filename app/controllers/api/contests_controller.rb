@@ -20,7 +20,9 @@ class Api::ContestsController < ApplicationController
       (user_signed_in? && current_user.admin?)
 
     writer_or_tester = []
-    if contest.is_writer_or_tester(current_user)
+    if current_user&.admin?
+      writer_or_tester = contest.problems
+    elsif contest.is_writer_or_tester(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
         if current_user == problem.writer_user || problem.tester_relations.exists?(tester_user_id: current_user.id)
@@ -40,7 +42,7 @@ class Api::ContestsController < ApplicationController
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
            registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id),
-           written: writer_or_tester.map(&:slug)
+           written: writer_or_tester.map { |u| { id: u.id, slug: u.slug} }
   end
 
   def create
