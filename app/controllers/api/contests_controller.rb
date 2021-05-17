@@ -9,7 +9,12 @@ class Api::ContestsController < ApplicationController
     during = Contest.all.where('`start_at` <= ? AND `end_at` > ?', now, now).order(:end_at)
     future = Contest.all.where('`start_at` > ?', now).order(:start_at)
     past = Contest.all.where('`end_at` <= ?', now).order(end_at: :desc)
-    render json: (during + future + past).as_json(only: [:slug, :name, :start_at, :end_at])
+    unless current_user&.admin?
+      during = during.where.not(kind: 'private')
+      future = future.where.not(kind: 'private')
+      past = past.where.not(kind: 'private')
+    end
+    render json: (during + future + past).as_json(only: [:slug, :name, :type, :start_at, :end_at])
   end
 
   def show
@@ -147,11 +152,11 @@ class Api::ContestsController < ApplicationController
 
   # @return [ActionController::Parameters]
   def contest_update_params
-    params.require(:contest).permit(:name, :description, :penalty_time, :start_at, :end_at, :editorial_url)
+    params.require(:contest).permit(:name, :description, :kind, :penalty_time, :start_at, :end_at, :editorial_url)
   end
 
   # @return [ActionController::Parameters]
   def contest_create_params
-    params.require(:contest).permit( :name, :slug, :description, :penalty_time, :start_at, :end_at)
+    params.require(:contest).permit( :name, :slug, :kind, :description, :penalty_time, :start_at, :end_at)
   end
 end

@@ -3,7 +3,7 @@ class Api::Manage::ContestsController < ApplicationController
   before_action :authenticate_admin_user!
 
   def index
-    render json: Contest.all.order(id: :desc).as_json(only: [:slug, :name, :start_at, :end_at])
+    render json: Contest.all.order(id: :desc).as_json(only: [:slug, :name, :kind, :start_at, :end_at])
   end
 
   def show

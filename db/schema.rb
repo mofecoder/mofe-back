@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_13_112953) do
+ActiveRecord::Schema.define(version: 2021_05_17_121148) do
 
   create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -31,6 +31,7 @@ ActiveRecord::Schema.define(version: 2021_05_13_112953) do
     t.string "slug", null: false
     t.string "name", null: false
     t.string "description", limit: 4096
+    t.string "kind", default: "normal", null: false
     t.integer "penalty_time", default: 0, null: false
     t.datetime "start_at"
     t.datetime "end_at"
