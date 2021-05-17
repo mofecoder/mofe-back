@@ -14,7 +14,7 @@ class Api::ContestsController < ApplicationController
       future = future.where.not(kind: 'private')
       past = past.where.not(kind: 'private')
     end
-    render json: (during + future + past).as_json(only: [:slug, :name, :type, :start_at, :end_at])
+    render json: (during + future + past).as_json(only: [:slug, :name, :kind, :start_at, :end_at])
   end
 
   def show
