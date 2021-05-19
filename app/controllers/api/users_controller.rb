@@ -6,7 +6,7 @@ class Api::UsersController < ApplicationController
   before_action :authenticate_admin_user!, only: [:index, :update_admin, :update_rating]
 
   def index
-    render json: User.all.as_json(only: [:id, :name, :role, :created_at])
+    render json: User.all.as_json(only: [:id, :name, :role, :writer_request_code, :created_at])
   end
 
   def update_admin
@@ -40,6 +40,18 @@ class Api::UsersController < ApplicationController
       user.update!(atcoder_rating: get_rating(user.atcoder_id))
       sleep(2)
     end
+  end
+
+  def generate_writer_request_code
+    user = User.find(params[:id])
+    unless current_user.admin?
+      if user.id != current_user.id
+        render_403
+        return
+      end
+      render json: { error: 'Writer Request が無効です' }, status: :conflict
+    end
+    user.writer_request_code = SecureRandom.uuid
   end
 
   private
