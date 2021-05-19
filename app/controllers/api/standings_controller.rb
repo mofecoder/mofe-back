@@ -1,6 +1,5 @@
 class Api::StandingsController < ApplicationController
   def index
-    # TODO: ペナルティを設定できるようにする
     # @type [Contest]
     contest = Contest.includes(registrations: :user).find_by!(slug: params[:contest_slug])
     penalty_time = contest.penalty_time
