@@ -21,6 +21,20 @@ class Api::UsersController < ApplicationController
     end
 
     param = user_update_param
+
+    if param[:name].present? && param[:name] != current_user.name
+      # 小文字だけではない → 変更済み
+      if current_user.name.downcase != current_user.name
+        render status: :conflict, json: { error: '名前の変更は1度のみ可能です。' }
+        return
+      end
+
+      if current_user.name != param[:name].downcase
+        render status: :conflict, json: { error: '大文字・小文字の修正以外の変更はできません。' }
+        return
+      end
+    end
+
     rating = nil
 
     if param[:atcoder_id].present?
@@ -60,7 +74,7 @@ class Api::UsersController < ApplicationController
   private
 
   def user_update_param
-    params.require(:user).permit(:atcoder_id)
+    params.require(:user).permit(:atcoder_id, :name)
   end
 
   def user_update_admin_param
