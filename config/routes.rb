@@ -52,7 +52,7 @@ Rails.application.routes.draw do
       collection do
         post 'update_rating'
       end
-      resource do
+      member do
         patch 'update_admin' => 'users#update_admin'
         post 'generate_writer_request_code'
       end

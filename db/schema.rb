@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_17_121148) do
+ActiveRecord::Schema.define(version: 2021_05_19_001850) do
 
   create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -177,6 +177,7 @@ ActiveRecord::Schema.define(version: 2021_05_17_121148) do
     t.string "name"
     t.string "atcoder_id", limit: 16
     t.integer "atcoder_rating"
+    t.string "writer_request_code"
     t.string "email"
     t.text "tokens"
     t.datetime "created_at", precision: 6, null: false
