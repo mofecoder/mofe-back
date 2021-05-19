@@ -49,7 +49,9 @@ class Api::UsersController < ApplicationController
         render_403
         return
       end
-      render json: { error: 'Writer Request が無効です' }, status: :conflict
+      if user.writer_request_code.present?
+        render json: { error: 'Writer Request が無効です' }, status: :conflict
+      end
     end
     user.writer_request_code = SecureRandom.uuid
     user.save!
