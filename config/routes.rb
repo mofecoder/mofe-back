@@ -12,6 +12,9 @@ Rails.application.routes.draw do
         end
       end
     end
+    namespace :slack do
+      post 'add_writer' => 'slack#add_writer'
+    end
     resources :contests, param: :slug, except: [:destroy] do
       resources :submits, only: [:index, :show] do
         collection do
