@@ -54,6 +54,7 @@ Rails.application.routes.draw do
       end
       resource do
         patch 'update_admin' => 'users#update_admin'
+        post 'generate_writer_request_code'
       end
     end
     resources :posts
