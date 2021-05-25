@@ -17,7 +17,7 @@ class Api::SubmitsController < ApplicationController
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
-            .user_id(user_id)
+            .search_by_user_id(user_id)
             .page(page)
             .per(count),
       Contest.find_by!(slug: contest_slug).problems.pluck(:id),
