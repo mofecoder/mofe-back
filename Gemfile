@@ -56,4 +56,7 @@ gem 'rubyzip'
 # 論理削除
 gem 'paranoia'
 
+# Pagination
+gem 'kaminari'
+
 gem 'google-cloud-storage'
