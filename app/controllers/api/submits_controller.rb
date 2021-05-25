@@ -1,4 +1,5 @@
 class Api::SubmitsController < ApplicationController
+  include Pagination
   before_action :authenticate_user!, except: [:all, :show]
 
   def index
@@ -8,44 +9,28 @@ class Api::SubmitsController < ApplicationController
     end
     contest_slug = params[:contest_slug]
     user_id = current_user.id
+    page = params[:page] || 1
+    count = params[:count] || 20
 
-    problem_ids = Contest.find_by!(slug: contest_slug).problems.pluck(:id)
-    my_submits = Submit.includes(problem: :testcase_sets)
-                     .includes(:user)
-                     .joins(problem: :contest)
-                     .where("contests.slug = ?", contest_slug)
-                     .search_by_user_id(user_id)
-
-    # problemId -> testcase.created_at
-    all_testcases = get_testcases(problem_ids)
-
-    testcase_count = {}
-    my_submits.each do |submit|
-      # submit.updated_at > testcase.created_at
-      submit_updated_at = submit.updated_at
-
-      # @type [Array<ActiveSupport::TimeWithZone>]
-      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
-
-      if c_testcases.nil?
-        testcase_count[submit.id] = 0
-      else
-        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
-
-        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
-      end
-    end
-
-    submit_ids = my_submits.pluck(:id)
-    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-
-    render json: my_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
+    submissions(
+      Submit.includes(problem: :testcase_sets)
+            .eager_load(:user)
+            .joins(problem: :contest)
+            .where("contests.slug = ?", contest_slug)
+            .user_id(user_id)
+            .page(page)
+            .per(count),
+      Contest.find_by!(slug: contest_slug).problems.pluck(:id),
+      params[:options]
+    )
   end
 
   def all
     contest_slug = params[:contest_slug]
     # @type [Contest]
     contest = Contest.find_by!(slug: contest_slug)
+    page = params[:page] || 1
+    count = params[:count] || 20
 
     unless contest.end_at.past?
       unless user_signed_in? && contest.is_writer_or_tester(current_user)
@@ -54,36 +39,16 @@ class Api::SubmitsController < ApplicationController
       end
     end
 
-    problem_ids = contest.problems.pluck(:id)
-    all_submits = Submit.includes(problem: :testcase_sets)
-                      .includes(:user)
-                      .joins(problem: :contest)
-                      .where("contests.slug = ?", contest_slug)
-
-    # problemId -> testcase.created_at
-    all_testcases = get_testcases(problem_ids)
-
-    testcase_count = {}
-    all_submits.each do |submit|
-      # submit.updated_at > testcase.created_at
-      submit_updated_at = submit.updated_at
-
-      # @type [Array<ActiveSupport::TimeWithZone>]
-      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
-
-      if c_testcases.nil?
-        testcase_count[submit.id] = 0
-      else
-        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
-
-        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
-      end
-    end
-
-    submit_ids = all_submits.pluck(:id)
-    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-
-    render json: all_submits.order(created_at: :desc), result_counts: result_counts, testcase_count: testcase_count
+    submissions(
+      Submit.includes(problem: :testcase_sets)
+            .eager_load(:user)
+            .joins(problem: :contest)
+            .where("contests.slug = ?", contest_slug)
+            .page(page)
+            .per(count),
+      contest.problems.pluck(:id),
+      params[:options]
+    )
   end
 
   def show
@@ -149,6 +114,71 @@ class Api::SubmitsController < ApplicationController
   end
 
   private
+    
+  # @param submissions [ActiveRecord::Relation<Submit>]
+  def submissions(submissions, problem_ids, options)
+    sort_table = {
+      'date' => %w[created_at],
+      'user' => %w[users.name],
+      'lang' => %w[lang],
+      'score' => %w[point],
+      'status' => %w[status],
+      'executionTime' => %w[execution_time],
+      'executionMemory' => %w[execution_memory],
+    }
+    filter_table = {
+      'user' => 'users.name',
+      'task' => 'problems.slug',
+      'status' => 'status',
+    }
+    if options.present?
+      options_data = JSON.parse(options)
+      sort_array = options_data['sort'] || []
+      sort_array.each do |obj|
+        if obj['target'] == 'task'
+          desc = obj['desc'] ? 'DESC' : 'ASC'
+          submissions.order!("CHAR_LENGTH(problems.position) #{desc}").order!(position: desc)
+        else
+          sort_table[obj['target']].each { |row| submissions.order!(row => obj['desc'] ? :desc : :asc) }
+        end
+      end
+      filter_array = options_data['filter'] || []
+      filter_array.each do |obj|
+        submissions.where!(filter_table[obj['target']] => obj['value'])
+      end
+    end
+
+    all_testcases = get_testcases(problem_ids)
+
+    testcase_count = {}
+    submissions.each do |submit|
+      # submit.updated_at > testcase.created_at
+      submit_updated_at = submit.updated_at
+
+      # @type [Array<ActiveSupport::TimeWithZone>]
+      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
+
+      if c_testcases.nil?
+        testcase_count[submit.id] = 0
+      else
+        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
+
+        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
+      end
+    end
+
+    submit_ids = submissions.pluck(:id)
+    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
+    submissions = submissions.order(created_at: :desc)
+
+    pagination_data = pagination(submissions)
+
+    data = submissions.map do |submission|
+      SubmitSerializer::new(submission, result_counts: result_counts, testcase_count: testcase_count)
+    end
+
+    render json: { data: data, meta: pagination_data }
+  end
 
   def _submit(problem, source)
     if problem.contest.start_at.future?
