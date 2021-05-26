@@ -84,6 +84,7 @@ class Api::SubmitsController < ApplicationController
                   .pluck(:testcase_id)
 
     in_contest = contest.end_at.future? && !is_admin_or_writer
+    r_count = submit.testcase_results.count
     t_count = submit.problem.testcases
                   .where('created_at < ?', submit.updated_at)
                   .count
@@ -94,7 +95,7 @@ class Api::SubmitsController < ApplicationController
            in_contest: in_contest,
            hide_results: r_count < t_count,
            samples: in_contest ? Set.new(samples) : nil,
-           result_count: submit.testcase_results.count,
+           result_count: r_count,
            testcase_count: t_count
   end
 
