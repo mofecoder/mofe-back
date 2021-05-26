@@ -84,14 +84,9 @@ class Api::SubmitsController < ApplicationController
                   .pluck(:testcase_id)
 
     in_contest = contest.end_at.future? && !is_admin_or_writer
-    r_count = submit.testcase_results.count
     t_count = submit.problem.testcases
                   .where('created_at < ?', submit.updated_at)
                   .count
-    result_counts = {}
-    result_counts[submit.id] = r_count
-    testcase_count = {}
-    testcase_count[submit.id] = t_count
 
     require('set')
     render json: submit,
@@ -99,8 +94,8 @@ class Api::SubmitsController < ApplicationController
            in_contest: in_contest,
            hide_results: r_count < t_count,
            samples: in_contest ? Set.new(samples) : nil,
-           result_counts: result_counts,
-           testcase_count: testcase_count
+           result_count: submit.testcase_results.count,
+           testcase_count: t_count
   end
 
   def create
