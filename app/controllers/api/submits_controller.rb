@@ -150,31 +150,24 @@ class Api::SubmitsController < ApplicationController
 
     all_testcases = get_testcases(problem_ids)
 
-    testcase_count = {}
-    submissions.each do |submit|
-      # submit.updated_at > testcase.created_at
-      submit_updated_at = submit.updated_at
-
-      # @type [Array<ActiveSupport::TimeWithZone>]
-      c_testcases = all_testcases[submit.problem_id]&.map { |x| x.created_at }
-
-      if c_testcases.nil?
-        testcase_count[submit.id] = 0
-      else
-        idx = c_testcases.bsearch_index { |t| t > submit_updated_at }
-
-        testcase_count[submit.id] = idx.nil? ? c_testcases.length : idx
-      end
-    end
-
     submit_ids = submissions.pluck(:id)
     result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-    submissions = submissions.order(created_at: :desc)
 
+    submissions = submissions.order(created_at: :desc)
     pagination_data = pagination(submissions)
 
     data = submissions.map do |submission|
-      SubmitSerializer::new(submission, result_counts: result_counts, testcase_count: testcase_count)
+      # @type [Array<ActiveSupport::TimeWithZone>]
+      c_testcases = all_testcases[submission.problem_id]&.map { |x| x.created_at }
+
+      if c_testcases.nil?
+        testcase_count = 0
+      else
+        idx = c_testcases.bsearch_index { |t| t > submission.updated_at }
+        testcase_count = idx.nil? ? c_testcases.length : idx
+      end
+
+      SubmitSerializer::new(submission, result_count: result_counts[submission.id], testcase_count: testcase_count)
     end
 
     render json: { data: data, meta: pagination_data }

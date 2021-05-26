@@ -2,6 +2,8 @@ version: '3'
 services:
   db:
     image: mysql:5.7
+    volumes:
+      - db-store:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
       TZ: Asia/Tokyo
@@ -17,3 +19,5 @@ services:
     - 4000:3000
     depends_on:
       - db
+volumes:
+  db-store:
