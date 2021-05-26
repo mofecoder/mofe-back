@@ -28,7 +28,7 @@ class SubmitSerializer < ActiveModel::Serializer
     if all.nil? || completed >= all || (completed == 0 && object.status != 'WIP')
       nil
     else
-      { completed: completed, all: all }
+      { completed: completed + 1, all: all }
     end
   end
 end
