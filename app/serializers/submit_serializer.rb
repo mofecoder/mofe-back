@@ -23,12 +23,12 @@ class SubmitSerializer < ActiveModel::Serializer
   end
 
   def judge_status
-    completed = @instance_options[:result_counts][object.id] || 0
-    all = @instance_options[:testcase_count][object.id]
+    completed = @instance_options[:result_count] || 0
+    all = @instance_options[:testcase_count]
     if all.nil? || completed >= all || (completed == 0 && object.status != 'WIP')
       nil
     else
-      {completed: completed, all: all}
+      { completed: completed, all: all }
     end
   end
 end
