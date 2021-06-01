@@ -17,19 +17,7 @@ class Api::TasksController < ApplicationController
 
     ok = true
 
-    if contest.end_at.future?
-      ok = contest.start_at.past? && contest.registered?(current_user)
-
-      if !ok && user_signed_in? && (
-        current_user.admin? ||
-        task.writer_user_id == current_user.id ||
-        task.tester_relations.exists?(tester_user_id: current_user.id, approved: true)
-      )
-        ok = true
-      end
-    end
-
-    if ok
+    if task.has_permission?(current_user)
       render json: task, serializer: TaskSerializer
     else
       render_403
