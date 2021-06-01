@@ -31,12 +31,14 @@ class Api::ContestsController < ApplicationController
     elsif contest.is_writer_or_tester(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
-        role = ''
         if current_user == problem.writer_user
           role = 'writer'
         elsif problem.tester_relations.exists?(tester_user_id: current_user.id)
           role = 'tester'
         else
+          if contest.start_at.past? || contest.official_mode
+            writer_or_tester_tasks.push(problem)
+          end
           next
         end
         writer_or_tester.push({ id: problem.id, slug: problem.slug, role: role })
@@ -152,11 +154,15 @@ class Api::ContestsController < ApplicationController
 
   # @return [ActionController::Parameters]
   def contest_update_params
-    params.require(:contest).permit(:name, :description, :kind, :penalty_time, :start_at, :end_at, :editorial_url)
+    params.require(:contest).permit(
+      :name, :description, :kind, :penalty_time, :start_at, :end_at, :editorial_url, :official_mode
+    )
   end
 
   # @return [ActionController::Parameters]
   def contest_create_params
-    params.require(:contest).permit( :name, :slug, :kind, :description, :penalty_time, :start_at, :end_at)
+    params.require(:contest).permit(
+      :name, :slug, :kind, :description, :penalty_time, :start_at, :end_at, :official_mode
+    )
   end
 end

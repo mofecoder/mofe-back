@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_19_001850) do
+ActiveRecord::Schema.define(version: 2021_06_01_092755) do
 
   create_table "clarifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 2021_05_19_001850) do
     t.datetime "start_at"
     t.datetime "end_at"
     t.string "editorial_url"
+    t.boolean "official_mode", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"

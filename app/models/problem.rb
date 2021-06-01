@@ -25,6 +25,19 @@ class Problem < ApplicationRecord
     end
   end
 
+  def has_permission?(user)
+    #@type [Contest]
+    contest = self.contest
+    return true if contest.end_at.past?
+    return true if contest.start_at.past? && contest.registered?(user)
+    user.present? && (
+      user.admin? ||
+      writer_user_id == user.id ||
+      tester_relations.exists?(tester_user_id: user.id, approved: true) ||
+      (contest.is_writer_or_tester(user) && (contest.official_mode || contest.start_at.past?))
+    )
+  end
+
   def to_param
     slug
   end

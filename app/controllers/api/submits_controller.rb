@@ -64,7 +64,8 @@ class Api::SubmitsController < ApplicationController
     is_admin_or_writer = user_signed_in? && (
       current_user.admin? ||
       submit.problem.writer_user_id == current_user.id ||
-      submit.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists?
+      submit.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
+      contest.is_writer_or_tester(current_user) && contest.official_mode
     )
 
     if !user_signed_in? || (!is_admin_or_writer && submit.user_id != current_user.id)
@@ -170,22 +171,8 @@ class Api::SubmitsController < ApplicationController
   end
 
   def _submit(problem, source)
-    if problem.contest.start_at.future?
-      unless user_signed_in?
-        render_403
-        return
-      end
-      if !current_user.admin? &&
-          problem.writer_user_id != current_user.id &&
-          problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
-        render_403
-        return
-      end
-    elsif problem.contest.end_at.future?
-      unless problem.contest.registered?(current_user)
-        render_403
-        return
-      end
+    unless problem.has_permission?(current_user)
+      render_403
     end
 
     save_path = make_path
