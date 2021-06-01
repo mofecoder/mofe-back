@@ -17,7 +17,7 @@ class Api::SubmitsController < ApplicationController
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
-            .user_id(user_id)
+            .search_by_user_id(user_id)
             .page(page)
             .per(count),
       Contest.find_by!(slug: contest_slug).problems.pluck(:id),
@@ -88,10 +88,6 @@ class Api::SubmitsController < ApplicationController
     t_count = submit.problem.testcases
                   .where('created_at < ?', submit.updated_at)
                   .count
-    result_counts = {}
-    result_counts[submit.id] = r_count
-    testcase_count = {}
-    testcase_count[submit.id] = t_count
 
     require('set')
     render json: submit,
@@ -99,8 +95,8 @@ class Api::SubmitsController < ApplicationController
            in_contest: in_contest,
            hide_results: r_count < t_count,
            samples: in_contest ? Set.new(samples) : nil,
-           result_counts: result_counts,
-           testcase_count: testcase_count
+           result_count: r_count,
+           testcase_count: t_count
   end
 
   def create
