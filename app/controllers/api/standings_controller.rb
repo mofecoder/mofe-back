@@ -34,9 +34,16 @@ class Api::StandingsController < ApplicationController
       problem_score_table[problem[0]] = problem[1].testcase_sets.to_a.sum(&:points)
     end
 
+    first_ac = problems.to_a.map { |d| [d[0], [nil, nil]] }.to_h
     submits.each do |submit|
       next if writers.include?(submit.user_id)
-      users[submit.user_id] << submit unless users[submit.user_id].nil?
+      unless users[submit.user_id].nil?
+        users[submit.user_id] << submit
+        first_ac_time = first_ac[submit.problem.id][0]
+        if first_ac_time.nil? || submit.created_at < first_ac_time
+          first_ac[submit.problem.id] = [submit.created_at, submit.user.id]
+        end
+      end
     end
 
     res = []
@@ -104,12 +111,17 @@ class Api::StandingsController < ApplicationController
     problem_res = []
     # @type [Problem] task
     problems.each do |id, task|
+      fa = first_ac[id]
       problem_res << {
           name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
           position: task.position,
           solved: solved[id],
-          tried: solved[id] + trying[id]
+          tried: solved[id] + trying[id],
+          first_accept: {
+            time: fa[0],
+            user: user_table[fa[1]]
+          }
       }
     end
 

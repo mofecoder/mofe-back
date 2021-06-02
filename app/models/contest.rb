@@ -20,10 +20,7 @@ class Contest < ApplicationRecord
 
     return true if user.admin?
 
-    writers = self.problems.pluck(:writer_user_id)
-    return true if writers.include?(user.id)
-
-    testers = TesterRelation.where(problem: self.problems).pluck(:tester_user_id)
-    testers.include?(user.id)
+    self.problems.exists?(writer_user_id: user.id) ||
+      TesterRelation.exists?(problem: self.problems, tester_user_id: user.id)
   end
 end
