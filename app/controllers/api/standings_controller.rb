@@ -37,7 +37,7 @@ class Api::StandingsController < ApplicationController
     first_ac = problems.to_a.map { |d| [d[0], [nil, nil]] }.to_h
     submits.each do |submit|
       next if writers.include?(submit.user_id)
-      if users[submit.user_id].present?
+      if users[submit.user_id]
         users[submit.user_id] << submit
         first_ac_time = first_ac[submit.problem.id][0]
         if submit.status == 'AC' && first_ac_time.nil?
