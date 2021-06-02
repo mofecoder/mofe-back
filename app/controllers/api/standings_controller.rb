@@ -10,7 +10,7 @@ class Api::StandingsController < ApplicationController
                   .select('user_id, problem_id, status, point, submits.created_at')
                   .order(created_at: :asc)
 
-    problems = Problem.joins(:contest, :testcase_sets, :tester_relations)
+    problems = Problem.joins(:contest).left_joins(:testcase_sets, :tester_relations)
                    .where('contests.slug': params[:contest_slug])
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
@@ -37,7 +37,7 @@ class Api::StandingsController < ApplicationController
     first_ac = problems.to_a.map { |d| [d[0], [nil, nil]] }.to_h
     submits.each do |submit|
       next if writers.include?(submit.user_id)
-      unless users[submit.user_id].nil?
+      if users[submit.user_id].present?
         users[submit.user_id] << submit
         first_ac_time = first_ac[submit.problem.id][0]
         if submit.status == 'AC' && first_ac_time.nil?
