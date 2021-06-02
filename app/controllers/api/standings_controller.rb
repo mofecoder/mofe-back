@@ -40,7 +40,7 @@ class Api::StandingsController < ApplicationController
       unless users[submit.user_id].nil?
         users[submit.user_id] << submit
         first_ac_time = first_ac[submit.problem.id][0]
-        if first_ac_time.nil? || submit.created_at < first_ac_time
+        if first_ac_time.nil?
           first_ac[submit.problem.id] = [submit.created_at, submit.user.id]
         end
       end
@@ -112,16 +112,21 @@ class Api::StandingsController < ApplicationController
     # @type [Problem] task
     problems.each do |id, task|
       fa = first_ac[id]
+      user = fa[1] ? user_table[fa[1]] : nil
       problem_res << {
           name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
           position: task.position,
           solved: solved[id],
           tried: solved[id] + trying[id],
-          first_accept: {
-            time: fa[0],
-            user: user_table[fa[1]]
-          }
+          first_accept: user ? {
+            time: (fa[0] - started_at).to_i,
+            user: {
+              name: user.name,
+              atcoder_id: user.atcoder_id,
+              atcoder_rating: user.atcoder_rating
+            }
+          } : nil
       }
     end
 
