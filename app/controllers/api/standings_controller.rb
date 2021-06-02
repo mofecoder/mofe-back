@@ -10,7 +10,7 @@ class Api::StandingsController < ApplicationController
                   .select('user_id, problem_id, status, point, submits.created_at')
                   .order(created_at: :asc)
 
-    problems = Problem.joins(:contest, :testcase_sets)
+    problems = Problem.joins(:contest, :testcase_sets, :tester_relations)
                    .where('contests.slug': params[:contest_slug])
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
@@ -105,7 +105,7 @@ class Api::StandingsController < ApplicationController
     # @type [Problem] task
     problems.each do |id, task|
       problem_res << {
-          name: task.name,
+          name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
           position: task.position,
           solved: solved[id],
