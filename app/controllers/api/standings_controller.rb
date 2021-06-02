@@ -40,7 +40,7 @@ class Api::StandingsController < ApplicationController
       unless users[submit.user_id].nil?
         users[submit.user_id] << submit
         first_ac_time = first_ac[submit.problem.id][0]
-        if first_ac_time.nil?
+        if submit.status == 'AC' && first_ac_time.nil?
           first_ac[submit.problem.id] = [submit.created_at, submit.user.id]
         end
       end
