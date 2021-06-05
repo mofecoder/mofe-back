@@ -14,6 +14,7 @@ class Api::SubmitsController < ApplicationController
 
     submissions(
       Submit.includes(problem: :testcase_sets)
+            .includes(:testcase_results)
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
@@ -41,6 +42,7 @@ class Api::SubmitsController < ApplicationController
 
     submissions(
       Submit.includes(problem: :testcase_sets)
+            .includes(:testcase_results)
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
@@ -146,10 +148,6 @@ class Api::SubmitsController < ApplicationController
     end
 
     all_testcases = get_testcases(problem_ids)
-
-    submit_ids = submissions.pluck(:id)
-    result_counts = TestcaseResult.where(submit_id: submit_ids).group(:submit_id).count
-
     submissions = submissions.order(created_at: :desc)
     pagination_data = pagination(submissions)
 
@@ -164,7 +162,7 @@ class Api::SubmitsController < ApplicationController
         testcase_count = idx.nil? ? c_testcases.length : idx
       end
 
-      SubmitSerializer::new(submission, result_count: result_counts[submission.id], testcase_count: testcase_count)
+      SubmitSerializer::new(submission, result_count: submission.testcase_results.count, testcase_count: testcase_count)
     end
 
     render json: { data: data, meta: pagination_data }
