@@ -1,6 +1,7 @@
 require 'devise_token_auth'
 
 Rails.application.routes.draw do
+  match '*path' => 'preflight_request#preflight', via: :options
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
   namespace :api do
     mount_devise_token_auth_for 'User', at: 'auth', controllers: {
@@ -18,13 +19,13 @@ Rails.application.routes.draw do
       post 'add_writer' => 'slack#add_writer'
     end
     resources :contests, param: :slug, except: [:destroy] do
-      resources :submits, only: [:index, :show] do
+      resources :submissions, only: [:index, :show] do
         collection do
           get 'all'
         end
       end
       resources :tasks, param: :slug, only: [:show] do
-        post "submit" => "submits#create"
+        post "submit" => "submissions#create"
         put 'remove_from_contest' => 'tasks#remove_from_contest'
       end
       get 'standings' => 'standings#index'
@@ -61,6 +62,6 @@ Rails.application.routes.draw do
     end
     resources :posts
   end
-  match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
-  match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :options, :head]
+  match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
+  match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
 end

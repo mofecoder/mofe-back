@@ -129,22 +129,22 @@ class Api::ContestsController < ApplicationController
   end
 
   def rejudge
-    ids = params[:submit_ids]
+    ids = params[:submission_ids]
     contest = Contest.find_by!(slug: params[:contest_slug])
     unless contest.is_writer_or_tester(current_user)
       render_403
       return
     end
-    submits = Submit.where(id: ids).includes(problem: :tester_relations)
-    submits.each do |submit|
+    submissions = Submission.where(id: ids).includes(problem: :tester_relations)
+    submissions.each do |submission|
       unless current_user.admin? ||
-          submit.problem.writer_user == current_user ||
-          submit.problem.tester_relations.exists?(tester_user_id: current_user.id)
-        render json: { error: "提出 #{submit.id} に対する権限がありません。" }, status: :forbidden
+          submission.problem.writer_user == current_user ||
+          submission.problem.tester_relations.exists?(tester_user_id: current_user.id)
+        render json: { error: "提出 #{submission.id} に対する権限がありません。" }, status: :forbidden
         return
       end
     end
-    submits.update_all(status: 'WR')
+    submissions.update_all(status: 'WR')
   end
 
   private

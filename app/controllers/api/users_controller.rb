@@ -10,7 +10,7 @@ class Api::UsersController < ApplicationController
   end
 
   def update_admin
-    user = User.find(params[:user_id])
+    user = User.find(params[:id])
     user.update!(user_update_admin_param)
   end
 
