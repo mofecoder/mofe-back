@@ -1,4 +1,4 @@
-class Api::SubmitsController < ApplicationController
+class Api::SubmissionsController < ApplicationController
   include Pagination
   before_action :authenticate_user!, except: [:all, :show]
 
@@ -13,8 +13,8 @@ class Api::SubmitsController < ApplicationController
     count = params[:count] || 20
 
     submissions(
-      Submit.includes(problem: :testcase_sets)
-            .includes(:testcase_results)
+      Submission.includes(problem: :testcase_sets)
+            .preload(:testcase_results)
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
@@ -41,8 +41,8 @@ class Api::SubmitsController < ApplicationController
     end
 
     submissions(
-      Submit.includes(problem: :testcase_sets)
-            .includes(:testcase_results)
+      Submission.includes(problem: :testcase_sets)
+            .preload(:testcase_results)
             .eager_load(:user)
             .joins(problem: :contest)
             .where("contests.slug = ?", contest_slug)
@@ -54,9 +54,9 @@ class Api::SubmitsController < ApplicationController
   end
 
   def show
-    #@type [Submit]
-    submit = Submit.includes(testcase_results: :testcase).find(params[:id])
-    contest = submit.problem.contest
+    #@type [Submission]
+    submission = Submission.includes(testcase_results: :testcase).find(params[:id])
+    contest = submission.problem.contest
 
     if contest.slug != params[:contest_slug]
       render status: :not_found
@@ -65,12 +65,12 @@ class Api::SubmitsController < ApplicationController
 
     is_admin_or_writer = user_signed_in? && (
       current_user.admin? ||
-      submit.problem.writer_user_id == current_user.id ||
-      submit.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
+      submission.problem.writer_user_id == current_user.id ||
+      submission.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
       contest.is_writer_or_tester(current_user) && contest.official_mode
     )
 
-    if !user_signed_in? || (!is_admin_or_writer && submit.user_id != current_user.id)
+    if !user_signed_in? || (!is_admin_or_writer && submission.user_id != current_user.id)
       unless contest.end_at.past?
         render json: {
             error: 'この提出は非公開です'
@@ -79,7 +79,7 @@ class Api::SubmitsController < ApplicationController
       end
     end
 
-    samples = submit
+    samples = submission
                   .problem
                   .testcase_sets
                   .where(is_sample: 1)
@@ -87,14 +87,14 @@ class Api::SubmitsController < ApplicationController
                   .pluck(:testcase_id)
 
     in_contest = contest.end_at.future? && !is_admin_or_writer
-    r_count = submit.testcase_results.count
-    t_count = submit.problem.testcases
-                  .where('created_at < ?', submit.updated_at)
+    r_count = submission.testcase_results.count
+    t_count = submission.problem.testcases
+                  .where('created_at < ?', submission.updated_at)
                   .count
 
     require('set')
-    render json: submit,
-           serializer: SubmitDetailSerializer,
+    render json: submission,
+           serializer: SubmissionDetailSerializer,
            in_contest: in_contest,
            hide_results: r_count < t_count,
            samples: in_contest ? Set.new(samples) : nil,
@@ -113,8 +113,8 @@ class Api::SubmitsController < ApplicationController
   end
 
   private
-    
-  # @param submissions [ActiveRecord::Relation<Submit>]
+
+  # @param submissions [ActiveRecord::Relation<Submission>]
   def submissions(submissions, problem_ids, options)
     sort_table = {
       'date' => %w[created_at],
@@ -162,7 +162,7 @@ class Api::SubmitsController < ApplicationController
         testcase_count = idx.nil? ? c_testcases.length : idx
       end
 
-      SubmitSerializer::new(submission, result_count: submission.testcase_results.count, testcase_count: testcase_count)
+      SubmissionSerializer::new(submission, result_count: submission.testcase_results.count, testcase_count: testcase_count)
     end
 
     render json: { data: data, meta: pagination_data }
@@ -175,14 +175,14 @@ class Api::SubmitsController < ApplicationController
 
     save_path = make_path
 
-    submit = current_user.submits.new
-    submit.problem_id = problem.id
-    submit.path = save_path
-    submit.lang = request.headers[:lang]
-    submit.status = 'WJ'
+    submission = current_user.submissions.new
+    submission.problem_id = problem.id
+    submission.path = save_path
+    submission.lang = params[:lang]
+    submission.status = 'WJ'
 
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
-    submit.save!
+    submission.save!
   end
 
   def get_testcases(problem_ids)

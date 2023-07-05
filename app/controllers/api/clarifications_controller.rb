@@ -2,6 +2,7 @@ class Api::ClarificationsController < ApplicationController
   before_action :set_contest
   before_action :authenticate_user!, except: [:index]
 
+  @contest = nil
 
   def index
     clarifications = @contest.clarifications.includes(:problem, :user).order(updated_at: :desc)

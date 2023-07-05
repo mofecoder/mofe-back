@@ -1,13 +1,13 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.6.3'
+ruby '3.2.2'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.2', '>= 6.0.2.1'
+gem 'rails', '~> 6.1.0'
 gem 'active_model_serializers', '~> 0.10.0'
 # Use mysql as the database for Active Record
-gem 'mysql2', '>= 0.4.4'
+gem 'mysql2', '~> 0.5.5'
 # Use Puma as the app server
 gem 'puma', '~> 4.1'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder

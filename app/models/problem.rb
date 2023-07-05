@@ -3,7 +3,7 @@ class Problem < ApplicationRecord
   belongs_to :writer_user, class_name: 'User'
   has_many :testcases
   has_many :testcase_sets
-  has_many :submits
+  has_many :submissions
   has_many :tester_relations, dependent: :destroy
   has_many :testers, through: :tester_relations, source: :user
   has_many :clarifications

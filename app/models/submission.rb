@@ -1,4 +1,4 @@
-class Submit < ApplicationRecord
+class Submission < ApplicationRecord
   belongs_to :problem
   belongs_to :user
   has_many :testcase_results, -> { joins(:testcase).order(:name) }

@@ -1,4 +1,4 @@
-class SubmitSerializer < ActiveModel::Serializer
+class SubmissionSerializer < ActiveModel::Serializer
   attributes :id, :user, :task, :status, :point,
              :execution_time, :execution_memory, :lang, :timestamp, :judge_status
 

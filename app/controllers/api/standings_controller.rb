@@ -4,11 +4,11 @@ class Api::StandingsController < ApplicationController
     contest = Contest.includes(registrations: :user).find_by!(slug: params[:contest_slug])
     penalty_time = contest.penalty_time
     started_at = contest.start_at
-    submits = Submit.joins(problem: :contest).includes(:user)
-                  .where('contests.slug': params[:contest_slug])
-                  .where(created_at: started_at..contest.end_at)
-                  .select('user_id, problem_id, status, point, submits.created_at')
-                  .order(created_at: :asc)
+    submissions = Submission.joins(problem: :contest).includes(:user)
+                        .where('contests.slug': params[:contest_slug])
+                        .where(created_at: started_at..contest.end_at)
+                        .select('user_id, problem_id, status, point, submissions.created_at')
+                        .order(created_at: :asc)
 
     problems = Problem.joins(:contest).left_joins(:testcase_sets, :tester_relations)
                    .where('contests.slug': params[:contest_slug])
@@ -35,13 +35,13 @@ class Api::StandingsController < ApplicationController
     end
 
     first_ac = problems.to_a.map { |d| [d[0], [nil, nil]] }.to_h
-    submits.each do |submit|
-      next if writers.include?(submit.user_id)
-      if users[submit.user_id]
-        users[submit.user_id] << submit
-        first_ac_time = first_ac[submit.problem.id][0]
-        if submit.status == 'AC' && first_ac_time.nil?
-          first_ac[submit.problem.id] = [submit.created_at, submit.user.id]
+    submissions.each do |sub|
+      next if writers.include?(sub.user_id)
+      if users[sub.user_id]
+        users[sub.user_id] << sub
+        first_ac_time = first_ac[sub.problem.id][0]
+        if sub.status == 'AC' && first_ac_time.nil?
+          first_ac[sub.problem.id] = [sub.created_at, sub.user.id]
         end
       end
     end
@@ -49,7 +49,7 @@ class Api::StandingsController < ApplicationController
     res = []
     solved = problems.to_a.map { |d| [d[0], 0] }.to_h
     trying = problems.to_a.map { |d| [d[0], 0] }.to_h
-    # @type [Array<Submit>] value
+    # @type [Array<Submission>] value
     users.each do |user_id, value|
       ls = []
       group = value.group_by { |p| p.problem_id }
@@ -57,7 +57,7 @@ class Api::StandingsController < ApplicationController
       time_max = 0
       penalty = 0
       problems.each do |id, problem|
-        # @type [Array<Submit>] s
+        # @type [Array<Submission>] s
         s = group[id]
         if s.nil? || user_id == problem.writer_user_id
           ls << {}
@@ -159,26 +159,26 @@ class Api::StandingsController < ApplicationController
 
   private
 
-    # @param [Array<Submit>] submits
+  # @param [Array<Submission>] submissions
     # @return [Hash, nil]
-    def aggregate(submits)
+    def aggregate(submissions)
       confirmed_pena = 0
       now_pena = 0
       max_point = -1
       time = nil
 
-      submits.each do |submit|
-        if %w(WJ WR IE CE).include?(submit.status)
+      submissions.each do |sub|
+        if %w(WJ WR IE CE).include?(sub.status)
           next
         end
-        if %w(WA RE OLE MLE TLE).include?(submit.status)
+        if %w(WA RE OLE MLE TLE).include?(sub.status)
           now_pena += 1
         end
-        score = submit.point || 0
+        score = sub.point || 0
         if score > max_point
           max_point = score
           confirmed_pena = now_pena
-          time = submit.created_at
+          time = sub.created_at
         end
       end
 

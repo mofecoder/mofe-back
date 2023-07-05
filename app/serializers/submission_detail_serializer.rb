@@ -1,4 +1,4 @@
-class SubmitDetailSerializer < SubmitSerializer
+class SubmissionDetailSerializer < SubmissionSerializer
   attributes :compile_error, :source, :sample_count, :testcase_results
 
   def source
