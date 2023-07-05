@@ -3,7 +3,7 @@ class PreflightRequestController < ApplicationController
   ACCESS_CONTROL_ALLOW_HEADERS = %w(Accept Origin Content-Type Authorization).freeze
 
   def preflight
-    origin = 'https://cafecoder.top'
+    origin = 'https://mofecoder.com'
     if request.headers['origin'] == 'http://localhost:8000'
       origin = 'http://localhost:8000'
     end
