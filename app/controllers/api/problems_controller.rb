@@ -42,7 +42,7 @@ class Api::ProblemsController < ApplicationController
             is_sample: false
         )
 
-        render serializer: ProblemDetailSerializer, status: :created
+        render json: @problem, serializer: ProblemDetailSerializer, status: :created
       else
         render json: @problem.errors, status: :unprocessable_entity
       end
@@ -58,7 +58,7 @@ class Api::ProblemsController < ApplicationController
     end
 
     if problem.update(problem_params)
-      render serializer: ProblemDetailSerializer
+      render json: problem, serializer: ProblemDetailSerializer
     else
       render json: problem.errors, status: :unprocessable_entity
     end
