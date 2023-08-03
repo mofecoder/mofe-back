@@ -33,7 +33,8 @@ class Api::TesterRelationsController < ApplicationController
 
   def set_problem
     @problem = Problem.find(params[:problem_id])
-    unless current_user.admin? || @problem.writer_user_id == current_user.id
+    unless current_user.admin_for_contest?(@problem.contest_id) ||
+        @problem.writer_user_id == current_user.id
       render_403
     end
   end

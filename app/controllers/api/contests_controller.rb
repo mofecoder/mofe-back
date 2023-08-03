@@ -1,7 +1,7 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
   before_action :authenticate_user!, only: [:create, :update, :register, :rejudge]
-  before_action :authenticate_admin_user!, only: [:create, :update]
+  before_action :authenticate_admin_user!, only: [:create]
   before_action :set_contest, except: [:index, :create, :register, :rejudge]
 
   def index
@@ -22,11 +22,11 @@ class Api::ContestsController < ApplicationController
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
     include_flag = contest.end_at.past? ||
       (contest.start_at.past? && contest.registered?(current_user)) ||
-      (user_signed_in? && current_user.admin?)
+      (user_signed_in? && current_user.admin_for_contest?(contest.id))
 
     writer_or_tester = []
     writer_or_tester_tasks = []
-    if current_user&.admin?
+    if current_user&.admin_for_contest?(contest.id)
       writer_or_tester = contest.problems.map { |p| { id: p.id, slug: p.slug, role: 'admin' }}
     elsif contest.is_writer_or_tester(current_user)
       problems = contest.problems.includes(:tester_relations)
@@ -53,7 +53,7 @@ class Api::ContestsController < ApplicationController
       include_tasks = writer_or_tester_tasks
     end
 
-    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin?)
+    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin_for_contest?(contest.id))
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
            registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id),
@@ -74,6 +74,11 @@ class Api::ContestsController < ApplicationController
   end
 
   def update
+    unless current_user.admin_for_contest?(@contest.id)
+      render_403
+      return
+    end
+
     @contest.update!(contest_update_params)
   end
 
@@ -137,7 +142,7 @@ class Api::ContestsController < ApplicationController
     end
     submissions = Submission.where(id: ids).includes(problem: :tester_relations)
     submissions.each do |submission|
-      unless current_user.admin? ||
+      unless current_user.admin_for_contest?(contest.id) ||
           submission.problem.writer_user == current_user ||
           submission.problem.tester_relations.exists?(tester_user_id: current_user.id)
         render json: { error: "提出 #{submission.id} に対する権限がありません。" }, status: :forbidden

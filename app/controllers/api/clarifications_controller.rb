@@ -2,15 +2,13 @@ class Api::ClarificationsController < ApplicationController
   before_action :set_contest
   before_action :authenticate_user!, except: [:index]
 
-  @contest = nil
-
   def index
     clarifications = @contest.clarifications.includes(:problem, :user).order(updated_at: :desc)
 
     if !user_signed_in?
       problems = []
       clarifications.where!(publish: true)
-    elsif current_user.admin?
+    elsif current_user.admin_for_contest?(@contest.id)
       problems = @contest.problems.pluck(:id) + [nil]
     else
       problems = writer_problem_ids
@@ -36,12 +34,12 @@ class Api::ClarificationsController < ApplicationController
       is_writer_or_tester = clarification.problem.writer_user_id == current_user.id ||
           clarification.problem.tester_ids.include?(current_user.id)
 
-      unless current_user.admin? || is_writer_or_tester
+      unless current_user.admin_for_contest?(@contest.id) || is_writer_or_tester
         render_403
         return
       end
     else
-      unless current_user.admin?
+      unless current_user.admin_for_contest?(@contest.id)
         render_403
         return
       end
@@ -70,7 +68,7 @@ class Api::ClarificationsController < ApplicationController
     clarification = Clarification.find(params[:id])
 
     # writer or tester or admin
-    ok = current_user.admin?
+    ok = current_user.admin_for_contest?(@contest.id)
 
     if clarification.problem.present?
       ok |= clarification.problem.writer_user.id == current_user.id
@@ -108,6 +106,7 @@ class Api::ClarificationsController < ApplicationController
   end
 
   def set_contest
+    # @type [Contest]
     @contest = Contest.find_by!(slug: params[:contest_slug])
   end
 end
