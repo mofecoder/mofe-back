@@ -1,5 +1,5 @@
 class ContestDetailSerializer < ContestSerializer
-  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks
+  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks, :is_admin
 
   def tasks
     return nil if @instance_options[:include_tasks].nil?
@@ -27,5 +27,11 @@ class ContestDetailSerializer < ContestSerializer
 
   def written_tasks
     @instance_options[:written]
+  end
+
+  def is_admin
+    return false if @instance_options[:user].nil?
+    return true if @instance_options[:user].admin?
+    @instance_options[:user].admin_for_contest?(object.id)
   end
 end

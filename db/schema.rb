@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_05_29_190733) do
+ActiveRecord::Schema.define(version: 2023_08_03_084505) do
 
   create_table "clarifications", charset: "utf8mb4", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -25,6 +25,17 @@ ActiveRecord::Schema.define(version: 2023_05_29_190733) do
     t.index ["contest_id"], name: "index_clarifications_on_contest_id"
     t.index ["problem_id"], name: "index_clarifications_on_problem_id"
     t.index ["user_id"], name: "index_clarifications_on_user_id"
+  end
+
+  create_table "contest_admins", charset: "utf8mb4", force: :cascade do |t|
+    t.bigint "contest_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+    t.datetime "true"
+    t.index ["contest_id"], name: "index_contest_admins_on_contest_id"
+    t.index ["user_id"], name: "index_contest_admins_on_user_id"
   end
 
   create_table "contests", charset: "utf8mb4", force: :cascade do |t|
@@ -191,6 +202,8 @@ ActiveRecord::Schema.define(version: 2023_05_29_190733) do
     t.index ["uid", "provider"], name: "index_users_on_uid_and_provider", unique: true
   end
 
+  add_foreign_key "contest_admins", "contests"
+  add_foreign_key "contest_admins", "users"
   add_foreign_key "problems", "contests"
   add_foreign_key "problems", "users", column: "writer_user_id"
   add_foreign_key "submissions", "problems"
