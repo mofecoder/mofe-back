@@ -33,21 +33,36 @@ class Api::SubmissionsController < ApplicationController
     page = params[:page] || 1
     count = params[:count] || 20
 
-    unless contest.end_at.past?
-      unless user_signed_in? && contest.is_writer_or_tester(current_user)
-        render_403
-        return
+    all_problem_id = contest.problems.pluck(:id)
+    including_problem_id = []
+    if contest.end_at.past?
+      including_problem_id = all_problem_id
+    elsif user_signed_in? && contest.is_writer_or_tester(current_user)
+      if contest.official_mode || current_user.admin_for_contest?(contest.id)
+        including_problem_id = all_problem_id
+      else
+        contest.problems.includes(:tester_relations).each do |problem|
+          if current_user == problem.writer_user ||
+              problem.tester_relations.exists?(tester_user_id: current_user.id, approved: true)
+            including_problem_id.push(problem.id)
+          end
+        end
       end
+
     end
 
+    all_submissions = Submission
+                        .includes(problem: :testcase_sets)
+                        .preload(:testcase_results)
+                        .eager_load(:user)
+                        .joins(problem: :contest)
+                        .where("contests.slug = ?", contest_slug)
+                        .where(problem_id: including_problem_id)
+                        .page(page)
+                        .per(count)
+
     submissions(
-      Submission.includes(problem: :testcase_sets)
-            .preload(:testcase_results)
-            .eager_load(:user)
-            .joins(problem: :contest)
-            .where("contests.slug = ?", contest_slug)
-            .page(page)
-            .per(count),
+      all_submissions,
       contest.problems.pluck(:id),
       params[:options]
     )
