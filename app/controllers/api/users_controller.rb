@@ -50,9 +50,11 @@ class Api::UsersController < ApplicationController
   def update_rating
     render status: :no_content
     users = User.where.not(atcoder_id: nil)
-    users.each do |user|
-      user.update!(atcoder_rating: get_rating(user.atcoder_id))
-      sleep(2)
+    Thread.new(users) do |u|
+      u.each do |user|
+        user.update!(atcoder_rating: get_rating(user.atcoder_id))
+        sleep(2)
+      end
     end
   end
 
