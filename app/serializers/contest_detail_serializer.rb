@@ -1,5 +1,5 @@
 class ContestDetailSerializer < ContestSerializer
-  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks, :is_admin
+  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks, :is_admin, :standings_mode
 
   def tasks
     return nil if @instance_options[:include_tasks].nil?

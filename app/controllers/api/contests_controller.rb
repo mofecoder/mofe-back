@@ -160,7 +160,7 @@ class Api::ContestsController < ApplicationController
   # @return [ActionController::Parameters]
   def contest_update_params
     params.require(:contest).permit(
-      :name, :description, :kind, :penalty_time, :start_at, :end_at, :editorial_url, :official_mode
+      :name, :description, :kind, :standings_mode, :penalty_time, :start_at, :end_at, :editorial_url, :official_mode
     )
   end
 
