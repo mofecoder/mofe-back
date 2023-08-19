@@ -1,6 +1,6 @@
 module Tasks
   class Camp 
-    def create_accounts
+    def self.reate_accounts
       1.upto(18) do |i|
         account_name = ("kyoprocamp2023west_team%03d" % i)
         email = ("camp23w_%03d@mofecoder.com" % i)
