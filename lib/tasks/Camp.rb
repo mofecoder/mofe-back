@@ -7,7 +7,7 @@ module Tasks
         password = Password.new.generate(18)
         puts account_name, password
         user = User.new(name: account_name, email: email, password: password, password_confirmation: password)
-        user.save!(validation: false)
+        user.save!(validate: false)
 
         Registration.create!(user_id: user.id, contest_id: 22)
       end
