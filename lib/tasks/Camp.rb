@@ -1,4 +1,4 @@
-module Camp
+module Tasks
   class Camp 
     def create_accounts
       1.upto(18) do |i|
