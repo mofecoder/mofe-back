@@ -72,6 +72,12 @@ class Api::TestcasesController < ApplicationController
     testcase.destroy!
   end
 
+  def delete_multiple
+    # @type [Array<Integer>]
+    ids = params[:testcases]
+    @problem.testcases.where(id: ids).destroy_all
+  end
+
   def update
     # @type [Testcase]
     testcase = @problem.testcases.find(params[:id])

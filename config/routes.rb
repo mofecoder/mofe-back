@@ -41,6 +41,7 @@ Rails.application.routes.draw do
       resources :testcases, only: [:index, :show, :create, :destroy, :update] do
         collection do
           post 'upload'
+          delete 'delete_multiple'
         end
         member do
           patch 'change_state'
