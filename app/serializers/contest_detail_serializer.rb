@@ -1,5 +1,6 @@
 class ContestDetailSerializer < ContestSerializer
-  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial, :written_tasks, :is_admin, :standings_mode
+  attributes :description, :penalty_time, :tasks, :is_writer_or_tester, :registered, :editorial,
+             :written_tasks, :is_admin, :standings_mode, :registration_restriction, :allow_open_registration
 
   def tasks
     return nil if @instance_options[:include_tasks].nil?
@@ -14,7 +15,7 @@ class ContestDetailSerializer < ContestSerializer
   end
 
   def registered
-    @instance_options[:registered] || false
+    @instance_options[:registered] || nil
   end
 
   def editorial
@@ -33,5 +34,9 @@ class ContestDetailSerializer < ContestSerializer
     return false if @instance_options[:user].nil?
     return true if @instance_options[:user].admin?
     @instance_options[:user].admin_for_contest?(object.id)
+  end
+
+  def registration_restriction
+    object.closed_password.present?
   end
 end

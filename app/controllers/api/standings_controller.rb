@@ -1,7 +1,7 @@
 class Api::StandingsController < ApplicationController
   def index
     # @type [Contest]
-    contest = Contest.includes(registrations: :user).find_by!(slug: params[:contest_slug])
+    contest = Contest.find_by!(slug: params[:contest_slug])
     penalty_time = contest.penalty_time
     started_at = contest.start_at
     submissions = Submission.joins(problem: :contest).preload(:user).preload(:problem)
@@ -23,7 +23,14 @@ class Api::StandingsController < ApplicationController
     # @type [Hash]
     users = {}
     user_table = {}
-    contest.registrations.each do |registration|
+
+    reg = contest.registrations.includes(:user)
+
+    if params.include?(:exclude_open)
+      reg.where!(open_registration: false)
+    end
+
+    reg.each do |registration|
       users[registration.user_id] = []
       user_table[registration.user_id] = registration.user
     end

@@ -35,6 +35,7 @@ Rails.application.routes.draw do
       end
       resources :clarifications, only: [:index, :show, :create, :update]
       post 'register'
+      delete 'unregister'
       post 'rejudge'
     end
     resources :problems, except: [:destroy] do

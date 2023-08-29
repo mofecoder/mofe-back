@@ -1,8 +1,8 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge]
+  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister]
   before_action :authenticate_admin_user!, only: [:create]
-  before_action :set_contest, except: [:index, :create, :register, :rejudge]
+  before_action :set_contest, except: [:index, :create, :register, :rejudge, :unregister]
 
   def index
     now = DateTime::now
@@ -54,9 +54,22 @@ class Api::ContestsController < ApplicationController
     end
 
     show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin_for_contest?(contest.id))
+
+    registered = nil
+    if user_signed_in?
+      registration = contest.registrations.find_by(user_id: current_user.id)
+      if registration.blank?
+        registered = nil
+      elsif registration.open_registration
+        registered = 'open'
+      elsif registration.present?
+        registered = 'normal'
+      end
+    end
+
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
-           registered: user_signed_in? && contest.registrations.exists?(user_id: current_user.id),
+           registered: registered,
            written: writer_or_tester
   end
 
@@ -115,6 +128,17 @@ class Api::ContestsController < ApplicationController
     end
   end
 
+  def unregister
+    contest = Contest.find_by!(slug: params[:contest_slug])
+    if contest.end_at.past?
+      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
+      return
+    end
+    reg = Registration.find_by!(user_id: current_user.id, contest_id: contest.id)
+
+    reg.destroy!
+  end
+
   def register
     contest = Contest.find_by!(slug: params[:contest_slug])
     if contest.end_at.past?
@@ -122,6 +146,19 @@ class Api::ContestsController < ApplicationController
       return
     end
     reg = Registration.find_or_initialize_by(user_id: current_user.id, contest_id: contest.id)
+
+    if contest.closed_password.present?
+      if contest.allow_open_registration && params[:open].present?
+        reg.open_registration = true
+      elsif params[:password].blank?
+        render json: { error: '参加登録にはパスワードが必要です。' }, status: :forbidden
+        return
+      elsif params[:password] != contest.closed_password
+        render json: { error: '参加登録パスワードが誤っています。' }, status: :forbidden
+        return
+      end
+    end
+
     if reg.new_record?
       if reg.save
         render status: :created

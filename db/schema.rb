@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_08_16_092450) do
+ActiveRecord::Schema.define(version: 2023_08_29_192330) do
 
   create_table "clarifications", charset: "utf8mb4", force: :cascade do |t|
     t.bigint "contest_id", null: false
@@ -33,7 +33,6 @@ ActiveRecord::Schema.define(version: 2023_08_16_092450) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
-    t.datetime "true"
     t.index ["contest_id"], name: "index_contest_admins_on_contest_id"
     t.index ["user_id"], name: "index_contest_admins_on_user_id"
   end
@@ -43,6 +42,9 @@ ActiveRecord::Schema.define(version: 2023_08_16_092450) do
     t.string "name", null: false
     t.string "description", limit: 4096
     t.string "kind", default: "normal", null: false
+    t.boolean "allow_open_registration", default: false
+    t.string "closed_password"
+    t.boolean "allow_team_registration", default: false
     t.integer "standings_mode", default: 1, null: false
     t.integer "penalty_time", default: 0, null: false
     t.datetime "start_at"
@@ -89,6 +91,7 @@ ActiveRecord::Schema.define(version: 2023_08_16_092450) do
   create_table "registrations", charset: "utf8mb4", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "contest_id", null: false
+    t.boolean "open_registration", default: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
@@ -110,6 +113,26 @@ ActiveRecord::Schema.define(version: 2023_08_16_092450) do
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
+  end
+
+  create_table "team_registration_users", charset: "utf8mb4", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "team_registration_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
+    t.index ["team_registration_id"], name: "index_team_registration_users_on_team_registration_id"
+    t.index ["user_id", "team_registration_id"], name: "index_team_registration_users_on_ids", unique: true
+    t.index ["user_id"], name: "index_team_registration_users_on_user_id"
+  end
+
+  create_table "team_registrations", charset: "utf8mb4", force: :cascade do |t|
+    t.string "name"
+    t.string "passphrase"
+    t.boolean "open_registration"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "deleted_at"
   end
 
   create_table "testcase_results", charset: "utf8mb4", force: :cascade do |t|
@@ -208,6 +231,8 @@ ActiveRecord::Schema.define(version: 2023_08_16_092450) do
   add_foreign_key "problems", "contests"
   add_foreign_key "problems", "users", column: "writer_user_id"
   add_foreign_key "submissions", "problems"
+  add_foreign_key "team_registration_users", "team_registrations"
+  add_foreign_key "team_registration_users", "users"
   add_foreign_key "testcase_sets", "problems"
   add_foreign_key "testcase_testcase_sets", "testcase_sets"
   add_foreign_key "testcase_testcase_sets", "testcases"
