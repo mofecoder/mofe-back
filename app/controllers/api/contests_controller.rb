@@ -149,7 +149,11 @@ class Api::ContestsController < ApplicationController
         return
       end
     end
-    submissions.update_all(status: 'WR')
+    ActiveRecord::Translation.transaction do
+      submissions.each do |submission|
+        submission.status = 'WR'
+      end
+    end
   end
 
   private
