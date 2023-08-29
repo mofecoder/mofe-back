@@ -177,7 +177,7 @@ class Api::SubmissionsController < ApplicationController
         testcase_count = idx.nil? ? c_testcases.length : idx
       end
 
-      SubmissionSerializer::new(submission, result_count: submission.testcase_results_raw.size, testcase_count: testcase_count)
+      SubmissionSerializer::new(submission, result_count: submission.testcase_results.size, testcase_count: testcase_count)
     end
 
     render json: { data: data, meta: pagination_data }
