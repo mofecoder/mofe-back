@@ -152,6 +152,7 @@ class Api::ContestsController < ApplicationController
     ActiveRecord::Translation.transaction do
       submissions.each do |submission|
         submission.status = 'WR'
+        submission.save
       end
     end
   end
