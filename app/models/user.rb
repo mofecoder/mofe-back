@@ -37,6 +37,6 @@ class User < ActiveRecord::Base
           authentication_keys: [:email, :name]
   include DeviseTokenAuth::Concerns::User
 
-  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..12 }
-  validates_format_of :name, with: /\A[a-zA-Z0-9_]{3,12}\z/, multiline: false
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..20 }
+  validates_format_of :name, with: /\A[a-zA-Z0-9_]{3,20}\z/, multiline: false
 end
