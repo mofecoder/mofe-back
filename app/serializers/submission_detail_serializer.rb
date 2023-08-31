@@ -12,23 +12,8 @@ class SubmissionDetailSerializer < SubmissionSerializer
   def testcase_results
     completed = @instance_options[:result_count] || 0
     all = @instance_options[:testcase_count]
-    if completed != all || @instance_options[:hide_results]
+    if completed != all || @instance_options[:hide_results] || @instance_options[:in_contest]
       []
-    elsif @instance_options[:in_contest]
-      samples = []
-      not_samples = []
-      object.testcase_results_in_contest.each do |testcase_result|
-        if @instance_options[:samples].include?(testcase_result.testcase_id)
-          samples << testcase_result
-        else
-          not_samples << testcase_result
-        end
-      end
-
-      CollectionSerializer.new(
-          samples + not_samples,
-          serializer: HiddenTestcaseResultSerializer
-      )
     else
       CollectionSerializer.new(
           object.testcase_results,
