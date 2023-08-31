@@ -107,6 +107,34 @@ class Api::SubmissionsController < ApplicationController
                   .where('created_at < ?', submission.updated_at)
                   .count
 
+    testcase_results_map = submission.testcase_results.map { |x| [x.testcase_id, x] }.to_h
+
+    testcase_sets = submission.problem.testcase_sets.eager_load(:testcases).order('testcases.name')
+    # @type [TestcaseSet] testcase_set
+    testcase_set_results = r_count < t_count ? nil : testcase_sets.map do |testcase_set|
+      is_all_ac = true
+      res = Hash.new(0)
+
+      testcase_set.testcases.each do |testcase|
+        result = testcase_results_map[testcase.id]
+        if result.nil?
+          next
+        end
+        if result.status != 'AC'
+          is_all_ac = false
+        end
+        res[result.status] += 1
+      end
+
+      {
+        name: testcase_set.name,
+        score: testcase_set.points,
+        point: is_all_ac ? testcase_set.points : 0,
+        results: res,
+        testcases: in_contest ? nil : testcase_set.testcases.map { |x| x.name },
+      }
+    end
+
     require('set')
     render json: submission,
            serializer: SubmissionDetailSerializer,
@@ -114,7 +142,8 @@ class Api::SubmissionsController < ApplicationController
            hide_results: r_count < t_count,
            samples: in_contest ? Set.new(samples) : nil,
            result_count: r_count,
-           testcase_count: t_count
+           testcase_count: t_count,
+           testcase_sets: testcase_set_results
   end
 
   def create

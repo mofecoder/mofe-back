@@ -1,5 +1,5 @@
 class SubmissionDetailSerializer < SubmissionSerializer
-  attributes :compile_error, :source, :sample_count, :testcase_results
+  attributes :compile_error, :source, :sample_count, :testcase_results, :testcase_sets
 
   def source
     Utils::GoogleCloudStorageClient::get_source(object.path).read.force_encoding("UTF-8")
@@ -35,5 +35,14 @@ class SubmissionDetailSerializer < SubmissionSerializer
           serializer: TestcaseResultSerializer
       )
     end
+  end
+
+  def testcase_sets
+    @instance_options[:testcase_sets]
+  end
+
+  class SetSerializer < ActiveModel::Serializer
+    attributes :name, :score, :point, :testcases, :results
+
   end
 end
