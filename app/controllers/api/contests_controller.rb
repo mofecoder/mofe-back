@@ -82,6 +82,7 @@ class Api::ContestsController < ApplicationController
     contest.start_at = param[:start_at]
     contest.end_at = param[:end_at]
     contest.penalty_time = param[:penalty_time]
+    contest.standings_mode = param[:standings_mode]
     contest.save
     render status: :created
   end
@@ -209,7 +210,7 @@ class Api::ContestsController < ApplicationController
   # @return [ActionController::Parameters]
   def contest_create_params
     params.require(:contest).permit(
-      :name, :slug, :kind, :description, :penalty_time, :start_at, :end_at, :official_mode
+      :name, :slug, :kind, :standings_mode, :description, :penalty_time, :start_at, :end_at, :official_mode
     )
   end
 end

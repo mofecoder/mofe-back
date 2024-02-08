@@ -1,6 +1,7 @@
 version: '3'
 services:
   db:
+    platform: linux/x86_64
     image: mysql:5.7
     volumes:
       - db-store:/var/lib/mysql
@@ -9,14 +10,16 @@ services:
       TZ: Asia/Tokyo
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
-      - 3306:3306
+      - "127.0.0.1:3306:3306"
 
   app:
     build: .
     volumes:
     - .:/app
+    environment:
+      DATABASE_URL: db
     ports:
-    - 4000:3000
+    - "127.0.0.1:3000:3000"
     depends_on:
       - db
 volumes:
