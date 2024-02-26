@@ -4,7 +4,8 @@ class Contest < ApplicationRecord
 
   has_many :problems, -> { order('char_length(`position`)').order(:position) }
   has_many :clarifications
-  has_many :registrations
+  has_many :registrations, dependent: :destroy
+  has_many :team_registrations, dependent: :destroy
   has_many :contest_admins, dependent: :destroy
   enum standings_mode: { atcoder: 1, icpc: 2 }
 

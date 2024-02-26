@@ -1,6 +1,6 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister]
+  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister, :team_register]
   before_action :authenticate_admin_user!, only: [:create]
   before_action :set_contest, except: [:index, :create, :register, :rejudge, :unregister]
 
@@ -171,6 +171,42 @@ class Api::ContestsController < ApplicationController
     end
   end
 
+  def team_register
+    name = team_register_params[:name]
+    passphrase = team_register_params[:passphrase]
+
+    contest = Contest.find_by!(slug: params[:contest_slug])
+    if contest.end_at.past?
+      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
+      return
+    end
+
+    unless contest.allow_team_registration
+      render json: { error: 'このコンテストはチーム参加できません。' }, status: :bad_request
+    end
+
+    reg = TeamRegistration.find_by(contest_id: contest.id, name: name)
+
+    if reg.present?
+      if reg.passphrase != passphrase
+        render json: { error: 'パスフレーズが謝っています。' }, status: :forbidden
+        return
+      end
+      if reg.team_registration_user_ids.include?(current_user.id)
+        render json: { error: 'すでに参加登録されています。' }, status: :conflict
+        return
+      end
+    else
+      reg = TeamRegistration.new(
+        contest_id: contest.id,
+        name: name,
+        passphrase: passphrase
+      )
+    end
+
+    reg.team_registration_users.create!(user_id: current_user.id)
+  end
+
   def rejudge
     ids = params[:submission_ids]
     contest = Contest.find_by!(slug: params[:contest_slug])
@@ -212,5 +248,9 @@ class Api::ContestsController < ApplicationController
     params.require(:contest).permit(
       :name, :slug, :kind, :standings_mode, :description, :penalty_time, :start_at, :end_at, :official_mode
     )
+  end
+
+  def team_register_params
+    params.permit(:contest_slug, :name, :password)
   end
 end
