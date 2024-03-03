@@ -20,7 +20,7 @@ class Api::ContestAdminsController < ApplicationController
       return
     end
 
-    @contest.contest_admins.create(user_id: user.id)
+    ContestAdmin.create(contest_id: @contest.id, user_id: user.id)
 
     render status: :created
   end

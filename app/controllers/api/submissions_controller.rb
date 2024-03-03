@@ -48,7 +48,6 @@ class Api::SubmissionsController < ApplicationController
           end
         end
       end
-
     end
 
     all_submissions = Submission

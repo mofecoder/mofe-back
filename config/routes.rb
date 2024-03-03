@@ -28,7 +28,8 @@ Rails.application.routes.draw do
         post "submit" => "submissions#create"
         put 'remove_from_contest' => 'tasks#remove_from_contest'
       end
-      resources :contest_admins, param: :slug, only: [:create, :destroy]
+      post 'contest_admins', to: 'contest_admins#create'
+      delete 'contest_admins', to: 'contest_admins#destroy'
       get 'standings' => 'standings#index'
       member do
         put 'set_task'
