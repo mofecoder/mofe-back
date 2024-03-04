@@ -13,10 +13,10 @@ class Problem < ApplicationRecord
   def samples
     set = testcase_sets.find_by(problem_id: id, is_sample: 1)
     return set unless set
-    set
-      .testcases
+
+    set.testcases
       .includes(:problem)
-      .order(:id)
+      .order(:name)
       .map do |m| {
           input: m.input_data(true),
           output: m.output_data(true),
