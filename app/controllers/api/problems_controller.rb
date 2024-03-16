@@ -57,7 +57,7 @@ class Api::ProblemsController < ApplicationController
       return
     end
 
-    if problem.update(problem_params)
+    if problem.update(problem_edit_params)
       render json: problem, serializer: ProblemDetailSerializer
     else
       render json: problem.errors, status: :unprocessable_entity
@@ -95,6 +95,12 @@ class Api::ProblemsController < ApplicationController
   private
 
   # Only allow a trusted parameter "white list" through.
+  def problem_edit_params
+    params.require(:problem)
+          .permit(:name, :difficulty, :execution_time_limit, :statement,
+                  :constraints, :input_format, :output_format)
+  end
+
   def problem_params
     params.require(:problem).permit(:name, :difficulty, :statement, :constraints, :input_format, :output_format)
   end
