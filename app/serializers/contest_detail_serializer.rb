@@ -6,7 +6,8 @@ class ContestDetailSerializer < ContestSerializer
     return nil if @instance_options[:include_tasks].nil?
     ActiveModel::Serializer::CollectionSerializer.new(
         @instance_options[:include_tasks],
-        serializer: ContestTaskSerializer
+        serializer: ContestTaskSerializer,
+        accepted: @instance_options[:accepted]
     )
   end
 

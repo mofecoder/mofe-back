@@ -44,6 +44,7 @@ Rails.application.routes.draw do
         collection do
           post 'upload'
           delete 'delete_multiple'
+          patch 'change_state_multiple'
         end
         member do
           patch 'change_state'

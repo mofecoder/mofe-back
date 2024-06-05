@@ -55,6 +55,12 @@ class Api::ContestsController < ApplicationController
 
     show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin_for_contest?(contest.id))
 
+    accepted = []
+    if user_signed_in?
+      accepted = Submission.where(user_id: current_user.id, problem: Problem.where(contest_id: contest.id))
+                           .where(status: 'AC').select(:problem_id).distinct.pluck(:problem_id)
+    end
+
     registered = nil
     if user_signed_in?
       registration = contest.registrations.find_by(user_id: current_user.id)
@@ -69,7 +75,7 @@ class Api::ContestsController < ApplicationController
 
     render json: contest, serializer: ContestDetailSerializer,
            include_tasks: include_tasks, user: current_user, show_editorial: show_editorial,
-           registered: registered,
+           registered: registered, accepted: Set.new(accepted),
            written: writer_or_tester
   end
 

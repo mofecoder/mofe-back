@@ -190,6 +190,21 @@ class Api::TestcasesController < ApplicationController
     end
   end
 
+  def change_state_multiple
+    testcases = @problem.testcases.where(id: params[:testcase_ids])
+    testcase_set_id = params[:testcase_set_id]
+    @problem.testcase_sets.find(testcase_set_id)
+
+    ActiveRecord::Base.transaction do
+      testcases.each do |testcase|
+        TestcaseTestcaseSet.find_or_create_by(
+          testcase_id: testcase.id,
+          testcase_set_id: testcase_set_id
+        )
+      end
+    end
+  end
+
   private
 
   def authenticate_writer!
