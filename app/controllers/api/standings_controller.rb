@@ -11,10 +11,11 @@ class Api::StandingsController < ApplicationController
                         .order(created_at: :asc)
 
     # @type [Hash]
-    problems = Problem.joins(:contest).eager_load(:testcase_sets, :tester_relations).preload(:contest)
+    problems = Problem.joins(:contest).preload(:testcase_sets, :tester_relations).preload(contest: :contest_admins)
                    .where('contests.slug': params[:contest_slug])
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
+    show_problems = contest.is_writer_or_tester(current_user) || started_at.past?
 
     require 'set'
 
@@ -117,31 +118,33 @@ class Api::StandingsController < ApplicationController
             time: time_max + penalty * penalty_time,
             penalty: penalty == 0 ? nil : penalty
           },
-          problems: ls
+          problems: show_problems ? ls : []
         }
       end
     end
 
     problem_res = []
-    # @type [Problem] task
-    problems.each do |id, task|
-      fa = first_ac[id]
-      user = fa[1] ? user_table[fa[1]] : nil
-      problem_res << {
-        name: task.has_permission?(current_user) ? task.name : nil,
-        slug: task.slug,
-        position: task.position,
-        solved: solved[id],
-        tried: solved[id] + trying[id],
-        first_accept: user ? {
-          time: (fa[0] - started_at).to_i,
-          user: {
-            name: user.name,
-            atcoder_id: user.atcoder_id,
-            atcoder_rating: user.atcoder_rating
-          }
-        } : nil
-      }
+    if show_problems
+      # @type [Problem] task
+      problems.each do |id, task|
+        fa = first_ac[id]
+        user = fa[1] ? user_table[fa[1]] : nil
+        problem_res << {
+          name: task.has_permission?(current_user) ? task.name : nil,
+          slug: task.slug,
+          position: task.position,
+          solved: solved[id],
+          tried: solved[id] + trying[id],
+          first_accept: user ? {
+            time: (fa[0] - started_at).to_i,
+            user: {
+              name: user.name,
+              atcoder_id: user.atcoder_id,
+              atcoder_rating: user.atcoder_rating
+            }
+          } : nil
+        }
+      end
     end
 
     res.sort! do |a, b|
