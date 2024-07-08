@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_02_26_193904) do
+ActiveRecord::Schema.define(version: 2024_06_30_153938) do
 
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
@@ -135,7 +135,7 @@ ActiveRecord::Schema.define(version: 2024_02_26_193904) do
     t.bigint "contest_id", null: false
     t.string "name"
     t.string "passphrase"
-    t.boolean "open_registration"
+    t.boolean "open_registration", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
@@ -247,4 +247,8 @@ ActiveRecord::Schema.define(version: 2024_02_26_193904) do
   add_foreign_key "testcases", "problems"
   add_foreign_key "tester_relations", "problems"
   add_foreign_key "tester_relations", "users", column: "tester_user_id"
+
+  create_view "all_registrations", sql_definition: <<-SQL
+      select `registrations`.`id` AS `id`,`registrations`.`contest_id` AS `contest_id`,`registrations`.`open_registration` AS `open_registration`,`registrations`.`created_at` AS `created_at`,`registrations`.`updated_at` AS `updated_at`,`registrations`.`deleted_at` AS `deleted_at`,'individual' AS `type` from `registrations` union select `team_registrations`.`id` AS `id`,`team_registrations`.`contest_id` AS `contest_id`,`team_registrations`.`open_registration` AS `open_registration`,`team_registrations`.`created_at` AS `created_at`,`team_registrations`.`updated_at` AS `updated_at`,`team_registrations`.`deleted_at` AS `deleted_at`,'team' AS `type` from `team_registrations`
+  SQL
 end
