@@ -85,7 +85,6 @@ class Api::ProblemsController < ApplicationController
       puts path
       problem.checker_path = path
     else
-      puts params[:type]
       problem.checker_path = "checker_sources/#{params[:type]}"
     end
 
@@ -102,7 +101,9 @@ class Api::ProblemsController < ApplicationController
   end
 
   def problem_params
-    params.require(:problem).permit(:name, :difficulty, :statement, :constraints, :input_format, :output_format)
+    params.require(:problem).permit(
+      :name, :difficulty, :statement, :constraints, :input_format, :output_format, :execution_time_limit
+    )
   end
 
   def authenticate_writer!

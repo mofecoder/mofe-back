@@ -60,3 +60,6 @@ gem 'paranoia'
 gem 'kaminari'
 
 gem 'google-cloud-storage'
+
+gem 'scenic'
+gem 'scenic-mysql_adapter'

@@ -35,8 +35,13 @@ Rails.application.routes.draw do
         put 'set_task'
       end
       resources :clarifications, only: [:index, :show, :create, :update]
-      post 'register'
-      delete 'unregister'
+      resources :registrations, only: [:create] do
+        collection do
+          post 'team'
+          delete :index, to:  "registrations#delete"
+        end
+      end
+
       post 'rejudge'
     end
     resources :problems, except: [:destroy] do

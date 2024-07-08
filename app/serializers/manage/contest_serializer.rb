@@ -1,5 +1,5 @@
 class Manage::ContestSerializer < ContestDetailSerializer
-  attributes :official_mode, :admins
+  attributes :official_mode, :admins, :closed_password, :allow_open_registration, :allow_team_registration
 
   def tasks
     ActiveModel::Serializer::CollectionSerializer.new(
