@@ -22,18 +22,44 @@ class Api::StandingsController < ApplicationController
     admins = Set.new(contest.contest_admins.pluck(:user_id) + User.where(role: 'admin').pluck(:id))
 
     # @type [Hash]
-    users = {}
-    user_table = {}
+    regs = {}
+    all_user_table = {}
+    team_table = {}
+    user_to_reg = {}
 
     reg = contest.registrations.includes(:user)
+    team_reg = contest.team_registrations.includes(team_registration_users: :user)
 
     if params.include?(:exclude_open)
       reg.where!(open_registration: false)
+      team_reg.where!(open_registration: false)
+    end
+
+    if params.include?(:team_only)
+      reg = []
     end
 
     reg.each do |registration|
-      users[registration.user_id] = []
-      user_table[registration.user_id] = registration.user
+      regs[registration.id] = []
+      all_user_table[registration.user.id] = registration.user
+      team_table[registration.id] = registration.user.slice(:name, :atcoder_id, :atcoder_rating)
+      team_table[registration.id][:team_member] = nil
+      team_table[registration.id][:open] = registration.open_registration
+      user_to_reg[registration.user.id] = registration.id
+    end
+    team_reg.each do |registration|
+      regs[-registration.id] = []
+      team_table[-registration.id] = {
+        name: registration.name,
+        atcoder_id: nil,
+        atcoder_rating: -1,
+        team_member: registration.team_registration_users.map(&:user).map(&:name),
+        open: registration.open_registration
+      }
+      registration.team_registration_users.map do |reg_u|
+        all_user_table[reg_u.user_id] = reg_u.user
+        user_to_reg[reg_u.user_id] = -registration.id
+      end
     end
 
     #@type [Hash]
@@ -48,8 +74,9 @@ class Api::StandingsController < ApplicationController
     submissions.each do |sub|
       next if problem_writers[sub.problem_id].include?(sub.user_id)
       next if admins.include?(sub.user_id)
-      if users[sub.user_id]
-        users[sub.user_id] << sub
+      reg_id = user_to_reg[sub.user_id]
+      if regs[reg_id]
+        regs[reg_id] << sub
         first_ac_time = first_ac[sub.problem.id][0]
         if sub.status == 'AC' && first_ac_time.nil?
           first_ac[sub.problem.id] = [sub.created_at, sub.user.id]
@@ -58,13 +85,13 @@ class Api::StandingsController < ApplicationController
     end
 
     if contest.icpc?
-      res, solved, trying = icpc_standings(users, user_table, problems, problem_score_table, started_at, penalty_time)
+      res, solved, trying = icpc_standings(regs, team_table, problems, problem_score_table, started_at, penalty_time)
     else
       res = []
       solved = problems.to_a.map { |d| [d[0], 0] }.to_h
       trying = problems.to_a.map { |d| [d[0], 0] }.to_h
       # @type [Array<Submission>] value
-      users.each do |user_id, value|
+      regs.each do |reg_id, value|
         ls = []
         group = value.group_by { |p| p.problem_id }
         score_sum = 0
@@ -73,7 +100,7 @@ class Api::StandingsController < ApplicationController
         problems.each do |id, problem|
           # @type [Array<Submission>] s
           s = group[id]
-          if s.nil? || user_id == problem.writer_user_id
+          if s.nil?
             ls << {}
             next
           end
@@ -105,14 +132,10 @@ class Api::StandingsController < ApplicationController
           ls << tmp
         end
 
-        user = user_table[user_id]
+        team = team_table[reg_id]
 
         res << {
-          user: {
-            name: user.name,
-            atcoder_id: user.atcoder_id,
-            atcoder_rating: user.atcoder_rating
-          },
+          user: team,
           result: {
             score: score_sum,
             time: time_max + penalty * penalty_time,
@@ -128,7 +151,7 @@ class Api::StandingsController < ApplicationController
       # @type [Problem] task
       problems.each do |id, task|
         fa = first_ac[id]
-        user = fa[1] ? user_table[fa[1]] : nil
+        user = fa[1] ? team_table[fa[1]] : nil
         problem_res << {
           name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
@@ -175,12 +198,12 @@ class Api::StandingsController < ApplicationController
 
   private
 
-  def icpc_standings(users, user_table, problems, problem_score_table, started_at, penalty_time)
+  def icpc_standings(regs, team_table, problems, problem_score_table, started_at, penalty_time)
     res = []
     solved = problems.to_a.map { |d| [d[0], 0] }.to_h
     trying = problems.to_a.map { |d| [d[0], 0] }.to_h
     # @type [Array<Submission>] value
-    users.each do |user_id, value|
+    regs.each do |reg_id, value|
       ls = []
       group = value.group_by { |p| p.problem_id }
       score_sum = 0
@@ -189,7 +212,7 @@ class Api::StandingsController < ApplicationController
       problems.each do |id, problem|
         # @type [Array<Submission>] s
         s = group[id]
-        if s.nil? || user_id == problem.writer_user_id
+        if s.nil?
           ls << {
             is_in_progress: false
           }
@@ -229,14 +252,10 @@ class Api::StandingsController < ApplicationController
         ls << tmp
       end
 
-      user = user_table[user_id]
+      team = team_table[reg_id]
 
       res << {
-        user: {
-          name: user.name,
-          atcoder_id: user.atcoder_id,
-          atcoder_rating: user.atcoder_rating
-        },
+        user: team,
         result: {
           score: score_sum,
           time: time_sum + penalty * penalty_time,

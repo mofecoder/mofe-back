@@ -1,6 +1,6 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister]
+  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister, :team_register]
   before_action :authenticate_admin_user!, only: [:create, :set_task]
   before_action :set_contest, except: [:index, :create, :register, :rejudge, :unregister]
 
@@ -64,12 +64,13 @@ class Api::ContestsController < ApplicationController
     registered = nil
     if user_signed_in?
       registration = contest.registrations.find_by(user_id: current_user.id)
-      if registration.blank?
-        registered = nil
-      elsif registration.open_registration
-        registered = 'open'
-      elsif registration.present?
-        registered = 'normal'
+      team_registration = contest.team_registrations.eager_load(:team_registration_users)
+                            .find_by(team_registration_users: { user_id: current_user.id })
+      registered = nil
+      if registration.present?
+        registered = { name: nil, open: registration.open_registration }
+      elsif team_registration.present?
+        registered = { name: team_registration.name, open: team_registration.open_registration }
       end
     end
 
@@ -135,47 +136,6 @@ class Api::ContestsController < ApplicationController
     end
   end
 
-  def unregister
-    contest = Contest.find_by!(slug: params[:contest_slug])
-    if contest.end_at.past?
-      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
-      return
-    end
-    reg = Registration.find_by!(user_id: current_user.id, contest_id: contest.id)
-
-    reg.destroy!
-  end
-
-  def register
-    contest = Contest.find_by!(slug: params[:contest_slug])
-    if contest.end_at.past?
-      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
-      return
-    end
-    reg = Registration.find_or_initialize_by(user_id: current_user.id, contest_id: contest.id)
-
-    if contest.closed_password.present?
-      if contest.allow_open_registration && params[:open].present?
-        reg.open_registration = true
-      elsif params[:password].blank?
-        render json: { error: '参加登録にはパスワードが必要です。' }, status: :forbidden
-        return
-      elsif params[:password] != contest.closed_password
-        render json: { error: '参加登録パスワードが誤っています。' }, status: :forbidden
-        return
-      end
-    end
-
-    if reg.new_record?
-      if reg.save
-        render status: :created
-      else
-        render json: { error: reg.errors }, status: :unprocessable_entity
-      end
-    else
-      render json: { error: 'すでに参加登録されています。' }, status: :conflict
-    end
-  end
 
   def rejudge
     ids = params[:submission_ids]
@@ -209,7 +169,8 @@ class Api::ContestsController < ApplicationController
   # @return [ActionController::Parameters]
   def contest_update_params
     params.require(:contest).permit(
-      :name, :description, :kind, :standings_mode, :penalty_time, :start_at, :end_at, :editorial_url, :official_mode
+      :name, :description, :kind, :standings_mode, :penalty_time, :start_at, :end_at, :editorial_url, :official_mode,
+      :allow_open_registration, :closed_password, :allow_team_registration
     )
   end
 
