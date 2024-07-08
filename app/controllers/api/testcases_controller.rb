@@ -38,6 +38,7 @@ class Api::TestcasesController < ApplicationController
       {
           id: set.id,
           name: set.name,
+          aggregate_type: set.aggregate_type,
           is_sample: set.is_sample,
           points: set.points
       }

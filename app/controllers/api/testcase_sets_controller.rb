@@ -3,7 +3,7 @@ class Api::TestcaseSetsController < ApplicationController
   before_action :authenticate_writer!
 
   def show
-    render json: TestcaseSet.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample])
+    render json: TestcaseSet.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample, :aggregate_type])
   end
 
   def create
@@ -62,10 +62,10 @@ class Api::TestcaseSetsController < ApplicationController
     end
 
     def create_params
-      params.required(:testcase_set).permit(:name, :points, :is_sample)
+      params.required(:testcase_set).permit(:name, :points, :is_sample, :aggregate_type)
     end
 
     def update_params
-      params.required(:testcase_set).permit(:name, :points)
+      params.required(:testcase_set).permit(:name, :points, :aggregate_type)
     end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_06_30_153938) do
+ActiveRecord::Schema.define(version: 2024_07_08_090533) do
 
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
@@ -146,6 +146,7 @@ ActiveRecord::Schema.define(version: 2024_06_30_153938) do
     t.bigint "submission_id", null: false
     t.bigint "testcase_id", null: false
     t.string "status", limit: 16, null: false
+    t.bigint "score"
     t.integer "execution_time", null: false
     t.integer "execution_memory", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -159,6 +160,7 @@ ActiveRecord::Schema.define(version: 2024_06_30_153938) do
     t.bigint "problem_id", null: false
     t.string "name", null: false
     t.integer "points", null: false
+    t.integer "aggregate_type", default: 0, null: false
     t.boolean "is_sample", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false

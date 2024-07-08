@@ -8,7 +8,7 @@ class Api::Manage::ContestsController < ApplicationController
 
   def show
     # @type [Contest]
-    contest = Contest.find_by!(slug: params[:slug])
+    contest = Contest.preload(problems: [:writer_user, :testcase_sets]).find_by!(slug: params[:slug])
     unless current_user.admin_for_contest?(contest.id)
       render_403
       return
