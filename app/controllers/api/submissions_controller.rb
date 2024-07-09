@@ -1,6 +1,8 @@
 class Api::SubmissionsController < ApplicationController
   include Pagination
   before_action :authenticate_user!, except: [:all, :show]
+  @min_id = 2.pow(63)
+  @max_id = -(2.pow(63))
 
   def index
     if current_user.nil?
@@ -111,27 +113,7 @@ class Api::SubmissionsController < ApplicationController
     testcase_sets = submission.problem.testcase_sets.eager_load(:testcases).order('testcases.name')
     # @type [TestcaseSet] testcase_set
     testcase_set_results = r_count < t_count ? nil : testcase_sets.map do |testcase_set|
-      is_all_ac = true
-      res = Hash.new(0)
-
-      testcase_set.testcases.each do |testcase|
-        result = testcase_results_map[testcase.id]
-        if result.nil?
-          next
-        end
-        if result.status != 'AC'
-          is_all_ac = false
-        end
-        res[result.status] += 1
-      end
-
-      {
-        name: testcase_set.name,
-        score: testcase_set.points,
-        point: is_all_ac ? testcase_set.points : 0,
-        results: res,
-        testcases: in_contest ? nil : testcase_set.testcases.map { |x| x.name },
-      }
+      testcase_set_map(in_contest, testcase_results_map, testcase_set)
     end
 
     require('set')
@@ -156,6 +138,57 @@ class Api::SubmissionsController < ApplicationController
   end
 
   private
+
+  def testcase_set_map(in_contest, testcase_results_map, testcase_set)
+    case testcase_set.aggregate_type
+    when 'min'
+      score = @min_id
+    when 'max'
+      score = @max_id
+    when 'all'
+      score = testcase_set.points
+    else
+      score = 0
+    end
+    res = Hash.new(0)
+
+    testcase_set.testcases.each do |testcase|
+      # @type [TestcaseResult]
+      result = testcase_results_map[testcase.id]
+      if result.nil?
+        next
+      end
+      res[result.status] += 1
+      case testcase_set.aggregate_type
+      when 'all'
+        if result.status != 'AC'
+          score = 0
+        end
+      when 'max'
+        if result.score.present? && score < result.score
+          score = result.score
+        end
+      when 'min'
+        if result.score.present? && score > result.score
+          score = result.score
+        end
+      when 'sum'
+        if result.score.present?
+          score += result.score
+        end
+      else
+        # unreachable
+      end
+    end
+
+    {
+      name: testcase_set.name,
+      score: testcase_set.points,
+      point: score,
+      results: res,
+      testcases: in_contest ? nil : testcase_set.testcases.map { |x| x.name },
+    }
+  end
 
   # @param submissions [ActiveRecord::Relation<Submission>]
   def submissions(submissions, problem_ids, options)
