@@ -1,8 +1,6 @@
 class Api::SubmissionsController < ApplicationController
   include Pagination
   before_action :authenticate_user!, except: [:all, :show]
-  @min_id = 2.pow(63)
-  @max_id = -(2.pow(63))
 
   def index
     if current_user.nil?
@@ -140,12 +138,14 @@ class Api::SubmissionsController < ApplicationController
   private
 
   def testcase_set_map(in_contest, testcase_results_map, testcase_set)
+    min_id = 2.pow(63)
+    max_id = -(2.pow(63))
     score = 0
     case testcase_set.aggregate_type
     when 'min'
-      score = @min_id
+      score = min_id
     when 'max'
-      score = @max_id
+      score = max_id
     when 'all'
       score = testcase_set.points
     else
