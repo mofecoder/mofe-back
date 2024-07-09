@@ -140,6 +140,7 @@ class Api::SubmissionsController < ApplicationController
   private
 
   def testcase_set_map(in_contest, testcase_results_map, testcase_set)
+    score = 0
     case testcase_set.aggregate_type
     when 'min'
       score = @min_id
