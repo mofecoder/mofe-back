@@ -13,9 +13,11 @@ class Api::StandingsController < ApplicationController
     # @type [Hash]
     problems = Problem.joins(:contest).preload(:testcase_sets, :tester_relations).preload(contest: :contest_admins)
                    .where('contests.slug': params[:contest_slug])
+                    .order('LENGTH(position)')
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
     show_problems = contest.is_writer_or_tester(current_user) || started_at.past?
+
 
     require 'set'
 
@@ -147,11 +149,13 @@ class Api::StandingsController < ApplicationController
     end
 
     problem_res = []
+    problem_pos_table = {}
     if show_problems
       # @type [Problem] task
       problems.each do |id, task|
         fa = first_ac[id]
         user = fa[1] ? team_table[fa[1]] : nil
+        problem_pos_table[task.position] = problem_res.length
         problem_res << {
           name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
@@ -168,6 +172,14 @@ class Api::StandingsController < ApplicationController
           } : nil
         }
       end
+    end
+
+    sort_column = params[:sort_column]
+    sort_order = params[:order]
+    if sort_column.is_a?(String) && problem_pos_table.include?(sort_column.upcase)
+      sort_column = problem_pos_table[sort_column.upcase]
+    else
+      sort_column = nil
     end
 
     res.sort! do |a, b|
@@ -188,6 +200,16 @@ class Api::StandingsController < ApplicationController
           res[i][:rank] = i + 1
         end
       end
+    end
+
+    if sort_column.present?
+      i = 0
+      multiply = -1
+      if sort_order == "asc"
+        multiply = 1
+      end
+
+      res.sort_by! { |x| [(x[:problems][sort_column][:score] || 0) * multiply, i + 1] }
     end
 
     render json: {
@@ -283,7 +305,7 @@ class Api::StandingsController < ApplicationController
         if %w(IE CE).include?(sub.status)
           next
         end
-        if %w(WA RE OLE MLE TLE).include?(sub.status)
+        if %w(WA RE OLE MLE TLE QLE).include?(sub.status)
           now_pena += 1
         end
         score = sub.point || 0
