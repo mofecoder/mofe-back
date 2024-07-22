@@ -6,7 +6,10 @@ class Api::UsersController < ApplicationController
   before_action :authenticate_admin_user!, only: [:index, :update_admin, :update_rating]
 
   def index
-    render json: User.all.as_json(only: [:id, :name, :role, :writer_request_code, :created_at])
+    render json: User.all.as_json(only: [
+      :id, :name, :role, :writer_request_code, :created_at,
+      :atcoder_id, :atcoder_rating, :current_sign_in_at
+    ])
   end
 
   def update_admin

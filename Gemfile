@@ -50,6 +50,9 @@ gem 'devise'
 gem 'devise_token_auth'
 gem 'devise-i18n'
 
+gem 'omniauth-google-oauth2'
+gem 'omniauth-rails_csrf_protection'
+
 # Zipファイル
 gem 'rubyzip'
 
