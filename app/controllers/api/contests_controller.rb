@@ -1,8 +1,8 @@
 #noinspection RubyYardReturnMatch
 class Api::ContestsController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :update, :register, :rejudge, :unregister, :team_register]
-  before_action :authenticate_admin_user!, only: [:create, :set_task]
-  before_action :set_contest, except: [:index, :create, :register, :rejudge, :unregister]
+  before_action :authenticate_user!, only: [:create, :update, :rejudge, :set_task]
+  before_action :authenticate_admin_user!, only: [:create]
+  before_action :set_contest, except: [:index, :create, :rejudge]
 
   def index
     now = DateTime::now
@@ -124,6 +124,10 @@ class Api::ContestsController < ApplicationController
     if task.contest_id.present?
       render json: { error: 'この問題はすでに他のコンテストに所属しています。' }, status: :conflict
       return
+    end
+
+    if current_user.writer? && task.writer_user != current_user
+      render json: { error: '他のユーザの問題は追加できません。' }, status: :forbidden
     end
 
     ActiveRecord::Base.transaction do
