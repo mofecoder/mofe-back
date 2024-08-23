@@ -116,6 +116,7 @@ class Api::SubmissionsController < ApplicationController
 
     require('set')
     render json: submission,
+           admin: is_admin_or_writer,
            serializer: SubmissionDetailSerializer,
            in_contest: in_contest,
            hide_results: r_count < t_count,

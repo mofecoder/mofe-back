@@ -17,7 +17,8 @@ class SubmissionDetailSerializer < SubmissionSerializer
     else
       CollectionSerializer.new(
           object.testcase_results,
-          serializer: TestcaseResultSerializer
+          serializer: TestcaseResultSerializer,
+          admin: @instance_options[:admin]
       )
     end
   end

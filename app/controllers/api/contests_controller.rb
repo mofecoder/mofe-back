@@ -6,15 +6,18 @@ class Api::ContestsController < ApplicationController
 
   def index
     now = DateTime::now
-    during = Contest.all.where('`start_at` <= ? AND `end_at` > ?', now, now).order(:end_at)
-    future = Contest.all.where('`start_at` > ?', now).order(:start_at)
-    past = Contest.all.where('`end_at` <= ?', now).order(end_at: :desc)
+    contests = Contest.all.select(:slug, :name, :kind, :start_at, :end_at)
+    during = contests.where('`start_at` <= ? AND `end_at` > ?', now, now).where(permanent: false).order(:end_at)
+    future = contests.where('`start_at` > ?', now).where(permanent: false).order(:start_at)
+    past = contests.where('`end_at` <= ?', now).where(permanent: false).order(end_at: :desc)
+    permanent = contests.where(permanent: true)
     unless current_user&.admin?
       during = during.where.not(kind: 'private')
       future = future.where.not(kind: 'private')
       past = past.where.not(kind: 'private')
+      permanent = permanent.where.not(kind: 'private')
     end
-    render json: (during + future + past).as_json(only: [:slug, :name, :kind, :start_at, :end_at])
+    render json: { in_progress: during, future: future, past: past, permanent: permanent }
   end
 
   def show
