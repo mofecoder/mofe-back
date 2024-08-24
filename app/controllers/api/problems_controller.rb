@@ -64,6 +64,18 @@ class Api::ProblemsController < ApplicationController
     end
   end
 
+  def download_checker
+    problem = Problem.find(params[:problem_id])
+    unless current_user.admin_for_contest?(problem.contest_id) || problem.writer_user_id == current_user.id
+      render_403
+      return
+    end
+
+    checker_data = Utils::GoogleCloudStorageClient::get_source(problem.checker_path)
+
+    send_data(checker_data, type: 'text/x-c')
+  end
+
   def update_checker
     problem = Problem.find(params[:problem_id])
     unless current_user.admin_for_contest?(problem.contest_id) || problem.writer_user_id == current_user.id
@@ -82,7 +94,6 @@ class Api::ProblemsController < ApplicationController
 
       FileUtils.rm_f file_path
 
-      puts path
       problem.checker_path = path
     else
       problem.checker_path = "checker_sources/#{params[:type]}"
@@ -111,4 +122,4 @@ class Api::ProblemsController < ApplicationController
       render_403
     end
   end
-end
+    end

@@ -141,7 +141,7 @@ class Api::SubmissionsController < ApplicationController
   def testcase_set_map(in_contest, testcase_results_map, testcase_set)
     min_id = 2.pow(63)
     max_id = -(2.pow(63))
-    score = 0
+
     case testcase_set.aggregate_type
     when 'min'
       score = min_id
