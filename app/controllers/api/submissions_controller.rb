@@ -77,12 +77,7 @@ class Api::SubmissionsController < ApplicationController
       return
     end
 
-    is_admin_or_writer = user_signed_in? && (
-      current_user.admin? ||
-      submission.problem.writer_user_id == current_user.id ||
-      submission.problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
-      contest.is_writer_or_tester(current_user) && contest.official_mode
-    )
+    is_admin_or_writer = is_admin_or_writer?(submission.problem)
 
     if !user_signed_in? || (!is_admin_or_writer && submission.user_id != current_user.id)
       unless contest.end_at.past?
@@ -133,6 +128,16 @@ class Api::SubmissionsController < ApplicationController
     end
 
     problem = Problem.find_by!(slug: params[:task_slug])
+    limit = check_submit_limit(problem)
+
+    if limit.present?
+      limit = limit.floor
+      response.set_header('Retry-After', limit)
+      render status: :too_early, json: {
+        error: "提出制限により、#{limit} 秒後までは提出できません。"
+      }
+      return
+    end
     _submit(problem, request.body.read)
   end
 
@@ -246,6 +251,31 @@ class Api::SubmissionsController < ApplicationController
     render json: { data: data, meta: pagination_data }
   end
 
+
+  # @param problem [Problem]
+  # @return [Integer, NilClass]
+  def check_submit_limit(problem)
+    if is_admin_or_writer?(problem)
+      return nil
+    end
+    latest_submissions = Submission
+                           .where(user: current_user)
+                           .where.not(status: %w[IE CE])
+                           .order(created_at: :desc)
+                           .limit(2).to_a
+
+    if latest_submissions.length >= 2 && problem.submission_limit_2 > 0&&
+      (remain2 = Time.zone.now - latest_submissions[1].created_at - problem.submission_limit_2) < 0
+      return -remain2
+    end
+    if latest_submissions.length >= 1 && problem.submission_limit_1 > 0 &&
+        (remain1 = Time.zone.now - latest_submissions[0].created_at - problem.submission_limit_1) < 0
+      return -remain1
+    end
+
+    nil
+  end
+
   def _submit(problem, source)
     unless problem.has_permission?(current_user)
       render_403
@@ -269,6 +299,15 @@ class Api::SubmissionsController < ApplicationController
         .order(:created_at)
         .to_a
         .group_by { |t| t.problem_id }
+  end
+
+  def is_admin_or_writer?(problem)
+    user_signed_in? && (
+      current_user.admin? ||
+        problem.writer_user_id == current_user.id ||
+        problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
+        problem.contest.is_writer_or_tester(current_user) && problem.contest.official_mode
+    )
   end
 
   # pathを生やす

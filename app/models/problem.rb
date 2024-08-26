@@ -9,6 +9,8 @@ class Problem < ApplicationRecord
   has_many :clarifications
 
   validates :slug, uniqueness: true, allow_nil: true
+  validates :submission_limit_1, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :submission_limit_2, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
   def samples
     set = testcase_sets.find_by(problem_id: id, is_sample: 1)

@@ -80,8 +80,8 @@ ActiveRecord::Schema.define(version: 2024_08_18_054102) do
     t.string "uuid"
     t.string "difficulty", limit: 16, null: false
     t.integer "execution_time_limit", default: 2000, null: false
-    t.integer "submission_limit_1"
-    t.integer "submission_limit_2"
+    t.integer "submission_limit_1", default: 5, null: false
+    t.integer "submission_limit_2", default: 60, null: false
     t.string "statement", limit: 4096, null: false
     t.string "constraints", limit: 2048, null: false
     t.string "input_format", limit: 1024, null: false

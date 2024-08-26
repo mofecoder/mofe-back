@@ -29,6 +29,8 @@ class Api::ProblemsController < ApplicationController
       @problem.uuid = SecureRandom.uuid
       @problem.writer_user_id = current_user.id
       @problem.checker_path = 'checker_sources/wcmp.cpp'
+      @problem.submission_limit_1 = 5
+      @problem.submission_limit_2 = 60
 
       if @problem.save
         @problem.testcase_sets.create(
@@ -108,7 +110,8 @@ class Api::ProblemsController < ApplicationController
   def problem_edit_params
     params.require(:problem)
           .permit(:name, :difficulty, :execution_time_limit, :statement,
-                  :constraints, :input_format, :output_format)
+                  :constraints, :input_format, :output_format,
+                  :submission_limit_1, :submission_limit_2)
   end
 
   def problem_params
