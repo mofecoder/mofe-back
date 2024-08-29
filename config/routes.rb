@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     mount_devise_token_auth_for 'User', at: 'auth', controllers: {
       passwords: 'api/passwords'
     }
+    get 'top' => 'top_page#index'
     namespace :manage do
       resources :contests, param: :slug, only: [:index, :show]
       resources :problems, param: :slug, only: [] do
@@ -25,7 +26,7 @@ Rails.application.routes.draw do
         end
       end
       resources :tasks, param: :slug, only: [:show] do
-        post "submit" => "submissions#create"
+        post 'submit' => 'submissions#create'
         put 'remove_from_contest' => 'tasks#remove_from_contest'
       end
       post 'contest_admins', to: 'contest_admins#create'
@@ -38,7 +39,7 @@ Rails.application.routes.draw do
       resources :registrations, only: [:create] do
         collection do
           post 'team'
-          delete :index, to:  "registrations#delete"
+          delete :index, to: 'registrations#delete'
         end
       end
 
