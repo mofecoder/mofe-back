@@ -63,6 +63,7 @@ class Api::RegistrationsController < ApplicationController
         contest_id: contest.id,
         name: name,
         passphrase: passphrase,
+        open_registration: false
       )
     end
 
