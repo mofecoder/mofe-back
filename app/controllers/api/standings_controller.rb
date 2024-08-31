@@ -44,7 +44,7 @@ class Api::StandingsController < ApplicationController
     reg.each do |registration|
       regs[registration.id] = []
       all_user_table[registration.user.id] = registration.user
-      team_table[registration.id] = registration.user.slice(:name, :atcoder_id, :atcoder_rating)
+      team_table[registration.id] = registration.user.slice(:name, :atcoder_id, :atcoder_rating).symbolize_keys
       team_table[registration.id][:team_member] = nil
       team_table[registration.id][:open] = registration.open_registration
       user_to_reg[registration.user.id] = registration.id
@@ -81,7 +81,7 @@ class Api::StandingsController < ApplicationController
         regs[reg_id] << sub
         first_ac_time = first_ac[sub.problem.id][0]
         if sub.status == 'AC' && first_ac_time.nil?
-          first_ac[sub.problem.id] = [sub.created_at, sub.user.id]
+          first_ac[sub.problem.id] = [sub.created_at, reg_id]
         end
       end
     end
@@ -150,12 +150,15 @@ class Api::StandingsController < ApplicationController
 
     problem_res = []
     problem_pos_table = {}
+    p first_ac
+    p team_table
     if show_problems
       # @type [Problem] task
       problems.each do |id, task|
         fa = first_ac[id]
         user = fa[1] ? team_table[fa[1]] : nil
         problem_pos_table[task.position] = problem_res.length
+        p user
         problem_res << {
           name: task.has_permission?(current_user) ? task.name : nil,
           slug: task.slug,
@@ -164,11 +167,7 @@ class Api::StandingsController < ApplicationController
           tried: solved[id] + trying[id],
           first_accept: user ? {
             time: (fa[0] - started_at).to_i,
-            user: {
-              name: user.name,
-              atcoder_id: user.atcoder_id,
-              atcoder_rating: user.atcoder_rating
-            }
+            user: user.slice(:name, :atcoder_id, :atcoder_rating)
           } : nil
         }
       end
