@@ -163,6 +163,11 @@ class Api::ContestsController < ApplicationController
     ActiveRecord::Base.transaction do
       submissions.each do |submission|
         submission.status = 'WR'
+        submission.point = nil
+        submission.compile_error = nil
+        submission.execution_memory = nil
+        submission.execution_time = nil
+        submission.testcase_results.delete_all
         submission.save
       end
     end
