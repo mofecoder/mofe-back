@@ -38,7 +38,7 @@ class Api::TopPageController < ApplicationController
                            .where(approved: true)
                            .pluck(:problem_id)
 
-    Problem.left_joins(:contest)
+    problems = Problem.left_joins(:contest)
            .where(id: problem_ids_writer + problem_ids_tester)
            .where('contests.end_at > ? OR contests.id IS NULL', DateTime::now)
 
