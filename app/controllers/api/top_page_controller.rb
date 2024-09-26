@@ -30,10 +30,17 @@ class Api::TopPageController < ApplicationController
       return nil
     end
 
-    problems = Problem
-                 .left_joins(:contest)
+    problem_ids_writer = Problem
                  .where(writer_user_id: current_user.id)
-                 .where('contests.end_at > ? OR contests.id IS NULL', DateTime::now)
+                 .pluck(:id)
+    problem_ids_tester = TesterRelation
+                           .where(tester_user_id: current_user.id)
+                           .where(approved: true)
+                           .pluck(:problem_id)
+
+    Problem.left_joins(:contest)
+           .where(id: problem_ids_writer + problem_ids_tester)
+           .where('contests.end_at > ? OR contests.id IS NULL', DateTime::now)
 
     ActiveModelSerializers::SerializableResource.new(
       problems,
