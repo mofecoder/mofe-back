@@ -55,7 +55,7 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
 
 # Zipファイル
-gem 'rubyzip'
+gem 'rubyzip', '~> 2.3.0'
 
 # 論理削除
 gem 'paranoia'
