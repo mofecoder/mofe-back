@@ -1,6 +1,6 @@
 class Api::SubmissionsController < ApplicationController
   include Pagination
-  before_action :authenticate_user!, except: [:all, :show]
+  before_action :authenticate_user!, except: [:all, :show, :toggle_published]
 
   def index
     if current_user.nil?
@@ -50,6 +50,8 @@ class Api::SubmissionsController < ApplicationController
       end
     end
 
+    permission = user_signed_in? && current_user.admin_for_contest?(contest.id)
+
     all_submissions = Submission
                         .includes(problem: :testcase_sets)
                         .preload(:testcase_results)
@@ -57,6 +59,7 @@ class Api::SubmissionsController < ApplicationController
                         .joins(problem: :contest)
                         .where("contests.slug = ?", contest_slug)
                         .where(problem_id: including_problem_id)
+                        .where("submissions.public OR submissions.user_id = ? OR ?", user_signed_in? ? current_user.id : -1, permission)
                         .page(page)
                         .per(count)
 
@@ -79,10 +82,10 @@ class Api::SubmissionsController < ApplicationController
 
     is_admin_or_writer = is_admin_or_writer?(submission.problem)
 
-    if !user_signed_in? || (!is_admin_or_writer && submission.user_id != current_user.id)
-      unless contest.end_at.past?
+    unless user_signed_in? && (is_admin_or_writer || submission.user_id == current_user.id)
+      unless contest.end_at.past? && submission.public
         render json: {
-            error: 'この提出は非公開です'
+          error: 'この提出は非公開です'
         }, status: :forbidden
         return
       end
@@ -118,7 +121,8 @@ class Api::SubmissionsController < ApplicationController
            samples: in_contest ? Set.new(samples) : nil,
            result_count: r_count,
            testcase_count: t_count,
-           testcase_sets: testcase_set_results
+           testcase_sets: testcase_set_results,
+           permission: submission.problem.check_admin_or_writer_or_tester(current_user)
   end
 
   def create
@@ -139,6 +143,19 @@ class Api::SubmissionsController < ApplicationController
       return
     end
     _submit(problem, request.body.read)
+  end
+
+  def toggle_published
+    submission = Submission.find(params[:id])
+
+    unless submission.problem.check_admin_or_writer_or_tester(current_user)
+      render_403
+      return
+    end
+
+    submission.public = !submission.public
+    submission.save
+    render json: { public: submission.public }
   end
 
   private
@@ -276,6 +293,7 @@ class Api::SubmissionsController < ApplicationController
     nil
   end
 
+  # @param [Problem] problem
   def _submit(problem, source)
     unless problem.has_permission?(current_user)
       render_403
@@ -288,6 +306,7 @@ class Api::SubmissionsController < ApplicationController
     submission.path = save_path
     submission.lang = params[:lang]
     submission.status = 'WJ'
+    submission.public = !problem.check_admin_or_writer_or_tester(current_user)
 
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
     submission.save!

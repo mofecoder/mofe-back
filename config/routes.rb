@@ -24,6 +24,9 @@ Rails.application.routes.draw do
         collection do
           get 'all'
         end
+        member do
+          patch 'toggle_published'
+        end
       end
       resources :tasks, param: :slug, only: [:show] do
         post 'submit' => 'submissions#create'

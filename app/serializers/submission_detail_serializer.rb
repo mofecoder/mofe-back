@@ -27,6 +27,10 @@ class SubmissionDetailSerializer < SubmissionSerializer
     @instance_options[:testcase_sets]
   end
 
+  attribute :permission do
+    @instance_options[:permission]
+  end
+
   class SetSerializer < ActiveModel::Serializer
     attributes :name, :score, :point, :testcases, :results
 

@@ -41,6 +41,14 @@ class Problem < ApplicationRecord
     )
   end
 
+  def check_admin_or_writer_or_tester(user)
+    return false if user.blank?
+    user.admin_for_contest?(contest.id) ||
+        writer_user_id == user.id ||
+        tester_relations.exists?(tester_user_id: user.id, approved: true) ||
+        (contest.official_mode && contest.is_writer_or_tester(user))
+  end
+
   def to_param
     slug
   end
