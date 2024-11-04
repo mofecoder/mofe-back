@@ -84,15 +84,7 @@ class Api::ContestsController < ApplicationController
   end
 
   def create
-    param = contest_create_params
-    contest = Contest.new
-    contest.slug = param[:slug]
-    contest.name = param[:name]
-    contest.description = param[:description]
-    contest.start_at = param[:start_at]
-    contest.end_at = param[:end_at]
-    contest.penalty_time = param[:penalty_time]
-    contest.standings_mode = param[:standings_mode]
+    contest = Contest.new(contest_create_params)
     contest.save
     render status: :created
   end
@@ -142,7 +134,6 @@ class Api::ContestsController < ApplicationController
       end
     end
   end
-
 
   def rejudge
     ids = params[:submission_ids]

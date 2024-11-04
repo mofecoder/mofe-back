@@ -1,4 +1,4 @@
-FROM ruby:3.2.2 as build
+FROM ruby:3.3.5 as build
 
 WORKDIR /app
 COPY Gemfile ./
