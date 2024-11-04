@@ -110,13 +110,13 @@ class Api::ProblemsController < ApplicationController
   def problem_edit_params
     params.require(:problem)
           .permit(:name, :difficulty, :execution_time_limit, :statement,
-                  :constraints, :input_format, :output_format,
+                  :constraints, :partial_scores, :input_format, :output_format,
                   :submission_limit_1, :submission_limit_2)
   end
 
   def problem_params
     params.require(:problem).permit(
-      :name, :difficulty, :statement, :constraints, :input_format, :output_format, :execution_time_limit
+      :name, :difficulty, :statement, :constraints, :partial_scores, :input_format, :output_format, :execution_time_limit
     )
   end
 

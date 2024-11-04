@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_08_18_054102) do
+ActiveRecord::Schema.define(version: 2024_11_04_132845) do
 
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
@@ -84,6 +84,7 @@ ActiveRecord::Schema.define(version: 2024_08_18_054102) do
     t.integer "submission_limit_2", default: 60, null: false
     t.string "statement", limit: 4096, null: false
     t.string "constraints", limit: 2048, null: false
+    t.string "partial_scores", limit: 4096
     t.string "input_format", limit: 1024, null: false
     t.string "output_format", limit: 1024, null: false
     t.string "checker_path"
@@ -116,6 +117,7 @@ ActiveRecord::Schema.define(version: 2024_08_18_054102) do
     t.integer "execution_memory"
     t.text "compile_error"
     t.string "lang", null: false
+    t.boolean "public", default: true, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "deleted_at"
