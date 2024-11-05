@@ -1,6 +1,6 @@
 class Contest < ApplicationRecord
-  include ActiveModel::Serialization
   include ActiveModel::Model
+  include ActiveModel::Serialization
 
   has_many :problems, -> { order('char_length(`position`)').order(:position) }
   has_many :clarifications
