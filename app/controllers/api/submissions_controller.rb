@@ -59,7 +59,10 @@ class Api::SubmissionsController < ApplicationController
                         .joins(problem: :contest)
                         .where("contests.slug = ?", contest_slug)
                         .where(problem_id: including_problem_id)
-                        .where("submissions.public OR submissions.user_id = ? OR ?", user_signed_in? ? current_user.id : -1, permission)
+                        .where("submissions.public OR submissions.user_id = ? OR problems.writer_user_id = ? OR ?",
+                               user_signed_in? ? current_user.id : -1,
+                               user_signed_in? ? current_user.id : -1,
+                               permission)
                         .page(page)
                         .per(count)
 
