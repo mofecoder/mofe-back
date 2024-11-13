@@ -208,7 +208,12 @@ class Api::StandingsController < ApplicationController
         multiply = 1
       end
 
-      res.sort_by! { |x| [(x[:problems][sort_column][:score] || 0) * multiply, i + 1] }
+      res.sort_by! do |x| [
+        (x[:problems][sort_column][:score] || 0) * multiply,
+        (x[:problems][sort_column][:time] || 0) * multiply * -1,
+        i + 1
+      ]
+      end
     end
 
     render json: {

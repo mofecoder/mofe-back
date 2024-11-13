@@ -337,7 +337,7 @@ DEPENDENCIES
   puma (~> 4.1)
   rack-cors
   rails (~> 6.1.0)
-  rubyzip
+  rubyzip (~> 2.3.0)
   scenic
   scenic-mysql_adapter
   spring
@@ -345,7 +345,7 @@ DEPENDENCIES
   tzinfo-data
 
 RUBY VERSION
-   ruby 3.2.2p53
+   ruby 3.3.5p100
 
 BUNDLED WITH
    2.4.10
