@@ -50,6 +50,11 @@ class Api::SubmissionsController < ApplicationController
       end
     end
 
+    unless including_problem_id.any?
+      render_403
+      return
+    end
+
     permission = user_signed_in? && current_user.admin_for_contest?(contest.id)
 
     all_submissions = Submission
