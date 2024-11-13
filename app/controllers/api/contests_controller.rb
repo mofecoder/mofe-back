@@ -29,13 +29,14 @@ class Api::ContestsController < ApplicationController
 
     writer_or_tester = []
     writer_or_tester_tasks = []
-    if current_user&.admin_for_contest?(contest.id)
-      writer_or_tester = contest.problems.map { |p| { id: p.id, slug: p.slug, role: 'admin' }}
-    elsif contest.is_writer_or_tester(current_user)
+    is_admin = current_user&.admin_for_contest?(contest.id)
+    if contest.is_writer_or_tester(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
         if current_user == problem.writer_user
           role = 'writer'
+        elsif is_admin
+          role = 'admin'
         elsif problem.tester_relations.exists?(tester_user_id: current_user.id)
           role = 'tester'
         else
