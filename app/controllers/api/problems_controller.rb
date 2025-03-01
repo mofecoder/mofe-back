@@ -1,6 +1,6 @@
 class Api::ProblemsController < ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_writer!, only: [:index, :show, :create]
+  before_action :authenticate_writer!, only: [:index, :create]
 
   # GET /problems
   def index
