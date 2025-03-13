@@ -3,6 +3,13 @@ require 'devise_token_auth'
 Rails.application.routes.draw do
   match '*path' => 'preflight_request#preflight', via: :options
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+
+  namespace :public do
+    scope :v1 do
+
+    end
+  end
+
   namespace :api do
     mount_devise_token_auth_for 'User', at: 'auth', controllers: {
       passwords: 'api/passwords'
@@ -77,6 +84,11 @@ Rails.application.routes.draw do
     end
     resources :posts
   end
+
+  namespace :v4 do
+    resources :problems
+  end
+
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
   match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
 end

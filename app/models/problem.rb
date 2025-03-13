@@ -12,6 +12,13 @@ class Problem < ApplicationRecord
   validates :submission_limit_1, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :submission_limit_2, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
+  attribute :uuid, default: -> { SecureRandom.uuid }
+  attribute :checker_path, default: 'checker_sources/wcmp.cpp'
+  attribute :submission_limit_1, default: 5
+  attribute :submission_limit_2, default: 60
+
+  after_create :add_default_testcase_sets
+
   def samples
     set = testcase_sets.find_by(problem_id: id, is_sample: 1)
     return set unless set
@@ -34,22 +41,37 @@ class Problem < ApplicationRecord
     return true if contest.end_at.past?
     return true if contest.start_at.past? && contest.registered?(user)
     user.present? && (
-      user.admin_for_contest?(contest.id) ||
+      user.contest_admin?(contest.id) ||
       writer_user_id == user.id ||
       tester_relations.exists?(tester_user_id: user.id, approved: true) ||
-      (contest.is_writer_or_tester(user) && (contest.official_mode || contest.start_at.past?))
+      (contest.writer_or_tester?(user) && (contest.official_mode || contest.start_at.past?))
     )
   end
 
   def check_admin_or_writer_or_tester(user)
     return false if user.blank?
-    user.admin_for_contest?(contest.id) ||
+    user.contest_admin?(contest.id) ||
         writer_user_id == user.id ||
         tester_relations.exists?(tester_user_id: user.id, approved: true) ||
-        (contest.official_mode && contest.is_writer_or_tester(user))
+        (contest.official_mode && contest.writer_or_tester?(user))
+  end
+
+  def tester?(user)
+    tester_relations.exists?(tester_user: user, approved: true)
   end
 
   def to_param
     slug
+  end
+
+  private
+
+  def add_default_testcase_sets
+    self.testcase_sets.create(
+      [
+        { name: 'sample', points: 0, is_sample: true },
+        { name: 'all', points: 100, is_sample: false }
+      ]
+    )
   end
 end

@@ -13,17 +13,17 @@ class Contest < ApplicationRecord
   # @param [User] user
   def registered?(user)
     user.present? && (
-      user.admin_for_contest?(self.id) ||
+      user.contest_admin?(self.id) ||
         self.registrations.exists?(user_id: user.id) ||
         self.team_registrations.eager_load(:team_registration_users)
                .exists?(team_registration_users: { user_id: user.id })
     )
   end
 
-  def is_writer_or_tester(user)
+  def writer_or_tester?(user)
     return false if user.nil?
 
-    return true if user.admin_for_contest?(self.id)
+    return true if user.contest_admin?(self.id)
 
     self.problems.exists?(writer_user_id: user.id) ||
       TesterRelation.exists?(problem: self.problems, tester_user_id: user.id)

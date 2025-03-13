@@ -21,7 +21,7 @@ class User < ActiveRecord::Base
     self.role == 'admin'
   end
 
-  def admin_for_contest?(contest_id)
+  def contest_admin?(contest_id)
     return true if self.admin?
     contest_id != nil && self.contest_admins.where(contest_id: contest_id).exists?
   end
