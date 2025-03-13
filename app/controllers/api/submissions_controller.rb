@@ -37,8 +37,8 @@ class Api::SubmissionsController < ApplicationController
     including_problem_id = []
     if contest.end_at.past?
       including_problem_id = all_problem_id
-    elsif user_signed_in? && contest.is_writer_or_tester(current_user)
-      if contest.official_mode || current_user.admin_for_contest?(contest.id)
+    elsif user_signed_in? && contest.writer_or_tester?(current_user)
+      if contest.official_mode || current_user.contest_admin?(contest.id)
         including_problem_id = all_problem_id
       else
         contest.problems.includes(:tester_relations).each do |problem|
@@ -55,7 +55,7 @@ class Api::SubmissionsController < ApplicationController
       return
     end
 
-    permission = user_signed_in? && current_user.admin_for_contest?(contest.id)
+    permission = user_signed_in? && current_user.contest_admin?(contest.id)
 
     all_submissions = Submission
                         .includes(problem: :testcase_sets)
@@ -120,7 +120,6 @@ class Api::SubmissionsController < ApplicationController
       testcase_set_map(in_contest, testcase_results_map, testcase_set)
     end
 
-    require('set')
     render json: submission,
            admin: is_admin_or_writer,
            serializer: SubmissionDetailSerializer,
@@ -333,7 +332,7 @@ class Api::SubmissionsController < ApplicationController
       current_user.admin? ||
         problem.writer_user_id == current_user.id ||
         problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
-        problem.contest.is_writer_or_tester(current_user) && problem.contest.official_mode
+        problem.contest.writer_or_tester?(current_user) && problem.contest.official_mode
     )
   end
 

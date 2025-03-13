@@ -13,7 +13,7 @@ class Api::ProblemsController < ApplicationController
   # GET /problems/1
   def show
     problem = Problem.includes(:testers).find(params[:id])
-    if !current_user.admin_for_contest?(problem.contest_id) &&
+    if !current_user.contest_admin?(problem.contest_id) &&
         problem.writer_user_id != current_user.id &&
         problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
       render_403
@@ -54,7 +54,7 @@ class Api::ProblemsController < ApplicationController
   # PATCH/PUT /problems/1
   def update
     problem = Problem.find(params[:id])
-    unless current_user.admin_for_contest?(problem.contest_id) || problem.writer_user_id == current_user.id
+    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
       render_403
       return
     end
@@ -68,7 +68,7 @@ class Api::ProblemsController < ApplicationController
 
   def download_checker
     problem = Problem.find(params[:problem_id])
-    unless current_user.admin_for_contest?(problem.contest_id) || problem.writer_user_id == current_user.id
+    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
       render_403
       return
     end
@@ -80,7 +80,7 @@ class Api::ProblemsController < ApplicationController
 
   def update_checker
     problem = Problem.find(params[:problem_id])
-    unless current_user.admin_for_contest?(problem.contest_id) || problem.writer_user_id == current_user.id
+    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
       render_403
       return
     end

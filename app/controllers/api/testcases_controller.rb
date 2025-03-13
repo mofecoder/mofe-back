@@ -1,6 +1,4 @@
 require 'zip'
-require 'set'
-require 'fileutils'
 
 class Api::TestcasesController < ApplicationController
   before_action :authenticate_user!
@@ -144,7 +142,7 @@ class Api::TestcasesController < ApplicationController
       message << "'output/#{k}.txt' は、input ファイルが存在しないため無視されました。" unless common_filename.include? k
     end
 
-    existing_testcase_names = Set.new @problem.testcases.pluck(:name)
+    existing_testcase_names = Set.new(@problem.testcases.pluck(:name))
     all_testcase_set = @problem.testcase_sets.find_by!(name: 'all')
 
     ActiveRecord::Base.transaction do
@@ -210,7 +208,7 @@ class Api::TestcasesController < ApplicationController
 
   def authenticate_writer!
     @problem = Problem.find(params[:problem_id])
-    unless current_user.admin_for_contest?(@problem.contest_id) || current_user.writer? && @problem.writer_user_id == current_user.id
+    unless current_user.contest_admin?(@problem.contest_id) || current_user.writer? && @problem.writer_user_id == current_user.id
       render_403
     end
   end

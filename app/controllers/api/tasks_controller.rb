@@ -25,7 +25,7 @@ class Api::TasksController < ApplicationController
   def remove_from_contest
     contest = Contest.find_by!(slug: params[:contest_slug])
 
-    unless current_user.admin_for_contest?(contest.id)
+    unless current_user.contest_admin?(contest.id)
       render_403
       return
     end
