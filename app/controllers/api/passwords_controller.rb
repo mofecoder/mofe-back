@@ -1,13 +1,12 @@
-class Api::PasswordsController < DeviseTokenAuth::PasswordsController
+class Api::PasswordsController
   def create
-    user = User.find_by(email: params[:email])
-    user&.send_reset_password_instructions
-    render json: { message: 'パスワードリセットメールを送信しました。' }
+    # user = User.find_by(email: params[:email])
+    # render json: { message: 'パスワードリセットメールを送信しました。' }
   end
 
   def update
-    user = User.reset_password_by_token(update_params)
-    render json: { message: 'パスワードを変更しました。' }
+    # user = User.reset_password_by_token(update_params)
+    # render json: { message: 'パスワードを変更しました。' }
   end
 
   private

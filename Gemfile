@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.3.5'
+ruby '3.4.4'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1.0'
+gem 'rails', '~> 7.2'
 gem 'active_model_serializers', '~> 0.10.0'
 # Use mysql as the database for Active Record
 gem 'mysql2', '~> 0.5.5'
 # Use Puma as the app server
-gem 'puma', '~> 4.1'
+gem 'puma', '~> 6.6'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
@@ -33,10 +33,9 @@ group :development, :test do
 end
 
 group :development do
-  gem 'listen', '>= 3.0.5', '< 3.2'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
-  gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'spring', '~> 4.1', '>= 4.1.1'
+  gem 'spring-watcher-listen', '~> 2.1'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -46,13 +45,7 @@ gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 
 gem 'rack-cors'
 
-# ログイン関連
-gem 'devise'
-gem 'devise_token_auth'
-gem 'devise-i18n'
-
-gem 'omniauth-google-oauth2'
-gem 'omniauth-rails_csrf_protection'
+gem 'jwt', '~> 2.10', '>= 2.10.1'
 
 # Zipファイル
 gem 'rubyzip', '~> 2.3.0'
@@ -64,6 +57,3 @@ gem 'paranoia'
 gem 'kaminari'
 
 gem 'google-cloud-storage'
-
-gem 'scenic'
-gem 'scenic-mysql_adapter'

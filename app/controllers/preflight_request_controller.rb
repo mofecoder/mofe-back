@@ -1,6 +1,6 @@
 class PreflightRequestController < ApplicationController
   ACCESS_CONTROL_ALLOW_METHODS = %w(GET OPTIONS).freeze
-  ACCESS_CONTROL_ALLOW_HEADERS = %w(Accept Origin Content-Type Authorization).freeze
+  ACCESS_CONTROL_ALLOW_HEADERS = %w(Accept Origin Content-Type X-Request-Signature X-Request-Timestamp X-User-Uid).freeze
 
   def preflight
     origin = 'https://mofecoder.com'

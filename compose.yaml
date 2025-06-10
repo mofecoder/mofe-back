@@ -1,6 +1,6 @@
 services:
   db:
-    platform: linux/x86_64
+    platform: linux/amd64
     image: mysql:5.7
     volumes:
       - db-store:/var/lib/mysql
@@ -13,14 +13,23 @@ services:
 
   app:
     build: .
-    volumes:
-    - .:/app
-    environment:
-      DATABASE_URL: db
+    env_file:
+      - .env
     ports:
     - "127.0.0.1:3000:3000"
     depends_on:
       - db
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: /app
+          ignore:
+            - log/
+            - tmp/
+            - .bundle/
+        - action: rebuild
+          path: Gemfile
 
 volumes:
   db-store:

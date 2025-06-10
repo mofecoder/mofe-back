@@ -1,12 +1,7 @@
-require 'devise_token_auth'
-
 Rails.application.routes.draw do
   match '*path' => 'preflight_request#preflight', via: :options
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
   namespace :api do
-    mount_devise_token_auth_for 'User', at: 'auth', controllers: {
-      passwords: 'api/passwords'
-    }
     get 'top' => 'top_page#index'
     namespace :manage do
       resources :contests, param: :slug, only: [:index, :show]

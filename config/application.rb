@@ -37,7 +37,7 @@ module CafecoderBackRails
     config.api_only = true
 
     config.i18n.default_locale = :ja
-    config.autoload_paths += %W(#{Rails.root}/lib)
+    config.autoload_lib(ignore: %w(tasks))
 
     config.time_zone = 'Tokyo'
   end

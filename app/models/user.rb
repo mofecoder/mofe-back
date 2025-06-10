@@ -30,13 +30,6 @@ class User < ActiveRecord::Base
     self.role == 'writer'
   end
 
-  # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable,
-          authentication_keys: [:email, :name]
-  include DeviseTokenAuth::Concerns::User
-
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..20 }
   validates_format_of :name, with: /\A[a-zA-Z0-9_]{3,20}\z/, multiline: false
 end
