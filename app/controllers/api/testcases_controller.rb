@@ -73,6 +73,8 @@ class Api::TestcasesController < ApplicationController
     testcase.destroy!
   end
 
+  # DELETE /api/problems/:problem_id/testcases/delete_multiple?testcases[]=:id1&testcases[]=:id2
+  # Expects testcases as a query parameter array instead of in the request body
   def delete_multiple
     # @type [Array<Integer>]
     ids = params[:testcases]

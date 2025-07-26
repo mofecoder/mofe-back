@@ -1,5 +1,4 @@
 class ApplicationController < ActionController::API
-  attr_reader :current_user
   rescue_from ActionController::RoutingError, with: :render_404
 
   before_action :verify_internal_request #, unless: -> { Rails.env.development? }
@@ -15,6 +14,11 @@ class ApplicationController < ActionController::API
 
   def render_403
     render json: { error: '権限がありません。' }, status: :forbidden
+  end
+
+  # @return [User]
+  def current_user
+    @current_user
   end
 
   def authenticate_user!

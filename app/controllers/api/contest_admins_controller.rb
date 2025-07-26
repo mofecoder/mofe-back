@@ -25,8 +25,11 @@ class Api::ContestAdminsController < ApplicationController
     render status: :created
   end
 
+  # DELETE /api/contests/:contest_slug/contest_admins?user_name=:user_name
+  # Expects user_name as a query parameter instead of in the request body
   def destroy
-    user = User.find_by!(name: params[:user_name])
+    user_name = params[:user_name]
+    user = User.find_by!(name: user_name)
     @contest.contest_admins.find_by!(user_id: user.id).destroy
   end
 

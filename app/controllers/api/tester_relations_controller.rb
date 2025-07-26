@@ -25,6 +25,8 @@ class Api::TesterRelationsController < ApplicationController
     render status: :created
   end
 
+  # DELETE /api/problems/:problem_id/tester_relations?user_name=:user_name
+  # Expects user_name as a query parameter instead of in the request body
   def destroy
     user = User.find_by!(name: params[:user_name])
     @problem.tester_relations.find_by!(tester_user_id: user.id).destroy

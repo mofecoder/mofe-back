@@ -3,6 +3,9 @@ Rails.application.routes.draw do
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
   namespace :api do
     get 'top' => 'top_page#index'
+    namespace :internal do
+      resources :users, param: :uid, only: :update
+    end
     namespace :manage do
       resources :contests, param: :slug, only: [:index, :show]
       resources :problems, param: :slug, only: [] do
