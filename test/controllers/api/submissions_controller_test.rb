@@ -22,10 +22,7 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
-    # Remove the stub if it was defined
-    if Utils::GoogleCloudStorageClient.singleton_class.method_defined?(:get_source)
-      Utils::GoogleCloudStorageClient.singleton_class.remove_method(:get_source)
-    end
+    Utils::GoogleCloudStorageClient.singleton_class.remove_method(:get_source)
   end
 
   private
