@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+admin_user:
+  name: admin_user
+  email: admin@example.com
+  provider: email
+  uid: admin@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: admin
+
+writer_user:
+  name: writer_user
+  email: writer@example.com
+  provider: email
+  uid: writer@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: writer
+
+general_user:
+  name: general_user
+  email: general@example.com
+  provider: email
+  uid: general@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: member
+
+other_user:
+  name: other_user
+  email: other@example.com
+  provider: email
+  uid: other@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: member

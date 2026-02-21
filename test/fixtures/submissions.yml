@@ -1,19 +1,49 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  user_id: 
-  path: MyString
-  status: MyString
-  point: 1
-  execution_time: 1
-  execution_memory: MyString
-  lang: MyString
+# Public submission by general_user on ended_problem
+public_submission:
+  user: general_user
+  problem: ended_problem
+  path: submit_sources/test-public
+  status: AC
+  point: 100
+  execution_time: 50
+  execution_memory: 10000
+  lang: cpp17_gcc
+  public: true
 
-two:
-  user_id: 
-  path: MyString
-  status: MyString
-  point: 1
-  execution_time: 1
-  execution_memory: MyString
-  lang: MyString
+# Private submission by general_user on ended_problem
+private_submission:
+  user: general_user
+  problem: ended_problem
+  path: submit_sources/test-private
+  status: WA
+  point: 0
+  execution_time: 100
+  execution_memory: 20000
+  lang: cpp17_gcc
+  public: false
+
+# Submission by other_user on ended_problem (public)
+other_user_submission:
+  user: other_user
+  problem: ended_problem
+  path: submit_sources/test-other
+  status: AC
+  point: 100
+  execution_time: 80
+  execution_memory: 15000
+  lang: python3
+  public: true
+
+# Submission by general_user on running_problem
+running_contest_submission:
+  user: general_user
+  problem: running_problem
+  path: submit_sources/test-running
+  status: AC
+  point: 100
+  execution_time: 30
+  execution_memory: 8000
+  lang: cpp17_gcc
+  public: true

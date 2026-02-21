@@ -1,9 +1,21 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  testcase: one
-  testcase_set: one
+sample_one:
+  testcase: testcase_one
+  testcase_set: sample_set
 
-two:
-  testcase: two
-  testcase_set: two
+all_one:
+  testcase: testcase_one
+  testcase_set: all_set
+
+all_two:
+  testcase: testcase_two
+  testcase_set: all_set
+
+running_sample_one:
+  testcase: testcase_running
+  testcase_set: running_sample_set
+
+running_all_one:
+  testcase: testcase_running
+  testcase_set: running_all_set

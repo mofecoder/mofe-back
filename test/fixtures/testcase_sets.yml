@@ -1,11 +1,25 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  name: MyString
-  points: 1
+sample_set:
+  problem_id: <%= ActiveRecord::FixtureSet.identify(:ended_problem) %>
+  name: sample
+  points: 0
+  is_sample: true
+
+all_set:
+  problem_id: <%= ActiveRecord::FixtureSet.identify(:ended_problem) %>
+  name: all
+  points: 100
   is_sample: false
 
-two:
-  name: MyString
-  points: 1
+running_sample_set:
+  problem_id: <%= ActiveRecord::FixtureSet.identify(:running_problem) %>
+  name: sample
+  points: 0
+  is_sample: true
+
+running_all_set:
+  problem_id: <%= ActiveRecord::FixtureSet.identify(:running_problem) %>
+  name: all
+  points: 100
   is_sample: false
