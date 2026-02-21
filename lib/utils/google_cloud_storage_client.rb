@@ -1,29 +1,32 @@
-require 'google/cloud/storage'
 require "logger"
 
 module Utils::GoogleCloudStorageClient
-  lgr = Logger.new $stderr
-  lgr.level = Logger::INFO
+  unless Rails.env.test?
+    require 'google/cloud/storage'
 
-  # Set the Google API Client logger
-  Google::Apis.logger = lgr
+    lgr = Logger.new $stderr
+    lgr.level = Logger::INFO
 
-  @storage = Google::Cloud::Storage.new(
-      project_id: Rails.application.credentials.gcs[:project_id],
-      credentials: {
-          type: "service_account",
-          private_key_id: Rails.application.credentials.gcs[:private_key_id],
-          private_key: Rails.application.credentials.gcs[:private_key],
-          client_email: Rails.application.credentials.gcs[:client_email],
-          client_id: Rails.application.credentials.gcs[:client_id],
-          auth_uri: "https://accounts.google.com/o/oauth2/auth",
-          token_uri: "https://accounts.google.com/o/oauth2/token",
-          auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-          client_x509_cert_url: Rails.application.credentials.gcs[:client_x509_cert_url]
-      }
-  )
-  @source_bucket = @storage.bucket('cafecoder-submit-source')
-  @testcase_bucket = @storage.bucket('cafecoder-testcase')
+    # Set the Google API Client logger
+    Google::Apis.logger = lgr
+
+    @storage = Google::Cloud::Storage.new(
+        project_id: Rails.application.credentials.gcs[:project_id],
+        credentials: {
+            type: "service_account",
+            private_key_id: Rails.application.credentials.gcs[:private_key_id],
+            private_key: Rails.application.credentials.gcs[:private_key],
+            client_email: Rails.application.credentials.gcs[:client_email],
+            client_id: Rails.application.credentials.gcs[:client_id],
+            auth_uri: "https://accounts.google.com/o/oauth2/auth",
+            token_uri: "https://accounts.google.com/o/oauth2/token",
+            auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+            client_x509_cert_url: Rails.application.credentials.gcs[:client_x509_cert_url]
+        }
+    )
+    @source_bucket = @storage.bucket('cafecoder-submit-source')
+    @testcase_bucket = @storage.bucket('cafecoder-testcase')
+  end
 
   def self.upload_source(file_name, file_content)
     @source_bucket.create_file(StringIO.new(file_content), file_name)

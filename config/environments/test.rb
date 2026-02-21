@@ -50,4 +50,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Enable session middleware for DeviseTokenAuth compatibility in integration tests.
+  config.session_store :cache_store, key: '_mofe_back_test_session'
+  config.middleware.use ActionDispatch::Cookies
+  config.middleware.use ActionDispatch::Session::CacheStore, config.session_options
 end

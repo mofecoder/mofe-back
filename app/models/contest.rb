@@ -4,7 +4,7 @@ class Contest < ApplicationRecord
   has_many :registrations, dependent: :destroy
   has_many :team_registrations, dependent: :destroy
   has_many :contest_admins, dependent: :destroy
-  enum standings_mode: { atcoder: 1, icpc: 2 }
+  enum :standings_mode, { atcoder: 1, icpc: 2 }
 
   def to_param
     slug

@@ -1,9 +1,19 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  name: MyString
-  path: MyString
+testcase_one:
+  problem: ended_problem
+  name: testcase_01
+  input: "1\n"
+  output: "1\n"
 
-two:
-  name: MyString
-  path: MyString
+testcase_two:
+  problem: ended_problem
+  name: testcase_02
+  input: "2\n"
+  output: "4\n"
+
+testcase_running:
+  problem: running_problem
+  name: testcase_01
+  input: "1\n"
+  output: "1\n"

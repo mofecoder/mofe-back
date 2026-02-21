@@ -1,11 +1,21 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  id: 1
-  slug: MyString
-  name: MyString
+# A contest that has ended (past)
+ended_contest:
+  slug: ended-contest
+  name: Ended Contest
+  kind: normal
+  standings_mode: 1
+  start_at: <%= 3.days.ago.to_fs(:db) %>
+  end_at: <%= 1.day.ago.to_fs(:db) %>
+  official_mode: false
 
-two:
-  id: 1
-  slug: MyString
-  name: MyString
+# A contest that is currently running
+running_contest:
+  slug: running-contest
+  name: Running Contest
+  kind: normal
+  standings_mode: 1
+  start_at: <%= 1.day.ago.to_fs(:db) %>
+  end_at: <%= 1.day.from_now.to_fs(:db) %>
+  official_mode: false

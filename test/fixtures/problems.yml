@@ -1,21 +1,37 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  slug: MyString
-  name: MyString
-  position: MyString
-  difficulty: MyString
-  statement: MyString
-  constraints: MyString
-  input_format: MyString
-  output_format: MyString
+# Problem in ended contest, written by writer_user
+ended_problem:
+  slug: ended-problem-a
+  name: Problem A
+  contest: ended_contest
+  writer_user: writer_user
+  position: A
+  uuid: <%= SecureRandom.uuid %>
+  difficulty: easy
+  execution_time_limit: 2000
+  submission_limit_1: 5
+  submission_limit_2: 60
+  statement: This is a test problem statement.
+  constraints: "1 <= N <= 100"
+  input_format: N
+  output_format: ans
+  checker_path: checker_sources/wcmp.cpp
 
-two:
-  slug: MyString
-  name: MyString
-  position: MyString
-  difficulty: MyString
-  statement: MyString
-  constraints: MyString
-  input_format: MyString
-  output_format: MyString
+# Problem in running contest, written by writer_user
+running_problem:
+  slug: running-problem-a
+  name: Problem B
+  contest: running_contest
+  writer_user: writer_user
+  position: A
+  uuid: <%= SecureRandom.uuid %>
+  difficulty: easy
+  execution_time_limit: 2000
+  submission_limit_1: 5
+  submission_limit_2: 60
+  statement: This is a running contest problem.
+  constraints: "1 <= N <= 100"
+  input_format: N
+  output_format: ans
+  checker_path: checker_sources/wcmp.cpp

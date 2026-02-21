@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+general_running:
+  user: general_user
+  contest: running_contest
+
+other_running:
+  user: other_user
+  contest: running_contest
