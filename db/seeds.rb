@@ -205,7 +205,7 @@ testcase_set_a = TestcaseSet.create!(
 
 testcase_set_b = TestcaseSet.create!(
   problem_id: problem_b.id,
-  name: "All", 
+  name: "All",
   points: 100,
   aggregate_type: 0,
   is_sample: true
