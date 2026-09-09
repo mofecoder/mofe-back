@@ -120,7 +120,6 @@ class Api::SubmissionsController < ApplicationController
       testcase_set_map(in_contest, testcase_results_map, testcase_set)
     end
 
-    require('set')
     render json: submission,
            admin: is_admin_or_writer,
            serializer: SubmissionDetailSerializer,

@@ -18,9 +18,6 @@ class Api::StandingsController < ApplicationController
                    .map { |p| [p.id, p] }.to_h
     show_problems = contest.is_writer_or_tester(current_user) || started_at.past?
 
-
-    require 'set'
-
     admins = Set.new(contest.contest_admins.pluck(:user_id) + User.where(role: 'admin').pluck(:id))
 
     # @type [Hash]

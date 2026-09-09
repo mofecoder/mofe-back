@@ -42,7 +42,7 @@ class Api::PostsController < ApplicationController
 
   def destroy
     post = Post.find(params[:id])
-    unless post.destroy
+    unless post.discard
       render json: { error: post.errors }, status: :bad_request
     end
   end

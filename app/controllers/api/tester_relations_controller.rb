@@ -27,7 +27,7 @@ class Api::TesterRelationsController < ApplicationController
 
   def destroy
     user = User.find_by!(name: params[:user_name])
-    @problem.tester_relations.find_by!(tester_user_id: user.id).destroy
+    @problem.tester_relations.find_by!(tester_user_id: user.id).discard
   end
   private
 

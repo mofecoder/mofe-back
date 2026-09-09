@@ -103,7 +103,7 @@ class Api::RegistrationsController < ApplicationController
     end
     reg = Registration.find_by(user_id: current_user.id, contest_id: contest.id)
     if reg.present?
-      reg.destroy!
+      reg.discard!
       return
     end
 
@@ -115,10 +115,10 @@ class Api::RegistrationsController < ApplicationController
       return
     end
 
-    team_reg.team_registration_users.find_by(user_id: current_user.id).really_destroy!
+    team_reg.team_registration_users.find_by(user_id: current_user.id).destroy!
     team_reg.team_registration_users.reload
     if team_reg.team_registration_users.empty?
-      team_reg.destroy!
+      team_reg.discard!
       render json: { message: 'チームメンバーがいなくなったため、チームを削除しました。' }
     else
       render json: { message: nil }

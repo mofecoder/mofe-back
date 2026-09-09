@@ -48,7 +48,7 @@ class Api::TestcaseSetsController < ApplicationController
       render json: { error: "このテストケースは削除できません。"}, status: :bad_request
       return
     end
-    set.destroy!
+    set.discard!
   end
 
   private
