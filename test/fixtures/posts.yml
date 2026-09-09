@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+public_post:
+  title: Public Post
+  content: This is a public post.
+  public_status: public
+
+private_post:
+  title: Private Post
+  content: This is a private post.
+  public_status: private
