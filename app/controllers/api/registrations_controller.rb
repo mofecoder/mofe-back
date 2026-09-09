@@ -45,6 +45,7 @@ class Api::RegistrationsController < ApplicationController
 
     unless contest.allow_team_registration
       render json: { error: 'このコンテストはチーム参加できません。' }, status: :bad_request
+      return
     end
 
     reg = TeamRegistration.find_by(contest_id: contest.id, name: name)

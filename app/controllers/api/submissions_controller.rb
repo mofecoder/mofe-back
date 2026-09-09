@@ -304,6 +304,7 @@ class Api::SubmissionsController < ApplicationController
   def _submit(problem, source)
     unless problem.has_permission?(current_user)
       render_403
+      return
     end
 
     save_path = make_path

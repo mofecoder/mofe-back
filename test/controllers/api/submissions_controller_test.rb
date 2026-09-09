@@ -2,10 +2,8 @@
 
 require 'test_helper'
 
-# NOTE(既知バグ): Api::SubmissionsController#_submit は権限が無い場合に render_403 したあと
-# return しておらず、そのまま Google Cloud Storage へソースをアップロードして提出を保存してしまう。
-# GCS に接続してしまうため create の成功パス／権限エラーパスはここではテストしていない。
-# 修正後は「権限の無いユーザが submit しても Submission が作られない」テストを追加すること。
+# NOTE: create の成功パスは Google Cloud Storage へソースをアップロードするためテストしない。
+# 権限エラーで早期リターンする経路は GCS に到達しないので検証できる。
 class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
   def setup
     @admin = users(:admin_user)
@@ -154,5 +152,24 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: @problem.slug),
          params: { lang: 'cpp' }
     assert_response :unauthorized
+  end
+
+  test "create returns 403 and creates no submission for an unauthorized user" do
+    # member_user は直前の提出があり check_submit_limit で 425 になるため、
+    # 提出履歴の無いユーザを作って権限チェックだけを検証する
+    user = User.create!(
+      name: 'nosubmit', email: 'nosubmit@example.com',
+      password: 'password', password_confirmation: 'password',
+      provider: 'email', uid: 'nosubmit@example.com', role: 'member'
+    )
+    # 開催中のコンテストに未登録なので Problem#has_permission? が false になる
+    assert_not @problem.has_permission?(user)
+
+    sign_in_as user
+    assert_no_difference -> { Submission.count } do
+      post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: @problem.slug),
+           params: { lang: 'cpp' }
+    end
+    assert_response :forbidden
   end
 end

@@ -51,19 +51,12 @@ class Api::PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
-  # NOTE(既知バグ): update は User.reset_password_by_token の戻り値を検証しておらず、
-  # トークンが不正でもパスワードを変更していないのに 200 と成功メッセージを返す。
-  # 修正後は「現行挙動」ブロックを削除し、「修正後の想定挙動」のコメントを有効化すること。
-  test "update reports success even for an invalid token" do
+  test "update returns 422 for an invalid token" do
     patch api_user_password_url, params: {
       user: { password: 'new_password', password_confirmation: 'new_password', reset_password_token: 'invalid' }
     }
 
-    # --- 現行挙動（バグ） ---
-    assert_response :success
-    assert_equal 'パスワードを変更しました。', JSON.parse(response.body)['message']
-    # --- 修正後の想定挙動 ---
-    # assert_response :unprocessable_entity
+    assert_response :unprocessable_entity
 
     # パスワード自体は変更されていない
     assert @user.reload.valid_password?('password')

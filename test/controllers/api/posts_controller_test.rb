@@ -76,24 +76,12 @@ class Api::PostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- create / update / destroy ---
-  #
-  # NOTE(既知バグ): Api::PostsController には create / update / destroy に
-  # 認証・認可の before_action が一切無く、未認証の第三者が記事を自由に
-  # 作成・改変・削除できてしまう。
-  # 修正後は各テストの「現行挙動」ブロックを削除し、「修正後の想定挙動」の
-  # コメントアウトを有効化すること。
 
-  test "create is currently allowed without authentication" do
-    # --- 現行挙動（バグ） ---
-    assert_difference -> { Post.count }, 1 do
+  test "create returns 401 when not authenticated" do
+    assert_no_difference -> { Post.count } do
       post api_posts_url, params: { post: { title: 'New', content: 'Body', public_status: 'public' } }
     end
-    assert_response :created
-    # --- 修正後の想定挙動 ---
-    # assert_no_difference -> { Post.count } do
-    #   post api_posts_url, params: { post: { title: 'New', content: 'Body', public_status: 'public' } }
-    # end
-    # assert_response :unauthorized
+    assert_response :unauthorized
   end
 
   test "create succeeds for an admin" do
@@ -104,15 +92,11 @@ class Api::PostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
   end
 
-  test "update is currently allowed without authentication" do
+  test "update returns 401 when not authenticated" do
     patch api_post_url(id: @public_post.id), params: { post: { title: 'Hijacked' } }
 
-    # --- 現行挙動（バグ） ---
-    assert_response :no_content
-    assert_equal 'Hijacked', @public_post.reload.title
-    # --- 修正後の想定挙動 ---
-    # assert_response :unauthorized
-    # assert_equal 'Public Post', @public_post.reload.title
+    assert_response :unauthorized
+    assert_equal 'Public Post', @public_post.reload.title
   end
 
   test "update succeeds for an admin" do
@@ -122,15 +106,11 @@ class Api::PostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'Updated', @public_post.reload.title
   end
 
-  test "destroy is currently allowed without authentication" do
+  test "destroy returns 401 when not authenticated" do
     delete api_post_url(id: @public_post.id)
 
-    # --- 現行挙動（バグ） ---
-    assert_response :no_content
-    assert_not Post.exists?(@public_post.id)
-    # --- 修正後の想定挙動 ---
-    # assert_response :unauthorized
-    # assert Post.exists?(@public_post.id)
+    assert_response :unauthorized
+    assert Post.exists?(@public_post.id)
   end
 
   test "destroy soft-deletes the post" do

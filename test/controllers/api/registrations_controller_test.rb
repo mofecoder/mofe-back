@@ -166,26 +166,14 @@ class Api::RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert TeamRegistration.with_discarded.exists?(team.id)
   end
 
-  # NOTE(既知バグ): team は「このコンテストはチーム参加できません。」を render した後に
-  # return しておらず、そのまま登録処理を続行して 2 回目の render に到達するため
-  # AbstractController::DoubleRenderError が送出される。しかもチーム登録自体は成立してしまう。
-  # 修正後は「現行挙動」ブロックを削除し、「修正後の想定挙動」のコメントを有効化すること。
   test "team rejects registration when the contest does not allow teams" do
     assert_not @contest.allow_team_registration
 
     sign_in_as @member
 
-    # --- 現行挙動（バグ）: 二重 render で例外になり、かつチームが作られてしまう ---
-    assert_raises(AbstractController::DoubleRenderError) do
-      post team_api_contest_registrations_url(contest_slug: @contest.slug),
-           params: { name: 'team_a', passphrase: 'pass' }
-    end
-    assert TeamRegistration.exists?(contest_id: @contest.id, name: 'team_a')
-
-    # --- 修正後の想定挙動 ---
-    # post team_api_contest_registrations_url(contest_slug: @contest.slug),
-    #      params: { name: 'team_a', passphrase: 'pass' }
-    # assert_response :bad_request
-    # assert_not TeamRegistration.exists?(contest_id: @contest.id, name: 'team_a')
+    post team_api_contest_registrations_url(contest_slug: @contest.slug),
+         params: { name: 'team_a', passphrase: 'pass' }
+    assert_response :bad_request
+    assert_not TeamRegistration.exists?(contest_id: @contest.id, name: 'team_a')
   end
 end

@@ -182,9 +182,6 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'Z', @standalone_problem.position
   end
 
-  # NOTE(既知バグ): set_task は「他のユーザの問題は追加できません。」を render した後に
-  # return しておらず、403 を返しつつ後続のトランザクションで割り当てを実行してしまう。
-  # 修正後は「現行挙動」ブロックを削除し、「修正後の想定挙動」のコメントを有効化すること。
   test "set_task rejects a writer adding another user's problem" do
     other_problem = Problem.create!(
       name: 'Admin Unset Problem', difficulty: 'easy', statement: 's', constraints: 'c',
@@ -197,12 +194,8 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
 
     other_problem.reload
-    # --- 現行挙動（バグ）: 403 を返すのに割り当てが実行されてしまう ---
-    assert_equal @ended_contest.id, other_problem.contest_id
-    assert_equal 'stolen-problem', other_problem.slug
-    # --- 修正後の想定挙動 ---
-    # assert_nil other_problem.contest_id
-    # assert_nil other_problem.slug
+    assert_nil other_problem.contest_id
+    assert_nil other_problem.slug
   end
 
   # --- rejudge ---

@@ -127,9 +127,6 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
     assert @member.reload.writer_request_code.present?
   end
 
-  # NOTE(既知バグ): generate_writer_request_code は「Writer Request が無効です」を
-  # render した後に return しておらず、409 を返しつつコードを再生成してしまう。
-  # 修正後は「現行挙動」ブロックを削除し、「修正後の想定挙動」のコメントを有効化すること。
   test "generate_writer_request_code returns 409 when a code already exists" do
     @member.update!(writer_request_code: 'existing-code')
 
@@ -137,9 +134,6 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
     post generate_writer_request_code_api_user_url(id: @member.id)
     assert_response :conflict
 
-    # --- 現行挙動（バグ）: 409 を返すのにコードが再生成されてしまう ---
-    assert_not_equal 'existing-code', @member.reload.writer_request_code
-    # --- 修正後の想定挙動 ---
-    # assert_equal 'existing-code', @member.reload.writer_request_code
+    assert_equal 'existing-code', @member.reload.writer_request_code
   end
 end

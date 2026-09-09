@@ -7,7 +7,11 @@ class Api::PasswordsController < DeviseTokenAuth::PasswordsController
 
   def update
     user = User.reset_password_by_token(update_params)
-    render json: { message: 'パスワードを変更しました。' }
+    if user.errors.empty?
+      render json: { message: 'パスワードを変更しました。' }
+    else
+      render json: { errors: user.errors }, status: :unprocessable_entity
+    end
   end
 
   private

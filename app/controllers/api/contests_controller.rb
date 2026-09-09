@@ -124,6 +124,7 @@ class Api::ContestsController < ApplicationController
 
     if current_user.writer? && task.writer_user != current_user
       render json: { error: '他のユーザの問題は追加できません。' }, status: :forbidden
+      return
     end
 
     ActiveRecord::Base.transaction do
