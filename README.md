@@ -2,7 +2,7 @@
 
 ## How to run
 
-Ruby version: 3.4.2
+Ruby version: 4.0.2
 
 Run this commands:
 ```shell script

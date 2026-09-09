@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.3.5'
+ruby '>= 3.4'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1.0'
+gem 'rails', '~> 8.1'
 gem 'active_model_serializers', '~> 0.10.0'
 # Use mysql as the database for Active Record
 gem 'mysql2', '~> 0.5.5'
 # Use Puma as the app server
-gem 'puma', '~> 4.1'
+gem 'puma', '~> 6.6'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
@@ -28,15 +28,7 @@ gem 'bootsnap', '>= 1.4.2', require: false
 # gem 'rack-cors'
 
 group :development, :test do
-  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
-  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
-end
-
-group :development do
-  gem 'listen', '>= 3.0.5', '< 3.2'
-  # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
-  gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'debug', platforms: [:mri, :mingw, :x64_mingw]
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -44,26 +36,34 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 
-gem 'rack-cors'
+gem 'rack-cors', '~> 2.0'
 
 # ログイン関連
-gem 'devise'
-gem 'devise_token_auth'
-gem 'devise-i18n'
+gem 'devise', '~> 4.9'
+gem 'devise_token_auth', '~> 1.2'
+gem 'devise-i18n', '~> 1.13'
 
 gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
 
 # Zipファイル
-gem 'rubyzip', '~> 2.3.0'
+gem 'rubyzip', '~> 2.4'
 
 # 論理削除
-gem 'paranoia'
+gem 'discard', '~> 1.3'
 
 # Pagination
-gem 'kaminari'
+gem 'kaminari', '~> 1.2'
 
-gem 'google-cloud-storage'
+gem 'google-cloud-storage', '~> 1.55'
 
 gem 'scenic'
 gem 'scenic-mysql_adapter'
+
+gem 'concurrent-ruby', '~> 1.3'
+gem 'pundit', '~> 2.5'
+
+# JSON Serialize
+gem 'blueprinter', '~> 1.1'
+gem 'oj', '~> 3.16'
+gem 'blueprinter-activerecord', '~> 1.3'

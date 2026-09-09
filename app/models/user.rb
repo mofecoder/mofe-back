@@ -8,6 +8,7 @@ class User < ActiveRecord::Base
   has_many :tester_problems, through: :tester_relations, source: :user
   has_many :clarifications
   has_many :registrations
+  enum :role, { member: 'member', writer: 'writer', admin: 'admin' }
 
   def login=(login)
     @login = login
