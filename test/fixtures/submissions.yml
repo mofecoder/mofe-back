@@ -1,19 +1,21 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+member_submission:
+  user: member_user
+  problem: writer_problem
+  path: /submissions/1
+  status: AC
+  point: 100
+  execution_time: 50
+  execution_memory: 256
+  lang: cpp
+  public: true
 
-one:
-  user_id: 
-  path: MyString
-  status: MyString
-  point: 1
-  execution_time: 1
-  execution_memory: MyString
-  lang: MyString
-
-two:
-  user_id: 
-  path: MyString
-  status: MyString
-  point: 1
-  execution_time: 1
-  execution_memory: MyString
-  lang: MyString
+writer_submission:
+  user: writer_user
+  problem: writer_problem
+  path: /submissions/2
+  status: WA
+  point: 0
+  execution_time: 100
+  execution_memory: 512
+  lang: ruby
+  public: false
