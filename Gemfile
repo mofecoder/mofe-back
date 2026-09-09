@@ -64,3 +64,8 @@ gem 'pundit', '~> 2.5'
 gem 'blueprinter', '~> 1.1'
 gem 'oj', '~> 3.16'
 gem 'blueprinter-activerecord', '~> 1.3'
+
+# activesupport 8.1.3.1 の ActiveSupport::JSON.decode は JSON.parse に options を
+# 位置引数で渡すが、json 3.0 で options が keyword 専用になったため非互換。
+# rails/rails main では修正済み (2026-08-28) なので、それを含むリリースが出たら外す。
+gem 'json', '~> 2.18'
