@@ -1,6 +1,6 @@
 # MOFE Backend
 
-Competitive programming platform (MOFE) backend API built with Rails 8.0 (API-only mode), Ruby 4.0.2, and MySQL 8.0.
+Competitive programming platform (MOFE) backend API built with Rails 8.1 (API-only mode), Ruby 4.0.6, and MySQL 8.0.
 
 ## Development Environment
 
@@ -22,7 +22,7 @@ docker compose down          # Stop and remove containers
 
 | Service | Image       | Port  |
 |---------|-------------|-------|
-| app     | Ruby 4.0.2  | 3000  |
+| app     | Ruby 4.0.6  | 3000  |
 | db      | MySQL 8.0   | 3306  |
 
 The database default credentials for development are `root` / `password` on host `db` (inside Docker network) or `127.0.0.1` (from host).

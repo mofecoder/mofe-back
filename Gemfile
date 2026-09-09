@@ -9,7 +9,7 @@ gem 'active_model_serializers', '~> 0.10.0'
 # Use mysql as the database for Active Record
 gem 'mysql2', '~> 0.5.5'
 # Use Puma as the app server
-gem 'puma', '~> 6.6'
+gem 'puma', '~> 8.0'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
@@ -36,21 +36,18 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 
-gem 'rack-cors', '~> 2.0'
+gem 'rack-cors', '~> 3.0'
 
 # ログイン関連
-gem 'devise', '~> 4.9'
+gem 'devise', '~> 5.0'
 gem 'devise_token_auth', '~> 1.2'
-gem 'devise-i18n', '~> 1.13'
-
-gem 'omniauth-google-oauth2'
-gem 'omniauth-rails_csrf_protection'
+gem 'devise-i18n', '~> 1.16'
 
 # Zipファイル
-gem 'rubyzip', '~> 2.4'
+gem 'rubyzip', '~> 3.6'
 
 # 論理削除
-gem 'discard', '~> 1.3'
+gem 'discard', '~> 2.0'
 
 # Pagination
 gem 'kaminari', '~> 1.2'
