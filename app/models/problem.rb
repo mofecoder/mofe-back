@@ -34,19 +34,19 @@ class Problem < ApplicationRecord
     return true if contest.end_at.past?
     return true if contest.start_at.past? && contest.registered?(user)
     user.present? && (
-      user.admin_for_contest?(contest.id) ||
+      user.contest_admin?(contest.id) ||
       writer_user_id == user.id ||
       tester_relations.exists?(tester_user_id: user.id, approved: true) ||
-      (contest.is_writer_or_tester(user) && (contest.official_mode || contest.start_at.past?))
+      (contest.writer_or_tester?(user) && (contest.official_mode || contest.start_at.past?))
     )
   end
 
   def check_admin_or_writer_or_tester(user)
     return false if user.blank?
-    user.admin_for_contest?(contest.id) ||
+    user.contest_admin?(contest.id) ||
         writer_user_id == user.id ||
         tester_relations.exists?(tester_user_id: user.id, approved: true) ||
-        (contest.official_mode && contest.is_writer_or_tester(user))
+        (contest.official_mode && contest.writer_or_tester?(user))
   end
 
   def to_param

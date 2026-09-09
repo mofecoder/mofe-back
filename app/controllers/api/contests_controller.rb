@@ -25,12 +25,12 @@ class Api::ContestsController < ApplicationController
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
     include_flag = contest.end_at.past? ||
       (contest.start_at.past? && contest.registered?(current_user)) ||
-      (user_signed_in? && current_user.admin_for_contest?(contest.id))
+      (user_signed_in? && current_user.contest_admin?(contest.id))
 
     writer_or_tester = []
     writer_or_tester_tasks = []
-    is_admin = current_user&.admin_for_contest?(contest.id)
-    if contest.is_writer_or_tester(current_user)
+    is_admin = current_user&.contest_admin?(contest.id)
+    if contest.writer_or_tester?(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
         if current_user == problem.writer_user
@@ -57,7 +57,7 @@ class Api::ContestsController < ApplicationController
       include_tasks = writer_or_tester_tasks
     end
 
-    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.admin_for_contest?(contest.id))
+    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.contest_admin?(contest.id))
 
     accepted = []
     if user_signed_in?
@@ -91,7 +91,7 @@ class Api::ContestsController < ApplicationController
   end
 
   def update
-    unless current_user.admin_for_contest?(@contest.id)
+    unless current_user.contest_admin?(@contest.id)
       render_403
       return
     end
@@ -139,13 +139,13 @@ class Api::ContestsController < ApplicationController
   def rejudge
     ids = params[:submission_ids]
     contest = Contest.find_by!(slug: params[:contest_slug])
-    unless contest.is_writer_or_tester(current_user)
+    unless contest.writer_or_tester?(current_user)
       render_403
       return
     end
     submissions = Submission.where(id: ids).includes(problem: :tester_relations)
     submissions.each do |submission|
-      unless current_user.admin_for_contest?(contest.id) ||
+      unless current_user.contest_admin?(contest.id) ||
           submission.problem.writer_user == current_user ||
           submission.problem.tester_relations.exists?(tester_user_id: current_user.id)
         render json: { error: "提出 #{submission.id} に対する権限がありません。" }, status: :forbidden

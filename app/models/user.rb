@@ -18,13 +18,14 @@ class User < ActiveRecord::Base
     @login || self.name || self.email
   end
 
-  def admin?
-    self.role == 'admin'
-  end
-
-  def admin_for_contest?(contest_id)
+  def contest_admin?(contest)
     return true if self.admin?
-    contest_id != nil && self.contest_admins.where(contest_id: contest_id).exists?
+
+    if contest.is_a?(Integer)
+      contest = Contest.find(contest)
+    end
+
+    contest.present? && contest.admin?(self)
   end
 
   def writer?
