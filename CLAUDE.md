@@ -27,6 +27,19 @@ docker compose down          # Stop and remove containers
 
 The database default credentials for development are `root` / `password` on host `db` (inside Docker network) or `127.0.0.1` (from host).
 
+### Changing gems
+
+`compose.yaml` only mounts the project directory (`.:/app`). There is **no volume for `/usr/local/bundle`**, so gems installed by running `bundle install` inside a running container live only in that container's writable layer and are lost when the container is recreated (`docker compose up` after a config change, `docker compose down`, etc.). Gems are installed by `bundle install` in the `Dockerfile` at build time.
+
+After editing `Gemfile` or `Gemfile.lock`, rebuild the image:
+
+```sh
+docker compose build app     # Rebuild the app image with the new gems
+docker compose up -d app     # Recreate the container from it
+```
+
+Running only `docker compose exec app bundle install` will appear to work until the container is recreated, at which point the app fails to boot with `Could not find <gem> in locally installed gems (Bundler::GemNotFound)`.
+
 ## Common Commands
 
 All commands below should be prefixed with `docker compose exec app`.
