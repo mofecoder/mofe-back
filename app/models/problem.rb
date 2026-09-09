@@ -56,6 +56,10 @@ class Problem < ApplicationRecord
         (contest.official_mode && contest.writer_or_tester?(user))
   end
 
+  def tester?(user)
+    tester_relations.exists?(tester_user_id: user.id, approved: true)
+  end
+
   def to_param
     slug
   end

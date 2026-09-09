@@ -9,6 +9,10 @@ class Submission < ApplicationRecord
 
   scope :user_id, -> (user_id) { where(user_id: user_id) }
 
+  def public?
+    public
+  end
+
   class << self
     def search_by_user_id(user_id)
       user_id(user_id)
