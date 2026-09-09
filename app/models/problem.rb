@@ -12,6 +12,13 @@ class Problem < ApplicationRecord
   validates :submission_limit_1, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :submission_limit_2, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
+  attribute :uuid, default: -> { SecureRandom.uuid }
+  attribute :checker_path, default: 'checker_sources/wcmp.cpp'
+  attribute :submission_limit_1, default: 5
+  attribute :submission_limit_2, default: 60
+
+  after_create :add_default_testcase_sets
+
   def samples
     set = testcase_sets.find_by(problem_id: id, is_sample: 1)
     return set unless set
@@ -51,5 +58,16 @@ class Problem < ApplicationRecord
 
   def to_param
     slug
+  end
+
+  private
+
+  def add_default_testcase_sets
+    self.testcase_sets.create(
+      [
+        { name: 'sample', points: 0, is_sample: true },
+        { name: 'all', points: 100, is_sample: false }
+      ]
+    )
   end
 end
