@@ -1,6 +1,6 @@
 class Contest < ApplicationRecord
-  has_many :problems, -> { order('char_length(`position`)').order(:position) }
-  has_many :clarifications
+  has_many :problems, -> { order('char_length(`position`)').order(:position) }, dependent: :restrict_with_error
+  has_many :clarifications, dependent: :destroy
   has_many :registrations, dependent: :destroy
   has_many :team_registrations, dependent: :destroy
   has_many :contest_admins, dependent: :destroy
