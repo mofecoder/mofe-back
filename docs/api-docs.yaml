@@ -1,0 +1,1619 @@
+openapi: 3.0.0
+info:
+  title: Mofe API
+  description: API for Mofe backend
+  version: 1.0.0
+servers:
+  - url: /api
+    description: API base path
+components:
+  securitySchemes:
+    BffSignature:
+      type: apiKey
+      in: header
+      name: X-Request-Signature
+      description: Signature for BFF validation
+    BffTimestamp:
+      type: apiKey
+      in: header
+      name: X-Request-Timestamp
+      description: Timestamp for BFF validation
+    UserUid:
+      type: apiKey
+      in: header
+      name: X-User-Uid
+      description: User UID for authentication
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, writer, user]
+        atcoder_id:
+          type: string
+        atcoder_rating:
+          type: integer
+        writer_request_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        current_sign_in_at:
+          type: string
+          format: date-time
+    Contest:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        end_at:
+          type: string
+          format: date-time
+    ContestDetail:
+      allOf:
+        - $ref: '#/components/schemas/Contest'
+        - type: object
+          properties:
+            description:
+              type: string
+            penalty_time:
+              type: integer
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContestTask'
+            is_writer_or_tester:
+              type: boolean
+            registered:
+              type: object
+              nullable: true
+              properties:
+                name:
+                  type: string
+                  nullable: true
+                open:
+                  type: boolean
+            editorial:
+              type: string
+              nullable: true
+            written_tasks:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  slug:
+                    type: string
+                  role:
+                    type: string
+            is_admin:
+              type: boolean
+            standings_mode:
+              type: string
+              enum: [atcoder, icpc]
+            registration_restriction:
+              type: boolean
+            allow_open_registration:
+              type: boolean
+            allow_team_registration:
+              type: boolean
+    ContestTask:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        position:
+          type: string
+        difficulty:
+          type: string
+        accepted:
+          type: boolean
+        points:
+          type: integer
+    Problem:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        statement:
+          type: string
+        constraints:
+          type: string
+        input_format:
+          type: string
+        output_format:
+          type: string
+        time_limit:
+          type: integer
+        memory_limit:
+          type: integer
+        difficulty:
+          type: string
+        position:
+          type: string
+        submission_limit_1:
+          type: integer
+        submission_limit_2:
+          type: integer
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        point:
+          type: number
+          nullable: true
+        language:
+          type: string
+        source_code:
+          type: string
+        compile_error:
+          type: string
+          nullable: true
+        execution_time:
+          type: integer
+          nullable: true
+        execution_memory:
+          type: integer
+          nullable: true
+        published:
+          type: boolean
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              error:
+                type: string
+security:
+  - BffSignature: []
+    BffTimestamp: []
+    UserUid: []
+paths:
+  /top:
+    get:
+      summary: Get top page information
+      description: Returns information for the top page
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                # TODO: Define top page response schema
+  /internal/users/{uid}:
+    parameters:
+      - name: uid
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      summary: Update or create a user
+      description: Updates an existing user or creates a new one if it doesn't exist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    uid:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    name:
+                      type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+  /contests:
+    get:
+      summary: Get all contests
+      description: Returns all contests categorized by status
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  in_progress:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contest'
+                  future:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contest'
+                  past:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contest'
+                  permanent:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contest'
+    post:
+      summary: Create a new contest
+      description: Creates a new contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contest:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    slug:
+                      type: string
+                    kind:
+                      type: string
+                    standings_mode:
+                      type: string
+                      enum: [atcoder, icpc]
+                    description:
+                      type: string
+                    penalty_time:
+                      type: integer
+                    start_at:
+                      type: string
+                      format: date-time
+                    end_at:
+                      type: string
+                      format: date-time
+                    official_mode:
+                      type: boolean
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /contests/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get contest details
+      description: Returns detailed information about a specific contest
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContestDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a contest
+      description: Updates an existing contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contest:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    kind:
+                      type: string
+                    standings_mode:
+                      type: string
+                      enum: [atcoder, icpc]
+                    penalty_time:
+                      type: integer
+                    start_at:
+                      type: string
+                      format: date-time
+                    end_at:
+                      type: string
+                      format: date-time
+                    editorial_url:
+                      type: string
+                    official_mode:
+                      type: boolean
+                    allow_open_registration:
+                      type: boolean
+                    closed_password:
+                      type: string
+                    allow_team_registration:
+                      type: boolean
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /contests/{slug}/set_task:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      summary: Add a problem to a contest
+      description: Adds a problem to a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                problem_id:
+                  type: integer
+                problem_slug:
+                  type: string
+                position:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+  /contests/{contest_slug}/rejudge:
+    parameters:
+      - name: contest_slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Rejudge submissions
+      description: Rejudges submissions for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users:
+    get:
+      summary: Get all users
+      description: Returns all users (admin only)
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      summary: Update a user
+      description: Updates a user's information
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    atcoder_id:
+                      type: string
+                    name:
+                      type: string
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /users/{id}/update_admin:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      summary: Update a user's admin status
+      description: Updates a user's admin status (admin only)
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    atcoder_id:
+                      type: string
+                    role:
+                      type: string
+                      enum: [admin, writer, user]
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/update_rating:
+    post:
+      summary: Update all users' AtCoder ratings
+      description: Updates all users' AtCoder ratings (admin only)
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '204':
+          description: No content
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{id}/generate_writer_request_code:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Generate a writer request code
+      description: Generates a writer request code for a user
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /manage/contests:
+    get:
+      summary: Get all contests for management
+      description: Returns all contests for management (admin only)
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    slug:
+                      type: string
+                    name:
+                      type: string
+                    kind:
+                      type: string
+                    start_at:
+                      type: string
+                      format: date-time
+                    end_at:
+                      type: string
+                      format: date-time
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /manage/contests/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get contest details for management
+      description: Returns detailed information about a specific contest for management
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ContestDetail'
+                  - type: object
+                    properties:
+                      official_mode:
+                        type: boolean
+                      admins:
+                        type: array
+                        items:
+                          type: string
+                      closed_password:
+                        type: string
+                      allow_open_registration:
+                        type: boolean
+                      allow_team_registration:
+                        type: boolean
+                      tasks:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: '#/components/schemas/ContestTask'
+                            - type: object
+                              properties:
+                                id:
+                                  type: integer
+                                writer_user:
+                                  type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /manage/problems/unset_problems:
+    get:
+      summary: Get unset problems
+      description: Returns all problems that are not assigned to any contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    difficulty:
+                      type: string
+                    writer_user:
+                      type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /slack/add_writer:
+    post:
+      summary: Add a writer from Slack
+      description: Adds a writer from a Slack command
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                text:
+                  type: string
+                  description: "Format: [user_id] [writer_request_code]"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+        '401':
+          description: Unauthorized
+
+  /contests/{slug}/submissions:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get submissions for a contest
+      description: Returns all submissions for a specific contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Submission'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/submissions/all:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get all submissions for a contest
+      description: Returns all submissions for a specific contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Submission'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/submissions/{id}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get a specific submission
+      description: Returns a specific submission for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/submissions/{id}/toggle_published:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      summary: Toggle submission published status
+      description: Toggles the published status of a submission
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/tasks/{task_slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get a specific task
+      description: Returns a specific task for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/tasks/{task_slug}/submit:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Submit a solution
+      description: Submits a solution for a task
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                source_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/tasks/{task_slug}/remove_from_contest:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_slug
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      summary: Remove a task from a contest
+      description: Removes a task from a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/contest_admins:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Add a contest admin
+      description: Adds a contest admin
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Remove a contest admin
+      description: Removes a contest admin
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/standings:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get standings
+      description: Returns standings for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                # TODO: Define standings response schema
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/clarifications:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get clarifications
+      description: Returns clarifications for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  # TODO: Define clarification schema
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Create a clarification
+      description: Creates a clarification for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define clarification request schema
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/clarifications/{id}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get a specific clarification
+      description: Returns a specific clarification for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                # TODO: Define clarification schema
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    update:
+      summary: Update a clarification
+      description: Updates a clarification for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define clarification update schema
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/registrations:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Register for a contest
+      description: Registers for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                open_registration:
+                  type: boolean
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Unregister from a contest
+      description: Unregisters from a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contests/{slug}/registrations/team:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Register a team for a contest
+      description: Registers a team for a contest
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                open_registration:
+                  type: boolean
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems:
+    get:
+      summary: Get all problems
+      description: Returns all problems
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Problem'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Create a problem
+      description: Creates a new problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define problem creation schema
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /problems/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get a specific problem
+      description: Returns a specific problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a problem
+      description: Updates a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define problem update schema
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems/{id}/testcases:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get testcases for a problem
+      description: Returns testcases for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  # TODO: Define testcase schema
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Create a testcase
+      description: Creates a testcase for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define testcase creation schema
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems/{id}/testcases/upload:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Upload testcases
+      description: Uploads testcases for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems/{id}/testcase_sets:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Create a testcase set
+      description: Creates a testcase set for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define testcase set creation schema
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems/{id}/tester_relations:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Add a tester
+      description: Adds a tester for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tester_user_id:
+                  type: integer
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Remove a tester
+      description: Removes a tester from a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tester_user_id:
+                  type: integer
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /problems/{id}/checker:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Download checker
+      description: Downloads the checker for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Update checker
+      description: Updates the checker for a problem
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts:
+    get:
+      summary: Get all posts
+      description: Returns all posts
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  # TODO: Define post schema
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Create a post
+      description: Creates a new post
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # TODO: Define post creation schema
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # TODO: Add more detailed schemas and responses for endpoints
