@@ -1,6 +1,7 @@
 member_submission:
-  user: member_user
-  problem: writer_problem
+  id: 1
+  user_id: 3 # member_user
+  problem_id: 1 # writer_problem
   path: /submissions/1
   status: AC
   point: 100
@@ -10,8 +11,9 @@ member_submission:
   public: true
 
 writer_submission:
-  user: writer_user
-  problem: writer_problem
+  id: 2
+  user_id: 2 # writer_user
+  problem_id: 1 # writer_problem
   path: /submissions/2
   status: WA
   point: 0

@@ -1,11 +1,13 @@
 one:
+  id: 1
   name: sample_set
   points: 100
   is_sample: true
-  problem_id: <%= ActiveRecord::FixtureSet.identify(:writer_problem) %>
+  problem_id: 1 # writer_problem
 
 two:
+  id: 2
   name: all_set
   points: 100
   is_sample: false
-  problem_id: <%= ActiveRecord::FixtureSet.identify(:admin_problem) %>
+  problem_id: 2 # admin_problem

@@ -1,34 +1,37 @@
 writer_problem:
+  id: 1
   slug: writer-problem
   name: Writer Problem
   position: A
-  difficulty: easy
+  difficulty: Milk
   statement: Test statement
   constraints: Test constraints
   input_format: Test input
   output_format: Test output
-  writer_user: writer_user
-  contest: active_contest
+  writer_user_id: 2 # writer_user
+  contest_id: 1 # active_contest
 
 admin_problem:
+  id: 2
   slug: admin-problem
   name: Admin Problem
   position: B
-  difficulty: medium
+  difficulty: Benihuki
   statement: Test statement 2
   constraints: Test constraints 2
   input_format: Test input 2
   output_format: Test output 2
-  writer_user: admin_user
-  contest: ended_contest
+  writer_user_id: 1 # admin_user
+  contest_id: 2 # ended_contest
 
 standalone_problem:
+  id: 3
   slug: standalone-problem
   name: Standalone Problem
   position: A
-  difficulty: beginner
+  difficulty: Assam
   statement: Standalone statement
   constraints: Standalone constraints
   input_format: Standalone input
   output_format: Standalone output
-  writer_user: writer_user
+  writer_user_id: 2 # writer_user
