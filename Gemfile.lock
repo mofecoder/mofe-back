@@ -91,7 +91,12 @@ GEM
       blueprinter (~> 1.0)
     bootsnap (1.26.0)
       msgpack (~> 1.5)
+    brakeman (8.1.0)
+      racc
     builder (3.3.0)
+    bundler-audit (0.9.3)
+      bundler (>= 1.2.0)
+      thor (~> 1.0)
     case_transform (0.2)
       activesupport
     concurrent-ruby (1.3.8)
@@ -347,6 +352,8 @@ DEPENDENCIES
   blueprinter (~> 1.1)
   blueprinter-activerecord (~> 1.3)
   bootsnap (>= 1.4.2)
+  brakeman
+  bundler-audit
   concurrent-ruby (~> 1.3)
   debug
   devise (~> 5.0)
@@ -371,4 +378,4 @@ RUBY VERSION
   ruby 4.0.6
 
 BUNDLED WITH
-  4.0.20
+  4.0.16
