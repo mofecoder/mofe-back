@@ -1,6 +1,6 @@
-class Api::ContestAdminsController < ApplicationController
+class Api::ContestAdminsController < Api::ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_admin_user!
+  before_action :authorize_manage_admins!
   before_action :set_contest
 
   def create
@@ -28,6 +28,13 @@ class Api::ContestAdminsController < ApplicationController
   def destroy
     user = User.find_by!(name: params[:user_name])
     @contest.contest_admins.find_by!(user_id: user.id).discard
+  end
+
+  private
+
+  # コンテストを引く前に認可する（未知の slug でも 403 を返す現行挙動を維持）
+  def authorize_manage_admins!
+    authorize [:api, Contest], :manage_admins?
   end
 
   def set_contest

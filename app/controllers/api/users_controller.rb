@@ -1,11 +1,12 @@
 require 'net/http'
 require 'json'
 
-class Api::UsersController < ApplicationController
+class Api::UsersController < Api::ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_admin_user!, only: [:index, :update_admin, :update_rating]
 
   def index
+    authorize [:api, User]
+
     render json: User.all.as_json(only: [
       :id, :name, :role, :writer_request_code, :created_at,
       :atcoder_id, :atcoder_rating, :current_sign_in_at
@@ -14,14 +15,14 @@ class Api::UsersController < ApplicationController
 
   def update_admin
     user = User.find(params[:id])
+    authorize [:api, user]
+
     user.update!(user_update_admin_param)
   end
 
   def update
-    if !current_user.admin? && User.find(params[:id]).id != current_user.id
-      render_403
-      return
-    end
+    user = User.find(params[:id])
+    authorize [:api, user]
 
     param = user_update_param
 
@@ -51,6 +52,8 @@ class Api::UsersController < ApplicationController
   end
 
   def update_rating
+    authorize [:api, User], :update_rating?
+
     render status: :no_content
     users = User.where.not(atcoder_id: nil)
     Thread.new(users) do |u|
@@ -63,16 +66,13 @@ class Api::UsersController < ApplicationController
 
   def generate_writer_request_code
     user = User.find(params[:id])
-    unless current_user.admin?
-      if user.id != current_user.id
-        render_403
-        return
-      end
-      if user.writer_request_code.present?
-        render json: { error: 'Writer Request が無効です' }, status: :conflict
-        return
-      end
+    authorize [:api, user]
+
+    if !current_user.admin? && user.writer_request_code.present?
+      render json: { error: 'Writer Request が無効です' }, status: :conflict
+      return
     end
+
     user.writer_request_code = SecureRandom.uuid
     user.save!
   end

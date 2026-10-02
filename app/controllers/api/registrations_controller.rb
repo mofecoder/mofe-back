@@ -1,8 +1,10 @@
-class Api::RegistrationsController < ApplicationController
+class Api::RegistrationsController < Api::ApplicationController
   before_action :authenticate_user!
 
   def create
     contest = Contest.find_by!(slug: params[:contest_slug])
+    authorize [:api, contest], :register?
+
     if contest.end_at.past?
       render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
       return
@@ -38,6 +40,8 @@ class Api::RegistrationsController < ApplicationController
     password = team_register_params[:password]
 
     contest = Contest.find_by!(slug: params[:contest_slug])
+    authorize [:api, contest], :register_team?
+
     if contest.end_at.past?
       render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
       return
@@ -98,6 +102,8 @@ class Api::RegistrationsController < ApplicationController
 
   def delete
     contest = Contest.find_by!(slug: params[:contest_slug])
+    authorize [:api, contest], :unregister?
+
     if contest.end_at.past?
       render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
       return
