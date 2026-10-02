@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_04_132845) do
+ActiveRecord::Schema.define(version: 2024_11_05_000000) do
 
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
@@ -51,8 +51,8 @@ ActiveRecord::Schema.define(version: 2024_11_04_132845) do
     t.boolean "allow_team_registration", default: false
     t.integer "standings_mode", default: 1, null: false
     t.integer "penalty_time", default: 0, null: false
-    t.datetime "start_at"
-    t.datetime "end_at"
+    t.datetime "start_at", null: false
+    t.datetime "end_at", null: false
     t.boolean "permanent", default: false, null: false
     t.string "editorial_url"
     t.boolean "official_mode", default: false, null: false

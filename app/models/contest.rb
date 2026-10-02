@@ -6,6 +6,9 @@ class Contest < ApplicationRecord
   has_many :contest_admins, dependent: :destroy
   enum :standings_mode, { atcoder: 1, icpc: 2 }, default: :atcoder
 
+  validates :start_at, :end_at, presence: true
+  validate :end_at_after_start_at
+
   def to_param
     slug
   end
@@ -33,6 +36,14 @@ class Contest < ApplicationRecord
   end
 
   def ended?
-    end_at.nil? || end_at.past?
+    end_at.past?
+  end
+
+  private
+
+  def end_at_after_start_at
+    return if start_at.blank? || end_at.blank?
+
+    errors.add(:end_at, :invalid) unless end_at > start_at
   end
 end
