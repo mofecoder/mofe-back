@@ -1,4 +1,4 @@
-class Api::TesterRelationsController < ApplicationController
+class Api::TesterRelationsController < Api::ApplicationController
   before_action :authenticate_user!
   before_action :set_problem
 
@@ -29,13 +29,11 @@ class Api::TesterRelationsController < ApplicationController
     user = User.find_by!(name: params[:user_name])
     @problem.tester_relations.find_by!(tester_user_id: user.id).discard
   end
+
   private
 
   def set_problem
     @problem = Problem.find(params[:problem_id])
-    unless current_user.contest_admin?(@problem.contest_id) ||
-        @problem.writer_user_id == current_user.id
-      render_403
-    end
+    authorize [:api, @problem], :manage_testers?
   end
 end

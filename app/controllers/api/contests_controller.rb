@@ -1,35 +1,31 @@
 #noinspection RubyYardReturnMatch
-class Api::ContestsController < ApplicationController
+class Api::ContestsController < Api::ApplicationController
   before_action :authenticate_user!, only: [:create, :update, :rejudge, :set_task]
-  before_action :authenticate_admin_user!, only: [:create]
   before_action :set_contest, except: [:index, :create, :rejudge]
 
   def index
+    authorize [:api, Contest]
+
     now = DateTime::now
-    contests = Contest.all.select(:slug, :name, :kind, :start_at, :end_at)
+    contests = policy_scope([:api, Contest]).select(:slug, :name, :kind, :start_at, :end_at)
     during = contests.where('`start_at` <= ? AND `end_at` > ?', now, now).where(permanent: false).order(:end_at)
     future = contests.where('`start_at` > ?', now).where(permanent: false).order(:start_at)
     past = contests.where('`end_at` <= ?', now).where(permanent: false).order(end_at: :desc)
     permanent = contests.where(permanent: true)
-    unless current_user&.admin?
-      during = during.where.not(kind: 'private')
-      future = future.where.not(kind: 'private')
-      past = past.where.not(kind: 'private')
-      permanent = permanent.where.not(kind: 'private')
-    end
     render json: { in_progress: during, future: future, past: past, permanent: permanent }
   end
 
   def show
     # @type [Contest]
     contest = Contest.includes(problems: :testcase_sets).find_by!(slug: params[:slug])
-    include_flag = contest.end_at.past? ||
-      (contest.start_at.past? && contest.registered?(current_user)) ||
-      (user_signed_in? && current_user.contest_admin?(contest.id))
+    authorize [:api, contest]
+
+    contest_policy = policy([:api, contest])
+    include_flag = contest_policy.include_tasks?
 
     writer_or_tester = []
     writer_or_tester_tasks = []
-    is_admin = current_user&.contest_admin?(contest.id)
+    is_admin = contest_policy.contest_admin?
     if contest.writer_or_tester?(current_user)
       problems = contest.problems.includes(:tester_relations)
       problems.each do |problem|
@@ -57,7 +53,7 @@ class Api::ContestsController < ApplicationController
       include_tasks = writer_or_tester_tasks
     end
 
-    show_editorial = contest.end_at.past? || (user_signed_in? && current_user.contest_admin?(contest.id))
+    show_editorial = contest_policy.show_editorial?
 
     accepted = []
     if user_signed_in?
@@ -85,21 +81,22 @@ class Api::ContestsController < ApplicationController
   end
 
   def create
+    authorize [:api, Contest]
+
     contest = Contest.new(contest_create_params)
     contest.save
     render status: :created
   end
 
   def update
-    unless current_user.contest_admin?(@contest.id)
-      render_403
-      return
-    end
+    authorize [:api, @contest]
 
     @contest.update!(contest_update_params)
   end
 
   def set_task
+    authorize [:api, @contest], :set_task?
+
     unless params.has_key?(:problem_id)
       render json: { error: "パラメータ 'problem_id' が必要です。" }, status: :bad_request
       return
@@ -122,7 +119,7 @@ class Api::ContestsController < ApplicationController
       return
     end
 
-    if current_user.writer? && task.writer_user != current_user
+    unless policy([:api, task]).add_to_contest?
       render json: { error: '他のユーザの問題は追加できません。' }, status: :forbidden
       return
     end
@@ -140,15 +137,11 @@ class Api::ContestsController < ApplicationController
   def rejudge
     ids = params[:submission_ids]
     contest = Contest.find_by!(slug: params[:contest_slug])
-    unless contest.writer_or_tester?(current_user)
-      render_403
-      return
-    end
+    authorize [:api, contest], :rejudge?
+
     submissions = Submission.where(id: ids).includes(problem: :tester_relations)
     submissions.each do |submission|
-      unless current_user.contest_admin?(contest.id) ||
-          submission.problem.writer_user == current_user ||
-          submission.problem.tester_relations.exists?(tester_user_id: current_user.id)
+      unless policy([:api, submission]).rejudge?
         render json: { error: "提出 #{submission.id} に対する権限がありません。" }, status: :forbidden
         return
       end

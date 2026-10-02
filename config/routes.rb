@@ -85,6 +85,10 @@ Rails.application.routes.draw do
     resources :posts
   end
 
+  namespace :v4 do
+    resources :problems
+  end
+
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
   match '*' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]
 end

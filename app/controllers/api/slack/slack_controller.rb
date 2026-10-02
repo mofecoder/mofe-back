@@ -1,5 +1,8 @@
-class Api::Slack::SlackController < ApplicationController
+class Api::Slack::SlackController < Api::ApplicationController
   def add_writer
+    # 共有シークレットによる検証で current_user が存在しないため Pundit の対象外
+    skip_authorization
+
     if params[:token] != Rails.application.credentials.slack[:verification_token]
       render status: 401
       return

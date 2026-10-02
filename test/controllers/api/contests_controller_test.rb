@@ -99,7 +99,7 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
   test "create succeeds for an admin" do
     sign_in_as @admin
     assert_difference -> { Contest.count }, 1 do
-      post api_contests_url, params: { contest: { name: 'New Contest', slug: 'new-contest', kind: 'normal' } }
+      post api_contests_url, params: { contest: { name: 'New Contest', slug: 'new-contest', kind: 'normal', start_at: 1.day.from_now, end_at: 2.days.from_now } }
     end
     assert_response :created
   end

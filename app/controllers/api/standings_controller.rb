@@ -1,7 +1,8 @@
-class Api::StandingsController < ApplicationController
+class Api::StandingsController < Api::ApplicationController
   def index
     # @type [Contest]
     contest = Contest.find_by!(slug: params[:contest_slug])
+    authorize [:api, contest], :standings?
     penalty_time = contest.penalty_time
     started_at = contest.start_at
     submissions = Submission.joins(problem: :contest).preload(:user).preload(:problem)
@@ -16,7 +17,7 @@ class Api::StandingsController < ApplicationController
                     .order('LENGTH(position)')
                    .order(:position)
                    .map { |p| [p.id, p] }.to_h
-    show_problems = contest.writer_or_tester?(current_user) || started_at.past?
+    show_problems = policy([:api, contest]).show_problems?
 
     admins = Set.new(contest.contest_admins.pluck(:user_id) + User.where(role: 'admin').pluck(:id))
 
