@@ -68,11 +68,12 @@ class Api::ProblemPolicy < Api::ApplicationPolicy
     signed_in? && !user.member?
   end
 
+  # テストケース評価情報（結果・名前・score）を見られる人の定義。
   # submissions#show / #create（旧 Api::SubmissionsController#is_admin_or_writer?）
   def admin_or_writer?
     return false unless signed_in?
 
-    user.admin? ||
+    contest_admin? ||
       record.writer_user_id == user.id ||
       record.tester?(user) ||
       (record.contest.present? && record.contest.writer_or_tester?(user) && record.contest.official_mode)

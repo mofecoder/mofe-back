@@ -167,6 +167,22 @@ class Api::ProblemPolicyTest < ActiveSupport::TestCase
     refute Api::ProblemPolicy.new(@member, @writer_problem).admin_or_writer?
   end
 
+  test "admin_or_writer? permits a contest admin of the problem's contest regardless of role" do
+    %w[member writer].each do |role|
+      user = create_user("contest_admin_#{role}", role: role)
+      ContestAdmin.create!(user: user, contest: @writer_problem.contest)
+
+      assert Api::ProblemPolicy.new(user, @writer_problem).admin_or_writer?, role
+    end
+  end
+
+  test "admin_or_writer? denies a contest admin of another contest" do
+    user = create_user('other_contest_admin', role: 'writer')
+    ContestAdmin.create!(user: user, contest: @admin_problem.contest)
+
+    refute Api::ProblemPolicy.new(user, @writer_problem).admin_or_writer?
+  end
+
   # --- show_task? / submit? ---
 
   test "show_task? delegates to Problem#has_permission?" do

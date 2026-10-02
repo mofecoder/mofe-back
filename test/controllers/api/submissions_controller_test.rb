@@ -115,6 +115,42 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  # 開催中のコンテストでも、他人が書いた問題の contest_admin にはテストケース評価情報が見える
+  test "show returns testcase results, names and score to a writer-role contest admin during the contest" do
+    contest_admin = users(:writer_user)
+    problem = problems(:admin_problem)
+    problem.update_columns(contest_id: @contest.id)
+    submission = Submission.create!(
+      user: @member, problem: problem, path: '/submissions/ca',
+      status: 'AC', point: 100, lang: 'cpp', public: false
+    )
+    submission.update_columns(updated_at: 1.minute.from_now)
+    TestcaseResult.create!(
+      submission: submission, testcase: testcases(:two),
+      status: 'AC', score: 100, execution_time: 10, execution_memory: 10
+    )
+    ContestAdmin.create!(user: contest_admin, contest: @contest)
+    assert_not_equal contest_admin.id, problem.writer_user_id
+
+    sign_in_as contest_admin
+    # source は GCS から取得されるのでスタブする
+    client = Utils::GoogleCloudStorageClient
+    original = client.method(:get_source)
+    client.define_singleton_method(:get_source) { |_path| StringIO.new('int main(){}') }
+    begin
+      get api_contest_submission_url(contest_slug: @contest.slug, id: submission.id)
+    ensure
+      client.define_singleton_method(:get_source, original)
+    end
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal 1, body['testcase_results'].length
+    assert_equal 'testcase_2', body['testcase_results'][0]['testcase_name']
+    assert_equal 100, body['testcase_results'][0]['score']
+    assert_equal ['testcase_2'], body['testcase_sets'][0]['testcases']
+  end
+
   # --- toggle_published ---
 
   test "toggle_published returns 403 when not authenticated" do

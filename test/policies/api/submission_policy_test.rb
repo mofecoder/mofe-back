@@ -52,6 +52,13 @@ class Api::SubmissionPolicyTest < ActiveSupport::TestCase
     assert Api::SubmissionPolicy.new(@admin, @member_submission).show?
   end
 
+  test "show? permits a contest admin for another user's private submission" do
+    user = create_user('show_contest_admin')
+    ContestAdmin.create!(user: user, contest: @writer_submission.problem.contest)
+
+    assert Api::SubmissionPolicy.new(user, @writer_submission).show?
+  end
+
   test "show? denies anonymous users while the contest is running" do
     refute Api::SubmissionPolicy.new(nil, @member_submission).show?
   end
