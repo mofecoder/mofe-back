@@ -1,4 +1,4 @@
-class Api::SubmissionsController < ApplicationController
+class Api::SubmissionsController < Api::ApplicationController
   include Pagination
   before_action :authenticate_user!, except: [:all, :show, :toggle_published]
 
@@ -8,6 +8,9 @@ class Api::SubmissionsController < ApplicationController
       return
     end
     contest_slug = params[:contest_slug]
+    contest = Contest.find_by!(slug: contest_slug)
+    authorize [:api, contest], :submissions?
+
     user_id = current_user.id
     page = params[:page] || 1
     count = params[:count] || 20
@@ -21,7 +24,7 @@ class Api::SubmissionsController < ApplicationController
             .search_by_user_id(user_id)
             .page(page)
             .per(count),
-      Contest.find_by!(slug: contest_slug).problems.pluck(:id),
+      contest.problems.pluck(:id),
       params[:options]
     )
   end
@@ -33,29 +36,13 @@ class Api::SubmissionsController < ApplicationController
     page = params[:page] || 1
     count = params[:count] || 20
 
-    all_problem_id = contest.problems.pluck(:id)
-    including_problem_id = []
-    if contest.end_at.past?
-      including_problem_id = all_problem_id
-    elsif user_signed_in? && contest.writer_or_tester?(current_user)
-      if contest.official_mode || current_user.contest_admin?(contest.id)
-        including_problem_id = all_problem_id
-      else
-        contest.problems.includes(:tester_relations).each do |problem|
-          if current_user == problem.writer_user ||
-              problem.tester_relations.exists?(tester_user_id: current_user.id, approved: true)
-            including_problem_id.push(problem.id)
-          end
-        end
-      end
-    end
+    contest_policy = policy([:api, contest])
+    including_problem_id = contest_policy.visible_submission_problem_ids
 
-    unless including_problem_id.any?
-      render_403
-      return
-    end
+    # 可視の問題が 1 つも無ければ 403（authorize は同じポリシーインスタンスを再利用する）
+    authorize [:api, contest], :all_submissions?
 
-    permission = user_signed_in? && current_user.contest_admin?(contest.id)
+    permission = contest_policy.contest_admin?
 
     all_submissions = Submission
                         .includes(problem: :testcase_sets)
@@ -79,6 +66,9 @@ class Api::SubmissionsController < ApplicationController
   end
 
   def show
+    # 独自のエラーメッセージを返すため authorize ではなく policy() で判定する
+    skip_authorization
+
     #@type [Submission]
     submission = Submission.includes(testcase_results: :testcase).find(params[:id])
     contest = submission.problem.contest
@@ -88,15 +78,13 @@ class Api::SubmissionsController < ApplicationController
       return
     end
 
-    is_admin_or_writer = is_admin_or_writer?(submission.problem)
+    is_admin_or_writer = policy([:api, submission.problem]).admin_or_writer?
 
-    unless user_signed_in? && (is_admin_or_writer || submission.user_id == current_user.id)
-      unless contest.end_at.past? && submission.public
-        render json: {
-          error: 'この提出は非公開です'
-        }, status: :forbidden
-        return
-      end
+    unless policy([:api, submission]).show?
+      render json: {
+        error: 'この提出は非公開です'
+      }, status: :forbidden
+      return
     end
 
     samples = submission
@@ -139,6 +127,8 @@ class Api::SubmissionsController < ApplicationController
     end
 
     problem = Problem.find_by!(slug: params[:task_slug])
+    authorize [:api, problem], :submit?
+
     limit = check_submit_limit(problem)
 
     if limit.present?
@@ -154,11 +144,7 @@ class Api::SubmissionsController < ApplicationController
 
   def toggle_published
     submission = Submission.find(params[:id])
-
-    unless submission.problem.check_admin_or_writer_or_tester(current_user)
-      render_403
-      return
-    end
+    authorize [:api, submission], :toggle_published?
 
     submission.public = !submission.public
     submission.save
@@ -279,7 +265,7 @@ class Api::SubmissionsController < ApplicationController
   # @param problem [Problem]
   # @return [Integer, NilClass]
   def check_submit_limit(problem)
-    if is_admin_or_writer?(problem)
+    if policy([:api, problem]).admin_or_writer?
       return nil
     end
     latest_submissions = Submission
@@ -302,11 +288,6 @@ class Api::SubmissionsController < ApplicationController
 
   # @param [Problem] problem
   def _submit(problem, source)
-    unless problem.has_permission?(current_user)
-      render_403
-      return
-    end
-
     save_path = make_path
 
     submission = current_user.submissions.new
@@ -326,15 +307,6 @@ class Api::SubmissionsController < ApplicationController
         .order(:created_at)
         .to_a
         .group_by { |t| t.problem_id }
-  end
-
-  def is_admin_or_writer?(problem)
-    user_signed_in? && (
-      current_user.admin? ||
-        problem.writer_user_id == current_user.id ||
-        problem.tester_relations.where(tester_user_id: current_user.id, approved: true).exists? ||
-        problem.contest.writer_or_tester?(current_user) && problem.contest.official_mode
-    )
   end
 
   # pathを生やす

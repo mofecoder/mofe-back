@@ -1,13 +1,9 @@
-class Api::PostsController < ApplicationController
+class Api::PostsController < Api::ApplicationController
   before_action :authenticate_user!, only: [:create, :update, :destroy]
-  before_action :authenticate_admin_user!, only: [:create, :update, :destroy]
 
   def index
-    posts = Post.all.order(id: :desc)
-
-    unless current_user&.admin?
-      posts.where!(public_status: 'public')
-    end
+    authorize [:api, Post]
+    posts = policy_scope([:api, Post]).order(id: :desc)
 
     if params[:count].present?
       posts.limit!(params[:count])
@@ -18,16 +14,14 @@ class Api::PostsController < ApplicationController
 
   def show
     post = Post.find(params[:id])
-
-    if !current_user&.admin? && post.public_status == 'private'
-      render json: { error: '権限がありません' }, status: :forbidden
-      return
-    end
+    authorize [:api, post]
 
     render json: post
   end
 
   def create
+    authorize [:api, Post]
+
     post = Post.new(post_param)
     if post.save
       render json: post, status: :created
@@ -38,6 +32,8 @@ class Api::PostsController < ApplicationController
 
   def update
     post = Post.find(params[:id])
+    authorize [:api, post]
+
     unless post.update(post_param)
       render json: { error: post.errors }, status: :bad_request
     end
@@ -45,6 +41,8 @@ class Api::PostsController < ApplicationController
 
   def destroy
     post = Post.find(params[:id])
+    authorize [:api, post]
+
     unless post.discard
       render json: { error: post.errors }, status: :bad_request
     end

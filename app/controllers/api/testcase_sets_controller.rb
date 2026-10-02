@@ -1,6 +1,6 @@
-class Api::TestcaseSetsController < ApplicationController
+class Api::TestcaseSetsController < Api::ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_writer!
+  before_action :set_problem
 
   def show
     render json: TestcaseSet.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample, :aggregate_type])
@@ -53,12 +53,9 @@ class Api::TestcaseSetsController < ApplicationController
 
   private
 
-    def authenticate_writer!
+    def set_problem
       @problem = Problem.find(params[:problem_id])
-      unless current_user.contest_admin?(@problem.contest_id) ||
-          current_user.writer? && @problem.writer_user_id == current_user.id
-        render_403
-      end
+      authorize [:api, @problem], :manage_testcases?
     end
 
     def create_params

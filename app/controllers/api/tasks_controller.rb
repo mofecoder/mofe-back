@@ -1,8 +1,10 @@
-class Api::TasksController < ApplicationController
+class Api::TasksController < Api::ApplicationController
   before_action :authenticate_user!, only: [:index, :remove_from_contest]
-  before_action :authenticate_admin_user!, only: [:index]
 
   def index
+    # コンテストを引く前に認可する（未知の slug でも 403 を返す現行挙動を維持）
+    authorize [:api, Contest], :tasks_index?
+
     contest = Contest.find_by!(slug: params[:contest_slug])
     tasks = contest.problems.includes(:writer_user)
     render json: tasks
@@ -15,20 +17,14 @@ class Api::TasksController < ApplicationController
            .includes(testcase_sets: {testcase_testcase_sets: :testcase})
            .find_by!(contest_id: contest.id, slug: params[:slug])
 
-    if task.has_permission?(current_user)
-      render json: task, serializer: TaskSerializer
-    else
-      render_403
-    end
+    authorize [:api, task], :show_task?
+
+    render json: task, serializer: TaskSerializer
   end
 
   def remove_from_contest
     contest = Contest.find_by!(slug: params[:contest_slug])
-
-    unless current_user.contest_admin?(contest.id)
-      render_403
-      return
-    end
+    authorize [:api, contest], :remove_task?
 
     task = Problem.find_by!(contest_id: contest.id, slug: params[:task_slug])
     task.contest_id = nil

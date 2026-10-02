@@ -1,54 +1,28 @@
-class Api::ClarificationsController < ApplicationController
+class Api::ClarificationsController < Api::ApplicationController
   before_action :set_contest
   before_action :authenticate_user!, except: [:index]
 
   def index
-    clarifications = @contest.clarifications.includes(:problem, :user).order(updated_at: :desc)
+    authorize [:api, Clarification]
 
-    if !user_signed_in?
-      problems = []
-      clarifications.where!(publish: true)
-    elsif current_user.contest_admin?(@contest.id)
-      problems = @contest.problems.pluck(:id) + [nil]
-    else
-      problems = writer_problem_ids
+    relation = @contest.clarifications.includes(:problem, :user).order(updated_at: :desc)
+    contest_policy = policy([:api, @contest])
 
-      if problems.any?
-        clarifications = clarifications.where(publish: true)
-                             .or(clarifications.where(problem_id: problems))
-                             .or(clarifications.where(user_id: current_user.id))
-      else
-        clarifications = clarifications.where(publish: true)
-            .or(clarifications.where(user_id: current_user.id))
-      end
-    end
-
-    render json: clarifications, problems: problems
+    render json: contest_policy.visible_clarifications(relation),
+           problems: contest_policy.visible_clarification_problem_ids
   end
 
   def show
     # @type [Clarification]
     clarification = @contest.clarifications.find(params[:id])
-
-    if clarification.problem.present?
-      is_writer_or_tester = clarification.problem.writer_user_id == current_user.id ||
-          clarification.problem.tester_ids.include?(current_user.id)
-
-      unless current_user.contest_admin?(@contest.id) || is_writer_or_tester
-        render_403
-        return
-      end
-    else
-      unless current_user.contest_admin?(@contest.id)
-        render_403
-        return
-      end
-    end
+    authorize [:api, clarification]
 
     render json: clarification, problems: [clarification.problem_id]
   end
 
   def create
+    authorize [:api, Clarification]
+
     clarification = @contest.clarifications.new
     clarification.question = create_params[:question]
     clarification.user_id = current_user.id
@@ -66,22 +40,7 @@ class Api::ClarificationsController < ApplicationController
 
   def update
     clarification = Clarification.find(params[:id])
-
-    # writer or tester or admin
-    ok = current_user.contest_admin?(@contest.id)
-
-    if clarification.problem.present?
-      ok |= clarification.problem.writer_user.id == current_user.id
-
-      unless ok
-        ok |= clarification.problem.tester_ids.include?(current_user.id)
-      end
-    end
-
-    unless ok
-      render_403
-      return
-    end
+    authorize [:api, clarification]
 
     if clarification.update(update_params)
       render json: clarification, status: :no_content
@@ -98,11 +57,6 @@ class Api::ClarificationsController < ApplicationController
 
   def update_params
     params.require(:clarification).permit(:answer, :publish)
-  end
-
-  def writer_problem_ids
-    @contest.problems.where(writer_user_id: current_user.id).pluck(:id) +
-        @contest.problems.joins(:testers).where('users.id': current_user.id).pluck(:id)
   end
 
   def set_contest
