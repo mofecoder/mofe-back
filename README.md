@@ -1,8 +1,8 @@
-# CafeCoder Provisional Backend
+# MOFE Backend
 
 ## How to run
 
-Ruby version: 2.6.3
+Ruby version: 4.0.2
 
 Run this commands:
 ```shell script

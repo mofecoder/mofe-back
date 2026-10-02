@@ -1,4 +1,7 @@
 class Api::PostsController < ApplicationController
+  before_action :authenticate_user!, only: [:create, :update, :destroy]
+  before_action :authenticate_admin_user!, only: [:create, :update, :destroy]
+
   def index
     posts = Post.all.order(id: :desc)
 
@@ -42,7 +45,7 @@ class Api::PostsController < ApplicationController
 
   def destroy
     post = Post.find(params[:id])
-    unless post.destroy
+    unless post.discard
       render json: { error: post.errors }, status: :bad_request
     end
   end

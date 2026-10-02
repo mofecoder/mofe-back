@@ -1,6 +1,4 @@
 require 'zip'
-require 'set'
-require 'fileutils'
 
 class Api::TestcasesController < ApplicationController
   before_action :authenticate_user!
@@ -70,13 +68,13 @@ class Api::TestcasesController < ApplicationController
   def destroy
     # @type [Testcase]
     testcase = @problem.testcases.find(params[:id])
-    testcase.destroy!
+    testcase.discard!
   end
 
   def delete_multiple
     # @type [Array<Integer>]
     ids = params[:testcases]
-    @problem.testcases.where(id: ids).destroy_all
+    @problem.testcases.where(id: ids).discard_all
   end
 
   def update
@@ -144,14 +142,14 @@ class Api::TestcasesController < ApplicationController
       message << "'output/#{k}.txt' は、input ファイルが存在しないため無視されました。" unless common_filename.include? k
     end
 
-    existing_testcase_names = Set.new @problem.testcases.pluck(:name)
+    existing_testcase_names = Set.new(@problem.testcases.pluck(:name))
     all_testcase_set = @problem.testcase_sets.find_by!(name: 'all')
 
     ActiveRecord::Base.transaction do
       common_filename.each do |name|
         if existing_testcase_names.include?(name)
           if params.has_key?('overwrite')
-            @problem.testcases.where(name: name).destroy!
+            @problem.testcases.where(name: name).discard_all
           else
             message << "'#{name}.txt' は、同名のテストケースが既に存在するため無視されました。"
             next
@@ -187,7 +185,7 @@ class Api::TestcasesController < ApplicationController
       )
     else
       return if s.nil?
-      s.really_destroy!
+      s.destroy!
     end
   end
 
@@ -210,7 +208,7 @@ class Api::TestcasesController < ApplicationController
 
   def authenticate_writer!
     @problem = Problem.find(params[:problem_id])
-    unless current_user.admin_for_contest?(@problem.contest_id) || current_user.writer? && @problem.writer_user_id == current_user.id
+    unless current_user.contest_admin?(@problem.contest_id) || current_user.writer? && @problem.writer_user_id == current_user.id
       render_403
     end
   end

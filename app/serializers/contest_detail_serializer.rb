@@ -13,7 +13,7 @@ class ContestDetailSerializer < ContestSerializer
   end
 
   def is_writer_or_tester
-    object.is_writer_or_tester(@instance_options[:user])
+    object.writer_or_tester?(@instance_options[:user])
   end
 
   def registered
@@ -35,7 +35,7 @@ class ContestDetailSerializer < ContestSerializer
   def is_admin
     return false if @instance_options[:user].nil?
     return true if @instance_options[:user].admin?
-    @instance_options[:user].admin_for_contest?(object.id)
+    @instance_options[:user].contest_admin?(object.id)
   end
 
   def registration_restriction
