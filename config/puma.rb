@@ -31,8 +31,16 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 5)
 threads threads_count, threads_count
 
-# Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-port ENV.fetch("PORT", 3000)
+# development 以外 (本番など) は nginx の upstream から接続できるよう unix ソケットで
+# 待ち受ける。development は `port` (default 3000) で待ち受ける。
+# (Puma 5 以降 daemonize は廃止されたため、常駐化は systemd などに任せる)
+if Rails.env.development?
+  port ENV.fetch("PORT", 3000)
+else
+  bind "unix://#{Rails.root}/tmp/sockets/puma.sock"
+  workers ENV.fetch("WEB_CONCURRENCY", 4)
+  stdout_redirect "#{Rails.root}/log/stdout", "#{Rails.root}/log/stderr", true
+end
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
