@@ -1,8 +1,8 @@
 require 'zip'
 
-class Api::TestcasesController < ApplicationController
+class Api::TestcasesController < Api::ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_writer!
+  before_action :set_problem
 
   def index
     # @type [Array<TestcaseSet>]
@@ -206,11 +206,9 @@ class Api::TestcasesController < ApplicationController
 
   private
 
-  def authenticate_writer!
+  def set_problem
     @problem = Problem.find(params[:problem_id])
-    unless current_user.contest_admin?(@problem.contest_id) || current_user.writer? && @problem.writer_user_id == current_user.id
-      render_403
-    end
+    authorize [:api, @problem], :manage_testcases?
   end
 
   def create_params

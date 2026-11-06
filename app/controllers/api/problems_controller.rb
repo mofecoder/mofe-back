@@ -1,11 +1,11 @@
-class Api::ProblemsController < ApplicationController
+class Api::ProblemsController < Api::ApplicationController
   before_action :authenticate_user!
-  before_action :authenticate_writer!, only: [:index, :create]
 
   # GET /problems
   def index
-    problems = Problem.includes(:writer_user, :contest).order(id: :desc)
-    problems.where!(writer_user_id: current_user.id) unless current_user.admin?
+    authorize [:api, Problem]
+
+    problems = policy_scope([:api, Problem]).includes(:writer_user, :contest).order(id: :desc)
 
     render json: problems
   end
@@ -13,17 +13,15 @@ class Api::ProblemsController < ApplicationController
   # GET /problems/1
   def show
     problem = Problem.includes(:testers).find(params[:id])
-    if !current_user.contest_admin?(problem.contest_id) &&
-        problem.writer_user_id != current_user.id &&
-        problem.tester_relations.where(tester_user_id: current_user.id, approved: true).empty?
-      render_403
-      return
-    end
+    authorize [:api, problem]
+
     render json: problem, serializer: ProblemDetailSerializer
   end
 
   # POST /problems
   def create
+    authorize [:api, Problem]
+
     ActiveRecord::Base.transaction do
       @problem = Problem.new(problem_params)
       @problem.uuid = SecureRandom.uuid
@@ -33,17 +31,6 @@ class Api::ProblemsController < ApplicationController
       @problem.submission_limit_2 = 60
 
       if @problem.save
-        @problem.testcase_sets.create(
-            name: 'sample',
-            points: 0,
-            is_sample: true
-        )
-        @problem.testcase_sets.create(
-            name: 'all',
-            points: 100,
-            is_sample: false
-        )
-
         render json: @problem, serializer: ProblemDetailSerializer, status: :created
       else
         render json: @problem.errors, status: :unprocessable_entity
@@ -54,10 +41,7 @@ class Api::ProblemsController < ApplicationController
   # PATCH/PUT /problems/1
   def update
     problem = Problem.find(params[:id])
-    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
-      render_403
-      return
-    end
+    authorize [:api, problem]
 
     if problem.update(problem_edit_params)
       render json: problem, serializer: ProblemDetailSerializer
@@ -68,10 +52,7 @@ class Api::ProblemsController < ApplicationController
 
   def download_checker
     problem = Problem.find(params[:problem_id])
-    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
-      render_403
-      return
-    end
+    authorize [:api, problem], :download_checker?
 
     checker_data = Utils::GoogleCloudStorageClient::get_source(problem.checker_path)
 
@@ -80,10 +61,7 @@ class Api::ProblemsController < ApplicationController
 
   def update_checker
     problem = Problem.find(params[:problem_id])
-    unless current_user.contest_admin?(problem.contest_id) || problem.writer_user_id == current_user.id
-      render_403
-      return
-    end
+    authorize [:api, problem], :update_checker?
 
     if params[:type].nil?
       file_path = "./tmp/#{SecureRandom.uuid}.zip"
@@ -119,10 +97,4 @@ class Api::ProblemsController < ApplicationController
       :name, :difficulty, :statement, :constraints, :partial_scores, :input_format, :output_format, :execution_time_limit
     )
   end
-
-  def authenticate_writer!
-    unless current_user.admin? || current_user.writer?
-      render_403
-    end
-  end
-    end
+end

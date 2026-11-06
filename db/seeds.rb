@@ -100,7 +100,7 @@ practice_contest = Contest.find_or_create_by!(slug: "practice") do |c|
   c.standings_mode = :atcoder
   c.penalty_time = 0
   c.start_at = 1.year.ago
-  c.end_at = nil
+  c.end_at = Time.zone.local(2100, 1, 1)
   c.permanent = true
   c.official_mode = false
 end
@@ -113,7 +113,7 @@ problem_a = Problem.find_or_create_by!(slug: "sample-a") do |p|
   p.writer_user_id = writer_user.id
   p.position = "A"
   p.uuid = SecureRandom.uuid
-  p.difficulty = "beginner"
+  p.difficulty = "Milk"
   p.execution_time_limit = 2000
   p.submission_limit_1 = 5
   p.submission_limit_2 = 60
@@ -130,7 +130,7 @@ problem_b = Problem.find_or_create_by!(slug: "sample-b") do |p|
   p.writer_user_id = writer_user.id
   p.position = "B"
   p.uuid = SecureRandom.uuid
-  p.difficulty = "easy"
+  p.difficulty = "Earlgray"
   p.execution_time_limit = 2000
   p.submission_limit_1 = 5
   p.submission_limit_2 = 60
@@ -147,7 +147,7 @@ practice_problem = Problem.find_or_create_by!(slug: "hello-world") do |p|
   p.writer_user_id = writer_user.id
   p.position = "A"
   p.uuid = SecureRandom.uuid
-  p.difficulty = "beginner"
+  p.difficulty = "Flavor"
   p.execution_time_limit = 1000
   p.submission_limit_1 = 10
   p.submission_limit_2 = 100
@@ -231,7 +231,7 @@ puts "✅ Created registrations for past contest"
 users.first(3).each_with_index do |user, index|
   Submission.find_or_create_by!(user_id: user.id, problem_id: problem_a.id) do |s|
     s.path = "submissions/#{user.id}/#{problem_a.id}/main.cpp"
-    s.status = index == 0 ? "AC" : ["WA", "TLE", "RE"].sample
+    s.status = index == 0 ? "AC" : %w[WA TLE RE].sample
     s.point = index == 0 ? 100 : 0
     s.execution_time = rand(100..1500)
     s.execution_memory = rand(1000..50000)

@@ -118,6 +118,18 @@ class Api::ProblemsControllerTest < ActionDispatch::IntegrationTest
     assert created.uuid.present?
   end
 
+  test "create builds exactly one sample and one all testcase set" do
+    sign_in_as @writer
+    post api_problems_url, params: { problem: valid_problem_params }
+    assert_response :created
+
+    created = Problem.find(JSON.parse(response.body)['id'])
+    sets = created.testcase_sets.order(:id)
+    assert_equal %w[sample all], sets.map(&:name)
+    assert_equal [true, false], sets.map(&:is_sample)
+    assert_equal [0, 100], sets.map(&:points)
+  end
+
   # --- update ---
 
   test "update returns 401 when not authenticated" do

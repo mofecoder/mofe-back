@@ -1,15 +1,11 @@
-class Api::Manage::ProblemsController < ApplicationController
+class Api::Manage::ProblemsController < Api::ApplicationController
   before_action :authenticate_user!
+
   # GET /problems
   def unset_problems
-    if current_user.role == 'member'
-      render_403
-      return
-    end
-    problems = Problem.includes(:writer_user).where(contest_id: nil)
-    if current_user.writer?
-      problems.where!(writer_user: current_user)
-    end
+    authorize [:api, Problem], :unset_problems?
+
+    problems = policy_scope([:api, Problem]).includes(:writer_user).where(contest_id: nil)
 
     render json: problems, each_serializer: UnsetProblemSerializer
   end
