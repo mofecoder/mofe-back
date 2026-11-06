@@ -1,10 +1,10 @@
 class Contest < ApplicationRecord
-  has_many :problems, -> { order('char_length(`position`)').order(:position) }
-  has_many :clarifications
+  has_many :problems, -> { order('char_length(`position`)').order(:position) }, dependent: :restrict_with_error
+  has_many :clarifications, dependent: :destroy
   has_many :registrations, dependent: :destroy
   has_many :team_registrations, dependent: :destroy
   has_many :contest_admins, dependent: :destroy
-  enum standings_mode: { atcoder: 1, icpc: 2 }
+  enum :standings_mode, { atcoder: 1, icpc: 2 }, default: :atcoder
 
   def to_param
     slug
@@ -13,19 +13,26 @@ class Contest < ApplicationRecord
   # @param [User] user
   def registered?(user)
     user.present? && (
-      user.admin_for_contest?(self.id) ||
+      user.contest_admin?(self.id) ||
         self.registrations.exists?(user_id: user.id) ||
         self.team_registrations.eager_load(:team_registration_users)
                .exists?(team_registration_users: { user_id: user.id })
     )
   end
 
-  def is_writer_or_tester(user)
-    return false if user.nil?
+  def admin?(user)
+    user.present? && (user.admin? || contest_admins.exists?(user: user))
+  end
 
-    return true if user.admin_for_contest?(self.id)
+  def writer_or_tester?(user)
+    return false if user.nil?
+    return true if admin?(user)
 
     self.problems.exists?(writer_user_id: user.id) ||
-      TesterRelation.exists?(problem: self.problems, tester_user_id: user.id)
+      TesterRelation.exists?(problem: self.problems, tester_user_id: user.id, approved: true)
+  end
+
+  def ended?
+    end_at.nil? || end_at.past?
   end
 end

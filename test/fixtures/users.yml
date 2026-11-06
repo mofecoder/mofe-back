@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+admin_user:
+  id: 1
+  name: admin_test
+  email: admin_test@example.com
+  encrypted_password: <%= BCrypt::Password.create('password') %>
+  role: admin
+  provider: email
+  uid: admin_test@example.com
+  sign_in_count: 0
+
+writer_user:
+  id: 2
+  name: writer_test
+  email: writer_test@example.com
+  encrypted_password: <%= BCrypt::Password.create('password') %>
+  role: writer
+  provider: email
+  uid: writer_test@example.com
+  sign_in_count: 0
+
+member_user:
+  id: 3
+  name: member_test
+  email: member_test@example.com
+  encrypted_password: <%= BCrypt::Password.create('password') %>
+  role: member
+  provider: email
+  uid: member_test@example.com
+  sign_in_count: 0

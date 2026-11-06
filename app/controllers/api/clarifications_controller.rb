@@ -8,7 +8,7 @@ class Api::ClarificationsController < ApplicationController
     if !user_signed_in?
       problems = []
       clarifications.where!(publish: true)
-    elsif current_user.admin_for_contest?(@contest.id)
+    elsif current_user.contest_admin?(@contest.id)
       problems = @contest.problems.pluck(:id) + [nil]
     else
       problems = writer_problem_ids
@@ -34,12 +34,12 @@ class Api::ClarificationsController < ApplicationController
       is_writer_or_tester = clarification.problem.writer_user_id == current_user.id ||
           clarification.problem.tester_ids.include?(current_user.id)
 
-      unless current_user.admin_for_contest?(@contest.id) || is_writer_or_tester
+      unless current_user.contest_admin?(@contest.id) || is_writer_or_tester
         render_403
         return
       end
     else
-      unless current_user.admin_for_contest?(@contest.id)
+      unless current_user.contest_admin?(@contest.id)
         render_403
         return
       end
@@ -68,7 +68,7 @@ class Api::ClarificationsController < ApplicationController
     clarification = Clarification.find(params[:id])
 
     # writer or tester or admin
-    ok = current_user.admin_for_contest?(@contest.id)
+    ok = current_user.contest_admin?(@contest.id)
 
     if clarification.problem.present?
       ok |= clarification.problem.writer_user.id == current_user.id

@@ -1,11 +1,19 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
+active_contest:
   id: 1
-  slug: MyString
-  name: MyString
+  name: Active Contest
+  slug: active-contest
+  kind: normal
+  standings_mode: 1
+  start_at: <%= 1.day.ago %>
+  end_at: <%= 1.day.from_now %>
+  penalty_time: 5
 
-two:
-  id: 1
-  slug: MyString
-  name: MyString
+ended_contest:
+  id: 2
+  name: Ended Contest
+  slug: ended-contest
+  kind: normal
+  standings_mode: 1
+  start_at: <%= 1.month.ago %>
+  end_at: <%= 1.week.ago %>
+  penalty_time: 5

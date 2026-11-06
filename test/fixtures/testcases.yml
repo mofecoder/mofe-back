@@ -1,9 +1,13 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  name: MyString
-  path: MyString
+  id: 1
+  name: testcase_1
+  input: "1 2"
+  output: "3"
+  problem_id: 1 # writer_problem
 
 two:
-  name: MyString
-  path: MyString
+  id: 2
+  name: testcase_2
+  input: "3 4"
+  output: "7"
+  problem_id: 2 # admin_problem

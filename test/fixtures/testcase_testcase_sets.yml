@@ -1,9 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  testcase: one
-  testcase_set: one
+  id: 1
+  testcase_id: 1 # testcase one
+  testcase_set_id: 1 # testcase_set one
 
 two:
-  testcase: two
-  testcase_set: two
+  id: 2
+  testcase_id: 2 # testcase two
+  testcase_set_id: 2 # testcase_set two

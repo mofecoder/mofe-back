@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+# 公開済み・問題に紐付かない clarification（未認証でも閲覧できる）
+published_clarification:
+  id: 1
+  contest_id: 1 # active_contest
+  user_id: 3 # member_user
+  question: Published question
+  answer: Published answer
+  publish: true
+
+# 未公開・writer_problem に紐付く clarification
+unpublished_clarification:
+  id: 2
+  contest_id: 1 # active_contest
+  problem_id: 1 # writer_problem
+  user_id: 3 # member_user
+  question: Unpublished question
+  publish: false

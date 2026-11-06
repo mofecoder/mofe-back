@@ -27,7 +27,7 @@ class Api::ContestAdminsController < ApplicationController
 
   def destroy
     user = User.find_by!(name: params[:user_name])
-    @contest.contest_admins.find_by!(user_id: user.id).destroy
+    @contest.contest_admins.find_by!(user_id: user.id).discard
   end
 
   def set_contest

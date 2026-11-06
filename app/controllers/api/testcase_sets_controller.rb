@@ -48,14 +48,14 @@ class Api::TestcaseSetsController < ApplicationController
       render json: { error: "このテストケースは削除できません。"}, status: :bad_request
       return
     end
-    set.destroy!
+    set.discard!
   end
 
   private
 
     def authenticate_writer!
       @problem = Problem.find(params[:problem_id])
-      unless current_user.admin_for_contest?(@problem.contest_id) ||
+      unless current_user.contest_admin?(@problem.contest_id) ||
           current_user.writer? && @problem.writer_user_id == current_user.id
         render_403
       end

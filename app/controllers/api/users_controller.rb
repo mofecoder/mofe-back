@@ -70,6 +70,7 @@ class Api::UsersController < ApplicationController
       end
       if user.writer_request_code.present?
         render json: { error: 'Writer Request が無効です' }, status: :conflict
+        return
       end
     end
     user.writer_request_code = SecureRandom.uuid
