@@ -34,12 +34,16 @@ threads threads_count, threads_count
 # development 以外 (本番など) は nginx の upstream から接続できるよう unix ソケットで
 # 待ち受ける。development は `port` (default 3000) で待ち受ける。
 # (Puma 5 以降 daemonize は廃止されたため、常駐化は systemd などに任せる)
-if Rails.env.development?
+# NOTE: `puma -C config/puma.rb` で直接起動すると Rails は未ロードなので、
+#       Rails.env / Rails.root ではなく ENV と __dir__ を使う。
+app_root = File.expand_path("..", __dir__)
+
+if ENV.fetch("RAILS_ENV", "development") == "development"
   port ENV.fetch("PORT", 3000)
 else
-  bind "unix://#{Rails.root}/tmp/sockets/puma.sock"
+  bind "unix://#{app_root}/tmp/sockets/puma.sock"
   workers ENV.fetch("WEB_CONCURRENCY", 4)
-  stdout_redirect "#{Rails.root}/log/stdout", "#{Rails.root}/log/stderr", true
+  stdout_redirect "#{app_root}/log/stdout", "#{app_root}/log/stderr", true
 end
 
 # Allow puma to be restarted by `bin/rails restart` command.
