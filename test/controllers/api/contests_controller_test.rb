@@ -226,6 +226,89 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_nil submission.point
   end
 
+  def create_rejudge_submission(problem, status: 'AC')
+    submission = Submission.create!(
+      user: @member, problem: problem, path: '/submissions/rejudge', status: status,
+      point: 100, execution_time: 10, execution_memory: 10, lang: 'cpp', public: true
+    )
+    TestcaseResult.create!(
+      submission: submission, testcase: testcases(:one), status: 'AC', score: 100,
+      execution_time: 10, execution_memory: 10
+    )
+    submission
+  end
+
+  test "rejudge resets every submission and removes testcase results" do
+    submissions = Array.new(3) { create_rejudge_submission(@writer_problem) }
+    ids = submissions.map(&:id)
+
+    sign_in_as @admin
+    post api_contest_rejudge_url(contest_slug: @active_contest.slug), params: { submission_ids: ids }
+    assert_response :no_content
+
+    submissions.each do |submission|
+      submission.reload
+      assert_equal 'WR', submission.status
+      assert_nil submission.point
+      assert_nil submission.execution_time
+      assert_nil submission.execution_memory
+    end
+    assert_equal 0, TestcaseResult.where(submission_id: ids).count
+  end
+
+  test "rejudge returns 403 and changes nothing when a submission of another contest is included" do
+    own = create_rejudge_submission(@writer_problem)
+    foreign = create_rejudge_submission(problems(:admin_problem))
+
+    sign_in_as @admin
+    post api_contest_rejudge_url(contest_slug: @active_contest.slug),
+         params: { submission_ids: [own.id, foreign.id] }
+    assert_response :forbidden
+
+    assert_equal 'AC', own.reload.status
+    assert_equal 'AC', foreign.reload.status
+    assert_equal 2, TestcaseResult.where(submission_id: [own.id, foreign.id]).count
+  end
+
+  test "rejudge returns 403 and changes nothing when a submission without permission is included" do
+    TesterRelation.create!(problem: @writer_problem, user: @member, approved: true)
+    other_problem = Problem.create!(
+      slug: 'other-problem', name: 'Other', position: 'C', difficulty: 'Milk', statement: 's',
+      constraints: 'c', input_format: 'i', output_format: 'o', writer_user_id: @admin.id,
+      contest_id: @active_contest.id
+    )
+    permitted = create_rejudge_submission(@writer_problem)
+    denied = create_rejudge_submission(other_problem)
+
+    sign_in_as @member
+    post api_contest_rejudge_url(contest_slug: @active_contest.slug),
+         params: { submission_ids: [permitted.id, denied.id] }
+    assert_response :forbidden
+
+    assert_equal 'AC', permitted.reload.status
+    assert_equal 'AC', denied.reload.status
+  end
+
+  test "rejudge issues a constant number of queries regardless of the number of submissions" do
+    count_queries = lambda do |ids|
+      queries = 0
+      counter = lambda do |_name, _start, _finish, _id, payload|
+        queries += 1 unless %w[SCHEMA TRANSACTION].include?(payload[:name]) || payload[:cached]
+      end
+      ActiveSupport::Notifications.subscribed(counter, 'sql.active_record') do
+        post api_contest_rejudge_url(contest_slug: @active_contest.slug), params: { submission_ids: ids }
+      end
+      assert_response :no_content
+      queries
+    end
+
+    sign_in_as @writer
+    two = Array.new(2) { create_rejudge_submission(@writer_problem) }.map(&:id)
+    five = Array.new(5) { create_rejudge_submission(@writer_problem) }.map(&:id)
+
+    assert_equal count_queries.call(two), count_queries.call(five)
+  end
+
   test "rejudge returns 404 for an unknown contest" do
     sign_in_as @admin
     post api_contest_rejudge_url(contest_slug: 'no-such-contest'), params: { submission_ids: [] }

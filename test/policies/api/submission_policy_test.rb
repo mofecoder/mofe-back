@@ -83,12 +83,25 @@ class Api::SubmissionPolicyTest < ActiveSupport::TestCase
     refute Api::SubmissionPolicy.new(nil, @member_submission).rejudge?
   end
 
-  # NOTE: rejudge だけ approved を見ていない（現行挙動をそのまま維持している）
-  test "rejudge? permits an unapproved tester" do
+  test "rejudge? denies an unapproved tester and permits an approved tester" do
     tester = create_user('rejudge_tester')
-    TesterRelation.create!(problem: @member_submission.problem, user: tester, approved: false)
+    relation = TesterRelation.create!(problem: @member_submission.problem, user: tester, approved: false)
 
-    assert Api::SubmissionPolicy.new(tester, @member_submission).rejudge?
+    refute Api::SubmissionPolicy.new(tester, @member_submission).rejudge?
+
+    relation.update!(approved: true)
+    assert Api::SubmissionPolicy.new(tester, @member_submission.reload).rejudge?
+  end
+
+  test "rejudge_as_problem_member? permits the writer and approved testers only" do
+    tester = create_user('rejudge_tester2')
+    TesterRelation.create!(problem: @member_submission.problem, user: tester, approved: true)
+    submission = Submission.find(@member_submission.id)
+
+    assert Api::SubmissionPolicy.new(@writer, submission).rejudge_as_problem_member?
+    assert Api::SubmissionPolicy.new(tester, submission).rejudge_as_problem_member?
+    refute Api::SubmissionPolicy.new(@member, submission).rejudge_as_problem_member?
+    refute Api::SubmissionPolicy.new(nil, submission).rejudge_as_problem_member?
   end
 
   # --- toggle_published? ---
