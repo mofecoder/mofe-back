@@ -11,22 +11,15 @@ class Api::SubmissionsController < Api::ApplicationController
     contest = Contest.find_by!(slug: contest_slug)
     authorize [:api, contest], :submissions?
 
-    user_id = current_user.id
-    page = params[:page] || 1
-    count = params[:count] || 20
+    render_user_submissions(contest, [current_user.id])
+  end
 
-    submissions(
-      Submission.includes(problem: :testcase_sets)
-            .preload(:testcase_results)
-            .eager_load(:user)
-            .joins(problem: :contest)
-            .where("contests.slug = ?", contest_slug)
-            .search_by_user_id(user_id)
-            .page(page)
-            .per(count),
-      contest.problems.pluck(:id),
-      params[:options]
-    )
+  # 同じチームのメンバー全員（自分を含む）の提出
+  def team
+    contest = Contest.find_by!(slug: params[:contest_slug])
+    authorize [:api, contest], :team_submissions?
+
+    render_user_submissions(contest, contest.teammate_user_ids(current_user))
   end
 
   def all
@@ -152,6 +145,23 @@ class Api::SubmissionsController < Api::ApplicationController
   end
 
   private
+
+  # @param contest [Contest]
+  # @param user_ids [Array<Integer>]
+  def render_user_submissions(contest, user_ids)
+    submissions(
+      Submission.includes(problem: :testcase_sets)
+            .preload(:testcase_results)
+            .eager_load(:user)
+            .joins(problem: :contest)
+            .where("contests.slug = ?", contest.slug)
+            .where(user_id: user_ids)
+            .page(params[:page] || 1)
+            .per(params[:count] || 20),
+      contest.problems.pluck(:id),
+      params[:options]
+    )
+  end
 
   def testcase_set_map(in_contest, testcase_results_map, testcase_set)
     min_id = 2.pow(63)
