@@ -139,23 +139,28 @@ class Api::ContestsController < Api::ApplicationController
     contest = Contest.find_by!(slug: params[:contest_slug])
     authorize [:api, contest], :rejudge?
 
-    submissions = Submission.where(id: ids).includes(problem: :tester_relations)
-    submissions.each do |submission|
-      unless policy([:api, submission]).rejudge?
-        render json: { error: "提出 #{submission.id} に対する権限がありません。" }, status: :forbidden
+    submissions = Submission.where(id: ids).includes(problem: :tester_relations).to_a
+    if submissions.any? { |submission| submission.problem.contest_id != contest.id }
+      render json: { error: 'このコンテストの提出ではないものが含まれています。' }, status: :forbidden
+      return
+    end
+
+    # コンテスト管理者は全提出を再ジャッジできる。それ以外は提出ごとに問題の writer / 承認済み tester かを見る
+    unless contest.admin?(current_user)
+      denied = submissions.find { |submission| !policy([:api, submission]).rejudge_as_problem_member? }
+      if denied
+        render json: { error: "提出 #{denied.id} に対する権限がありません。" }, status: :forbidden
         return
       end
     end
+
+    submission_ids = submissions.map(&:id)
     ActiveRecord::Base.transaction do
-      submissions.each do |submission|
-        submission.status = 'WR'
-        submission.point = nil
-        submission.compile_error = nil
-        submission.execution_memory = nil
-        submission.execution_time = nil
-        submission.testcase_results.delete_all
-        submission.save
-      end
+      TestcaseResult.where(submission_id: submission_ids).delete_all
+      Submission.where(id: submission_ids).update_all(
+        status: 'WR', point: nil, compile_error: nil, execution_memory: nil, execution_time: nil,
+        updated_at: Time.current
+      )
     end
   end
 
