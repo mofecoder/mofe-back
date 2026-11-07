@@ -208,4 +208,110 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+
+  def create_user(name)
+    User.create!(
+      name: name, email: "#{name}@example.com",
+      password: 'password', password_confirmation: 'password',
+      provider: 'email', uid: "#{name}@example.com", role: 'member'
+    )
+  end
+
+  def create_team(contest, *users)
+    team = TeamRegistration.create!(contest: contest, name: "team_#{SecureRandom.hex(3)}", passphrase: 'pass')
+    users.each { |u| team.team_registration_users.create!(user: u) }
+    team
+  end
+
+  def create_submission(user, problem, public: false)
+    Submission.create!(
+      user: user, problem: problem, path: '/submissions/x',
+      status: 'AC', point: 100, lang: 'cpp', public: public
+    )
+  end
+
+  # --- team ---
+
+  test "team returns 401 when not authenticated" do
+    get team_api_contest_submissions_url(contest_slug: @contest.slug)
+    assert_response :unauthorized
+  end
+
+  test "team returns 403 when the user is not in a team" do
+    sign_in_as @member
+    get team_api_contest_submissions_url(contest_slug: @contest.slug)
+    assert_response :forbidden
+  end
+
+  test "team returns submissions of all teammates only" do
+    mate = create_user('mate')
+    outsider = create_user('outsider')
+    other_mate = create_user('other_mate')
+    create_team(@contest, @member, mate)
+    create_team(@contest, outsider, other_mate)
+    mate_sub = create_submission(mate, @problem)
+    outsider_sub = create_submission(outsider, @problem)
+    other_contest_sub = create_submission(mate, problems(:admin_problem))
+
+    sign_in_as @member
+    get team_api_contest_submissions_url(contest_slug: @contest.slug)
+    assert_response :success
+
+    data = JSON.parse(response.body)['data']
+    ids = data.map { |s| s['id'] }
+    assert_includes ids, @member_submission.id
+    assert_includes ids, mate_sub.id
+    assert_not_includes ids, outsider_sub.id
+    assert_not_includes ids, other_contest_sub.id
+    assert_not_includes ids, @writer_submission.id
+    assert_includes data.map { |s| s.dig('user', 'name') }, 'mate'
+  end
+
+  test "team paginates" do
+    mate = create_user('mate')
+    create_team(@contest, @member, mate)
+    create_submission(mate, @problem)
+
+    sign_in_as @member
+    get team_api_contest_submissions_url(contest_slug: @contest.slug), params: { count: 1, page: 2 }
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal 1, body['data'].length
+    pagination = body.dig('meta', 'pagination')
+    assert_equal 2, pagination['current']
+    assert_equal 2, pagination['pages']
+  end
+
+  # --- show (teammate) ---
+
+  test "show returns 200 for a teammate's private submission" do
+    mate = create_user('mate')
+    create_team(@contest, @member, mate)
+    sub = create_submission(mate, @problem)
+
+    sign_in_as @member
+    # GCS へ到達しないよう get_source を一時的に差し替える
+    client = Utils::GoogleCloudStorageClient
+    original = client.method(:get_source)
+    client.define_singleton_method(:get_source) { |*| StringIO.new('int main() {}') }
+    begin
+      get api_contest_submission_url(contest_slug: @contest.slug, id: sub.id)
+    ensure
+      client.define_singleton_method(:get_source, original)
+    end
+    assert_response :success
+  end
+
+  test "show returns 403 for a private submission of a user in another team" do
+    mate = create_user('mate')
+    outsider = create_user('outsider')
+    create_team(@contest, @member, mate)
+    create_team(@contest, outsider)
+    sub = create_submission(outsider, @problem)
+
+    sign_in_as @member
+    get api_contest_submission_url(contest_slug: @contest.slug, id: sub.id)
+    assert_response :forbidden
+  end
 end

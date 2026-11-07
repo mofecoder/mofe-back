@@ -99,4 +99,37 @@ class Api::SubmissionPolicyTest < ActiveSupport::TestCase
     refute Api::SubmissionPolicy.new(@member, @member_submission).toggle_published?
     refute Api::SubmissionPolicy.new(nil, @member_submission).toggle_published?
   end
+
+
+  # --- チームメイト ---
+
+  def create_team(contest, *users)
+    team = TeamRegistration.create!(contest: contest, name: 'team_a', passphrase: 'pass')
+    users.each { |u| team.team_registration_users.create!(user: u) }
+    team
+  end
+
+  test "show? permits a teammate but not rejudge? / toggle_published?" do
+    mate = create_user('mate')
+    create_team(@writer_submission.problem.contest, mate, @writer)
+
+    policy = Api::SubmissionPolicy.new(mate, @writer_submission)
+    assert policy.show?
+    refute policy.rejudge?
+    refute policy.toggle_published?
+  end
+
+  test "show? denies a user in a different team" do
+    other = create_user('other')
+    create_team(@writer_submission.problem.contest, other)
+
+    refute Api::SubmissionPolicy.new(other, @writer_submission).show?
+  end
+
+  test "show? does not treat a teammate as writer (admin_or_writer? stays false)" do
+    mate = create_user('mate')
+    create_team(@writer_submission.problem.contest, mate, @member)
+
+    refute Api::ProblemPolicy.new(mate, @writer_submission.problem).admin_or_writer?
+  end
 end

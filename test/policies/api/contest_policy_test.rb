@@ -222,4 +222,17 @@ class Api::ContestPolicyTest < ActiveSupport::TestCase
     end
     assert_includes Api::ContestPolicy::Scope.new(@admin, Contest).resolve, private_contest
   end
+
+
+  # --- team_submissions? ---
+
+  test "team_submissions? requires login and team membership" do
+    refute Api::ContestPolicy.new(nil, @active_contest).team_submissions?
+    refute Api::ContestPolicy.new(@member, @active_contest).team_submissions?
+
+    team = TeamRegistration.create!(contest: @active_contest, name: 'team_a', passphrase: 'pass')
+    team.team_registration_users.create!(user: @member)
+    assert Api::ContestPolicy.new(@member, @active_contest).team_submissions?
+    refute Api::ContestPolicy.new(@member, @ended_contest).team_submissions?
+  end
 end

@@ -2,7 +2,7 @@
 
 class Api::SubmissionPolicy < Api::ApplicationPolicy
   def show?
-    return true if signed_in? && (admin_or_writer? || record.user_id == user.id)
+    return true if signed_in? && (admin_or_writer? || record.user_id == user.id || teammate?)
 
     record.problem.contest.end_at.past? && record.public
   end
@@ -21,6 +21,11 @@ class Api::SubmissionPolicy < Api::ApplicationPolicy
   end
 
   private
+
+  # 同じチームのメンバーの提出か
+  def teammate?
+    record.problem.contest.teammate_user_ids(user).include?(record.user_id)
+  end
 
   def admin_or_writer?
     Api::ProblemPolicy.new(user, record.problem).admin_or_writer?

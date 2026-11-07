@@ -30,6 +30,7 @@ Rails.application.routes.draw do
       resources :submissions, only: [:index, :show] do
         collection do
           get 'all'
+          get 'team'
         end
         member do
           patch 'toggle_published'
