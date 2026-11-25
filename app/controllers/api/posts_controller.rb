@@ -26,7 +26,7 @@ class Api::PostsController < Api::ApplicationController
     if post.save
       render json: post, status: :created
     else
-      render json: { error: post.errors }, status: :bad_request
+      render_validation_error(post, status: :bad_request)
     end
   end
 
@@ -35,7 +35,7 @@ class Api::PostsController < Api::ApplicationController
     authorize [:api, post]
 
     unless post.update(post_param)
-      render json: { error: post.errors }, status: :bad_request
+      render_validation_error(post, status: :bad_request)
     end
   end
 
@@ -44,7 +44,7 @@ class Api::PostsController < Api::ApplicationController
     authorize [:api, post]
 
     unless post.discard
-      render json: { error: post.errors }, status: :bad_request
+      render_validation_error(post, status: :bad_request)
     end
   end
 

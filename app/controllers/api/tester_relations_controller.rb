@@ -6,16 +6,12 @@ class Api::TesterRelationsController < Api::ApplicationController
     user = User.find_by(name: params[:user_name])
 
     unless user
-      render json: {
-          error: '指定されたユーザ名のユーザは存在しません。',
-      }, status: :not_found
+      render_api_error('指定されたユーザ名のユーザは存在しません。', status: :not_found)
       return
     end
 
     if @problem.tester_relations.where(tester_user_id: user.id).exists?
-      render json: {
-          error: '指定されたユーザは既にテスターとして追加されています。'
-      }, status: :bad_request
+      render_api_error('指定されたユーザは既にテスターとして追加されています。', status: :bad_request)
       return
     end
 
