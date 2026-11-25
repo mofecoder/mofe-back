@@ -66,8 +66,8 @@ class Api::ContestPolicyTest < ActiveSupport::TestCase
 
   # --- コンテスト管理者 ---
 
-  test "update?, manage_show? and remove_task? permit contest admins and site admins" do
-    %i[update? manage_show? remove_task?].each do |query|
+  test "update?, manage_show?, remove_task? and move_task? permit contest admins and site admins" do
+    %i[update? manage_show? remove_task? move_task?].each do |query|
       assert Api::ContestPolicy.new(@admin, @active_contest).public_send(query), query
       assert Api::ContestPolicy.new(contest_admin, @active_contest).public_send(query), query
       refute Api::ContestPolicy.new(@member, @active_contest).public_send(query), query

@@ -35,6 +35,11 @@ class Api::ContestPolicy < Api::ApplicationPolicy
     contest_admin?
   end
 
+  # tasks#move
+  def move_task?
+    contest_admin?
+  end
+
   # tasks#index
   def tasks_index?
     admin?
