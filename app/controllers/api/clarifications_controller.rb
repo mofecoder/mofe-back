@@ -34,7 +34,7 @@ class Api::ClarificationsController < Api::ApplicationController
     if clarification.save
       render json: clarification, status: :created
     else
-      render json: { error: clarification.errors }, status: :unprocessable_entity
+      render_validation_error(clarification, status: :unprocessable_entity)
     end
   end
 
@@ -45,7 +45,7 @@ class Api::ClarificationsController < Api::ApplicationController
     if clarification.update(update_params)
       render json: clarification, status: :no_content
     else
-      render json: { error: clarification.errors }, status: :unprocessable_entity
+      render_validation_error(clarification, status: :unprocessable_entity)
     end
   end
 

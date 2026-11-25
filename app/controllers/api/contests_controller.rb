@@ -98,15 +98,15 @@ class Api::ContestsController < Api::ApplicationController
     authorize [:api, @contest], :set_task?
 
     unless params.has_key?(:problem_id)
-      render json: { error: "パラメータ 'problem_id' が必要です。" }, status: :bad_request
+      render_api_error("パラメータ 'problem_id' が必要です。", status: :bad_request)
       return
     end
     unless params.has_key?(:problem_slug)
-      render json: { error: "パラメータ 'problem_slug' が必要です。" }, status: :bad_request
+      render_api_error("パラメータ 'problem_slug' が必要です。", status: :bad_request)
       return
     end
     unless params.has_key?(:position)
-      render json: { error: "パラメータ 'position' が必要です。" }, status: :bad_request
+      render_api_error("パラメータ 'position' が必要です。", status: :bad_request)
       return
     end
 
@@ -115,12 +115,12 @@ class Api::ContestsController < Api::ApplicationController
     task = Problem.find(params[:problem_id])
 
     if task.contest_id.present?
-      render json: { error: 'この問題はすでに他のコンテストに所属しています。' }, status: :conflict
+      render_api_error('この問題はすでに他のコンテストに所属しています。', status: :conflict)
       return
     end
 
     unless policy([:api, task]).add_to_contest?
-      render json: { error: '他のユーザの問題は追加できません。' }, status: :forbidden
+      render_api_error('他のユーザの問題は追加できません。', status: :forbidden)
       return
     end
 
@@ -129,7 +129,7 @@ class Api::ContestsController < Api::ApplicationController
       task.slug = params[:problem_slug]
       task.position = params[:position]
       unless task.save
-        render json: { error: task.errors }, status: :unprocessable_entity
+        render_validation_error(task, status: :unprocessable_entity)
       end
     end
   end
@@ -141,7 +141,7 @@ class Api::ContestsController < Api::ApplicationController
 
     submissions = Submission.where(id: ids).includes(problem: :tester_relations).to_a
     if submissions.any? { |submission| submission.problem.contest_id != contest.id }
-      render json: { error: 'このコンテストの提出ではないものが含まれています。' }, status: :forbidden
+      render_api_error('このコンテストの提出ではないものが含まれています。', status: :forbidden)
       return
     end
 
@@ -149,7 +149,7 @@ class Api::ContestsController < Api::ApplicationController
     unless contest.admin?(current_user)
       denied = submissions.find { |submission| !policy([:api, submission]).rejudge_as_problem_member? }
       if denied
-        render json: { error: "提出 #{denied.id} に対する権限がありません。" }, status: :forbidden
+        render_api_error("提出 #{denied.id} に対する権限がありません。", status: :forbidden)
         return
       end
     end

@@ -10,7 +10,7 @@ class Api::TestcaseSetsController < Api::ApplicationController
     name = params[:testcase_set][:name]
     points = params[:testcase_set][:points]
     if @problem.testcase_sets.find_by(problem_id: params[:problem_id], name: name).present?
-      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
+      render_api_error('この名前のテストケースはすでに存在します。', status: :bad_request)
       return
     end
 
@@ -29,12 +29,12 @@ class Api::TestcaseSetsController < Api::ApplicationController
 
     if set.name != name
       if set.name == 'all' || set.name == 'sample'
-        render json: { error: "このテストケースは名前を変更できません。"}, status: :bad_request
+        render_api_error("このテストケースは名前を変更できません。", status: :bad_request)
         return
       end
 
       if @problem.testcase_sets.exists?(problem_id: params[:problem_id], name: name)
-        render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: :bad_request
+        render_api_error('この名前のテストケースはすでに存在します。', status: :bad_request)
         return
       end
     end
@@ -45,7 +45,7 @@ class Api::TestcaseSetsController < Api::ApplicationController
   def destroy
     set = TestcaseSet.find(params[:id])
     if set.name == 'all' || set.name == 'sample'
-      render json: { error: "このテストケースは削除できません。"}, status: :bad_request
+      render_api_error("このテストケースは削除できません。", status: :bad_request)
       return
     end
     set.discard!

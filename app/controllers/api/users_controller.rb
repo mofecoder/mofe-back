@@ -29,12 +29,12 @@ class Api::UsersController < Api::ApplicationController
     if param[:name].present? && param[:name] != current_user.name
       # 小文字だけではない → 変更済み
       if current_user.name.downcase != current_user.name
-        render status: :conflict, json: { error: '名前の変更は1度のみ可能です。' }
+        render_api_error('名前の変更は1度のみ可能です。', status: :conflict)
         return
       end
 
       if current_user.name != param[:name].downcase
-        render status: :conflict, json: { error: '大文字・小文字の修正以外の変更はできません。' }
+        render_api_error('大文字・小文字の修正以外の変更はできません。', status: :conflict)
         return
       end
     end
@@ -69,7 +69,7 @@ class Api::UsersController < Api::ApplicationController
     authorize [:api, user]
 
     if !current_user.admin? && user.writer_request_code.present?
-      render json: { error: 'Writer Request が無効です' }, status: :conflict
+      render_api_error('Writer Request が無効です', status: :conflict)
       return
     end
 

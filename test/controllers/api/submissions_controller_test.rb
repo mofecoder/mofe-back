@@ -89,6 +89,58 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes ids, @writer_submission.id
   end
 
+  # --- all: 絞り込み・ソート ---
+
+  def all_submission_ids(params)
+    sign_in_as @admin
+    get all_api_contest_submissions_url(contest_slug: @contest.slug), params: params
+    assert_response :success
+    JSON.parse(response.body)['data'].map { |s| s['id'] }
+  end
+
+  test "all sorts by the new sort param in descending order" do
+    assert_equal [@member_submission.id, @writer_submission.id], all_submission_ids(sort: '-score')
+  end
+
+  test "all sorts by the new sort param in ascending order" do
+    assert_equal [@writer_submission.id, @member_submission.id], all_submission_ids(sort: 'score')
+  end
+
+  test "all accepts multiple sort keys including task" do
+    assert_equal [@writer_submission.id, @member_submission.id], all_submission_ids(sort: 'task,-executionTime')
+  end
+
+  test "all ignores unknown sort targets" do
+    ids = all_submission_ids(sort: '-unknown,score')
+    assert_equal [@writer_submission.id, @member_submission.id], ids
+  end
+
+  test "all filters by status with the new format" do
+    assert_equal [@member_submission.id], all_submission_ids(status: ['AC'])
+  end
+
+  test "all filters by user name with the new format" do
+    assert_equal [@writer_submission.id], all_submission_ids(user: @writer.name)
+  end
+
+  test "all filters by task slug with the new format" do
+    assert_equal 2, all_submission_ids(task: [@problem.slug]).length
+    assert_empty all_submission_ids(task: ['no-such-problem'])
+  end
+
+  test "all still accepts the legacy options param" do
+    options = {
+      sort: [{ target: 'score', desc: false }],
+      filter: [{ target: 'status', value: %w[AC WA] }]
+    }.to_json
+    assert_equal [@writer_submission.id, @member_submission.id], all_submission_ids(options: options)
+  end
+
+  test "all ignores unknown sort targets in the legacy options param" do
+    options = { sort: [{ target: 'unknown', desc: true }] }.to_json
+    assert_equal 2, all_submission_ids(options: options).length
+  end
+
   # --- show ---
   #
   # 成功パスは SubmissionDetailSerializer#source が Google Cloud Storage を参照するため
