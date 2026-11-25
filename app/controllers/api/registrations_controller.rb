@@ -6,7 +6,7 @@ class Api::RegistrationsController < Api::ApplicationController
     authorize [:api, contest], :register?
 
     if contest.end_at.past?
-      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
+      render_api_error('コンテストは終了済みです。', status: :bad_request)
       return
     end
     reg = Registration.find_or_initialize_by(user_id: current_user.id, contest_id: contest.id)
@@ -15,10 +15,10 @@ class Api::RegistrationsController < Api::ApplicationController
       if contest.allow_open_registration && params[:open].present?
         reg.open_registration = true
       elsif params[:password].blank?
-        render json: { error: '参加登録にはパスワードが必要です。' }, status: :forbidden
+        render_api_error('参加登録にはパスワードが必要です。', status: :forbidden)
         return
       elsif params[:password] != contest.closed_password
-        render json: { error: '参加登録パスワードが誤っています。' }, status: :forbidden
+        render_api_error('参加登録パスワードが誤っています。', status: :forbidden)
         return
       end
     end
@@ -27,10 +27,10 @@ class Api::RegistrationsController < Api::ApplicationController
       if reg.save
         render status: :created
       else
-        render json: { error: reg.errors }, status: :unprocessable_entity
+        render_validation_error(reg, status: :unprocessable_entity)
       end
     else
-      render json: { error: 'すでに参加登録されています。' }, status: :conflict
+      render_api_error('すでに参加登録されています。', status: :conflict)
     end
   end
 
@@ -43,12 +43,12 @@ class Api::RegistrationsController < Api::ApplicationController
     authorize [:api, contest], :register_team?
 
     if contest.end_at.past?
-      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
+      render_api_error('コンテストは終了済みです。', status: :bad_request)
       return
     end
 
     unless contest.allow_team_registration
-      render json: { error: 'このコンテストはチーム参加できません。' }, status: :bad_request
+      render_api_error('このコンテストはチーム参加できません。', status: :bad_request)
       return
     end
 
@@ -56,11 +56,11 @@ class Api::RegistrationsController < Api::ApplicationController
 
     if reg.present?
       if reg.passphrase != passphrase
-        render json: { error: 'パスフレーズが誤っています。' }, status: :forbidden
+        render_api_error('パスフレーズが誤っています。', status: :forbidden)
         return
       end
       if reg.team_registration_users.where(user_id: current_user.id).exists?
-        render json: { error: 'すでに参加登録されています。' }, status: :conflict
+        render_api_error('すでに参加登録されています。', status: :conflict)
         return
       end
     else
@@ -79,7 +79,7 @@ class Api::RegistrationsController < Api::ApplicationController
           reg.open_registration = true
         elsif password != contest.closed_password
           error_message = password.blank? ? '参加登録にはパスワードが必要です。' : '参加登録パスワードが誤っています。'
-          render json: { error: error_message }, status: :forbidden
+          render_api_error(error_message, status: :forbidden)
           return
         end
       elsif reg.open_registration
@@ -89,7 +89,7 @@ class Api::RegistrationsController < Api::ApplicationController
       else
         if password != contest.closed_password
           error_message = password.blank? ? '指定されたチームは通常参加となっているため、オープン参加登録はできません。' : '参加登録パスワードが誤っています。'
-          render json: { error: error_message }, status: :forbidden
+          render_api_error(error_message, status: :forbidden)
           return
         end
       end
@@ -105,7 +105,7 @@ class Api::RegistrationsController < Api::ApplicationController
     authorize [:api, contest], :unregister?
 
     if contest.end_at.past?
-      render json: { error: 'コンテストは終了済みです。' }, status: :bad_request
+      render_api_error('コンテストは終了済みです。', status: :bad_request)
       return
     end
     reg = Registration.find_by(user_id: current_user.id, contest_id: contest.id)
@@ -118,7 +118,7 @@ class Api::RegistrationsController < Api::ApplicationController
       .find_by(contest_id: contest.id, team_registration_users: { user_id: current_user.id })
 
     if team_reg.blank?
-      render json: { error: '参加登録されていません' }, status: :not_found
+      render_api_error('参加登録されていません', status: :not_found)
       return
     end
 

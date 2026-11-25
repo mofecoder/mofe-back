@@ -5,15 +5,29 @@ class ApplicationController < ActionController::API
   include DeviseTokenAuth::Concerns::SetUserByToken
 
   def render_404(e = nil)
-    render json: { status: 404, error: e }, status: 404
+    render_api_error(error_message(e, 'ページが見つかりません。'), status: :not_found)
   end
 
   def render_500(e = nil)
-    render json: { status: 500, error: e }, status: 500
+    render_api_error(error_message(e, 'サーバーエラーが発生しました。'), status: :internal_server_error)
   end
 
-  def render_403
-    render json: { error: '権限がありません。' }, status: :forbidden
+  def render_403(_e = nil)
+    render_api_error('権限がありません。', status: :forbidden)
+  end
+
+  # エラーレスポンスの形式を統一する
+  # devise_token_auth の render_error(status, message) と衝突しないよう別名にしている
+  # 形式: { error: string, details?: { [field]: string[] } }
+  def render_api_error(message, status:, details: nil)
+    body = { error: message }
+    body[:details] = details if details.present?
+    render json: body, status: status
+  end
+
+  # ActiveModel のバリデーションエラーを統一形式で返す
+  def render_validation_error(record, status: :unprocessable_content)
+    render_api_error(record.errors.full_messages.join("\n"), status: status, details: record.errors.to_hash)
   end
 
   # @return [User]
@@ -37,6 +51,15 @@ class ApplicationController < ActionController::API
   end
 
   private
+
+  # 例外ならメッセージを、文字列ならそのまま、それ以外は既定のメッセージを返す
+  def error_message(e, default)
+    case e
+    when Exception then e.message
+    when String then e.presence || default
+    else default
+    end
+  end
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [:name])

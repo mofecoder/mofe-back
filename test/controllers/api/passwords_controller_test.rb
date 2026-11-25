@@ -57,6 +57,9 @@ class Api::PasswordsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
+    body = JSON.parse(response.body)
+    assert_kind_of String, body['error']
+    assert body['details'].key?('reset_password_token')
 
     # パスワード自体は変更されていない
     assert @user.reload.valid_password?('password')

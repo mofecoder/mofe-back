@@ -88,6 +88,7 @@ class Api::ContestAdminsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     post api_contest_contest_admins_url(contest_slug: @contest.slug)
     assert_response :bad_request
+    assert_equal({ 'error' => 'ユーザ名を指定してください。' }, response.parsed_body)
   end
 
   test "create returns 404 for an unknown contest" do

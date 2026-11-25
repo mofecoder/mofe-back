@@ -7,7 +7,7 @@ class Api::ContestAdminsController < Api::ApplicationController
     names = Array(params[:user_names]).map { |name| name.to_s.strip }.reject(&:empty?).uniq
 
     if names.empty?
-      render json: { error: 'ユーザ名を指定してください。' }, status: :bad_request
+      render_api_error('ユーザ名を指定してください。', status: :bad_request)
       return
     end
 

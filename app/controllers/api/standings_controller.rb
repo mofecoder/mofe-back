@@ -30,12 +30,12 @@ class Api::StandingsController < Api::ApplicationController
     reg = contest.registrations.includes(:user)
     team_reg = contest.team_registrations.includes(team_registration_users: :user)
 
-    if params.include?(:exclude_open)
+    if flag_param?(:exclude_open)
       reg.where!(open_registration: false)
       team_reg.where!(open_registration: false)
     end
 
-    if params.include?(:team_only)
+    if flag_param?(:team_only)
       reg = []
     end
 
@@ -221,6 +221,14 @@ class Api::StandingsController < Api::ApplicationController
   end
 
   private
+
+  # クエリのフラグを判定する
+  # キーがあり、値が false / 0 以外なら true (値なしの ?exclude_open も true)
+  def flag_param?(key)
+    return false unless params.key?(key)
+
+    !%w[false 0].include?(params[key].to_s.downcase)
+  end
 
   def icpc_standings(regs, team_table, problems, problem_score_table, started_at, penalty_time)
     res = []
