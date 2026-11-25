@@ -1,144 +1,144 @@
 # MOFE Backend
 
-Competitive programming platform (MOFE) backend API built with Rails 8.1 (API-only mode), Ruby 4.0.6, and MySQL 8.0.
+競技プログラミングプラットフォーム MOFE のバックエンド API。Rails 8.1 (API-only モード)、Ruby 4.0.6、MySQL 8.0 で構築している。
 
-## Development Environment
+## 開発環境
 
-Development uses **Docker Compose**. All commands (rails, bundle, rake, etc.) MUST be run inside the app container:
+開発には **Docker Compose** を使う。すべてのコマンド (rails, bundle, rake など) は**必ず** app コンテナ内で実行すること:
 
 ```sh
 docker compose exec app <command>
 ```
 
-### Starting the environment
+### 環境の起動
 
 ```sh
-docker compose up --build    # Build and start all services
-docker compose up            # Start services (without rebuilding)
-docker compose down          # Stop and remove containers
+docker compose up --build    # すべてのサービスをビルドして起動
+docker compose up            # サービスを起動 (再ビルドなし)
+docker compose down          # コンテナを停止して削除
 ```
 
-### Services
+### サービス
 
-| Service | Image       | Port  |
-|---------|-------------|-------|
-| app     | Ruby 4.0.6  | 3000  |
-| db      | MySQL 8.0   | 3306  |
+| サービス | イメージ    | ポート |
+|----------|-------------|--------|
+| app      | Ruby 4.0.6  | 3000   |
+| db       | MySQL 8.0   | 3306   |
 
-The database default credentials for development are `root` / `password` on host `db` (inside Docker network) or `127.0.0.1` (from host).
+開発用 DB のデフォルト認証情報は `root` / `password`。ホストは `db` (Docker ネットワーク内) または `127.0.0.1` (ホストから)。
 
-### Changing gems
+### gem の変更
 
-`compose.yaml` only mounts the project directory (`.:/app`). There is **no volume for `/usr/local/bundle`**, so gems installed by running `bundle install` inside a running container live only in that container's writable layer and are lost when the container is recreated (`docker compose up` after a config change, `docker compose down`, etc.). Gems are installed by `bundle install` in the `Dockerfile` at build time.
+`compose.yaml` はプロジェクトディレクトリ (`.:/app`) しかマウントしていない。**`/usr/local/bundle` 用のボリュームはない**ため、起動中のコンテナ内で `bundle install` した gem はそのコンテナの書き込み可能レイヤーにしか存在せず、コンテナが再作成される (設定変更後の `docker compose up`、`docker compose down` など) と消える。gem はビルド時に `Dockerfile` 内の `bundle install` でインストールされる。
 
-After editing `Gemfile` or `Gemfile.lock`, rebuild the image:
+`Gemfile` または `Gemfile.lock` を編集したら、イメージを再ビルドする:
 
 ```sh
-docker compose build app     # Rebuild the app image with the new gems
-docker compose up -d app     # Recreate the container from it
+docker compose build app     # 新しい gem で app イメージを再ビルド
+docker compose up -d app     # そのイメージからコンテナを再作成
 ```
 
-Running only `docker compose exec app bundle install` will appear to work until the container is recreated, at which point the app fails to boot with `Could not find <gem> in locally installed gems (Bundler::GemNotFound)`.
+`docker compose exec app bundle install` だけを実行すると、コンテナが再作成されるまでは動いているように見えるが、再作成後に `Could not find <gem> in locally installed gems (Bundler::GemNotFound)` で起動に失敗する。
 
-## Common Commands
+## よく使うコマンド
 
-All commands below should be prefixed with `docker compose exec app`.
+以下のコマンドはすべて `docker compose exec app` を前に付けて実行する。
 
-### Database
+### データベース
 
 ```sh
-bundle exec rails db:create      # Create databases
-bundle exec rails db:migrate     # Run pending migrations
-bundle exec rails db:seed        # Load seed data
-bundle exec rails db:reset       # Drop, create, migrate, seed
+bundle exec rails db:create      # データベースを作成
+bundle exec rails db:migrate     # 未適用のマイグレーションを実行
+bundle exec rails db:seed        # シードデータを投入
+bundle exec rails db:reset       # drop → create → migrate → seed
 ```
 
-### Testing
+### テスト
 
-The project uses Minitest (Rails default). Fixtures are in `test/fixtures/`.
+Minitest (Rails デフォルト) を使う。fixture は `test/fixtures/` にある。
 
 ```sh
-bundle exec rails test                         # Run all tests
-bundle exec rails test test/models             # Run model tests only
-bundle exec rails test test/controllers        # Run controller tests only
-bundle exec rails test test/path/to/file.rb    # Run a specific test file
-bundle exec rails test test/path/to/file.rb:42 # Run a specific test by line
+bundle exec rails test                         # 全テストを実行
+bundle exec rails test test/models             # モデルのテストのみ
+bundle exec rails test test/controllers        # コントローラのテストのみ
+bundle exec rails test test/path/to/file.rb    # 特定のテストファイルを実行
+bundle exec rails test test/path/to/file.rb:42 # 行番号を指定して特定のテストを実行
 ```
 
-### Other
+### その他
 
 ```sh
-bundle exec rails routes    # List all routes
-bundle exec rails console   # Open Rails console
-bundle install              # Install gem dependencies
+bundle exec rails routes    # 全ルートを一覧表示
+bundle exec rails console   # Rails コンソールを開く
+bundle install              # gem の依存関係をインストール
 ```
 
-## Git Branch Naming
+## Git ブランチ命名
 
-- Main branch: `master`
-- Feature branches: `feature/#<issue-number>`
+- メインブランチ: `master`
+- feature ブランチ: `feature/#<issue番号>`
 
-## Architecture & Conventions
+## アーキテクチャと規約
 
-### API Versioning
+### API バージョニング
 
-The API has two namespaces:
+API には 2 つの名前空間がある:
 
-- **`/api/`** (v1, legacy) — Uses `ActiveModelSerializers` for JSON serialization. Authorization is handled manually in controllers.
-- **`/v4/`** (current) — Uses `Blueprinter` for serialization and `Pundit` for authorization. **New API endpoints should follow v4 patterns.**
+- **`/api/`** (v1、レガシー) — JSON シリアライズに `ActiveModelSerializers` を使う。認可はコントローラ内で手動で行う。
+- **`/v4/`** (現行) — シリアライズに `Blueprinter`、認可に `Pundit` を使う。**新しい API エンドポイントは v4 のパターンに従うこと。**
 
-### Authentication
+### 認証
 
-Devise Token Auth. Token headers (`access-token`, `uid`, `client`, `expiry`) are used for authentication. The base controller includes `DeviseTokenAuth::Concerns::SetUserByToken`.
+Devise Token Auth。認証にはトークンヘッダー (`access-token`, `uid`, `client`, `expiry`) を使う。ベースコントローラは `DeviseTokenAuth::Concerns::SetUserByToken` を include している。
 
-- `authenticate_user!` — requires login
-- `authenticate_admin_user!` — requires admin role
-- `current_user` — returns the logged-in `User` (delegates to `current_api_user`)
+- `authenticate_user!` — ログインを要求する
+- `authenticate_admin_user!` — admin ロールを要求する
+- `current_user` — ログイン中の `User` を返す (`current_api_user` に委譲)
 
-### Authorization (Pundit)
+### 認可 (Pundit)
 
-Used in v4 controllers via `V4::ApplicationController` which includes `Pundit::Authorization` and calls `after_action :verify_authorized`.
+v4 コントローラで使う。`V4::ApplicationController` が `Pundit::Authorization` を include し、`after_action :verify_authorized` を呼んでいる。
 
-- Policies live in `app/policies/`
-- `ApplicationPolicy` defaults all actions to `false` (deny by default)
-- Each policy defines `index?`, `show?`, `create?`, `update?`, `destroy?` and a `Scope` class
+- ポリシーは `app/policies/` に置く
+- `ApplicationPolicy` はすべてのアクションをデフォルトで `false` にする (デフォルト拒否)
+- 各ポリシーは `index?`, `show?`, `create?`, `update?`, `destroy?` と `Scope` クラスを定義する
 
-### Serialization (Blueprinter)
+### シリアライズ (Blueprinter)
 
-Used in v4 controllers. Blueprints live in `app/blueprints/`.
+v4 コントローラで使う。blueprint は `app/blueprints/` に置く。
 
-- Use `view` blocks to define different response shapes (e.g., `:problem`, `:problem_detail`)
-- Use `include_view` to compose views
-- Use `association` for nested resources
-- Use `preload` option on fields/associations to specify eager loading
+- レスポンスの形ごとに `view` ブロックを定義する (例: `:problem`, `:problem_detail`)
+- view の合成には `include_view` を使う
+- ネストしたリソースには `association` を使う
+- eager loading を指定するには field / association の `preload` オプションを使う
 
-### Soft Deletes (Discard)
+### 論理削除 (Discard)
 
-All models inherit `Discard::Model` via `ApplicationRecord`. Soft-deleted records have a non-null `deleted_at` column and are excluded by the default scope (`kept`).
+すべてのモデルは `ApplicationRecord` 経由で `Discard::Model` を継承している。論理削除されたレコードは `deleted_at` カラムが非 null で、デフォルトスコープ (`kept`) から除外される。
 
-- Use `record.discard` to soft-delete (NOT `record.destroy`)
-- Use `record.undiscard` to restore
-- Use `Model.with_discarded` to include soft-deleted records in queries
+- 論理削除には `record.discard` を使う (`record.destroy` は使わない)
+- 復元には `record.undiscard` を使う
+- 論理削除済みレコードも含めて検索するには `Model.with_discarded` を使う
 
-### User Roles
+### ユーザーロール
 
-Users have roles defined as an enum: `:member`, `:writer`, `:admin`.
+ユーザーのロールは enum で `:member`, `:writer`, `:admin` の 3 種類。
 
-## Key Directory Structure
+## 主なディレクトリ構成
 
 ```
 app/
-├── blueprints/         # Blueprinter serializers (v4)
+├── blueprints/         # Blueprinter シリアライザ (v4)
 ├── controllers/
-│   ├── api/            # v1 API controllers (legacy)
-│   └── v4/             # v4 API controllers (preferred for new code)
-├── models/             # ActiveRecord models
-├── policies/           # Pundit authorization policies
-├── serializers/        # ActiveModelSerializers (legacy, v1)
-└── services/           # Service objects
+│   ├── api/            # v1 API コントローラ (レガシー)
+│   └── v4/             # v4 API コントローラ (新規コードはこちら)
+├── models/             # ActiveRecord モデル
+├── policies/           # Pundit 認可ポリシー
+├── serializers/        # ActiveModelSerializers (レガシー、v1)
+└── services/           # サービスオブジェクト
 test/
-├── controllers/        # Controller tests
-├── models/             # Model tests
-├── policies/           # Policy tests
-└── fixtures/           # Test fixtures (YAML)
+├── controllers/        # コントローラのテスト
+├── models/             # モデルのテスト
+├── policies/           # ポリシーのテスト
+└── fixtures/           # テスト用 fixture (YAML)
 ```
