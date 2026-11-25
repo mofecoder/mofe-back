@@ -264,6 +264,7 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     post api_contest_rejudge_url(contest_slug: @active_contest.slug),
          params: { submission_ids: [own.id, foreign.id] }
     assert_response :forbidden
+    assert_equal({ 'error' => 'このコンテストの提出ではないものが含まれています。' }, response.parsed_body)
 
     assert_equal 'AC', own.reload.status
     assert_equal 'AC', foreign.reload.status
@@ -284,6 +285,7 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     post api_contest_rejudge_url(contest_slug: @active_contest.slug),
          params: { submission_ids: [permitted.id, denied.id] }
     assert_response :forbidden
+    assert_equal({ 'error' => "提出 #{denied.id} に対する権限がありません。" }, response.parsed_body)
 
     assert_equal 'AC', permitted.reload.status
     assert_equal 'AC', denied.reload.status
