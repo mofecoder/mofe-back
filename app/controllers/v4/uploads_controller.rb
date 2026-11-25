@@ -60,14 +60,10 @@ class V4::UploadsController < V4::ApplicationController
   def complete
     authorize @upload
 
-    @upload.with_lock do
-      if @upload.rejected?
-        render_api_error('このアップロードは無効になっています。', status: :unprocessable_content)
-      elsif @upload.completed? || @upload.complete!
-        render json: UploadBlueprint.render(@upload)
-      else
-        render_api_error(@upload.rejection_reason, status: :unprocessable_content)
-      end
+    if @upload.complete!
+      render json: UploadBlueprint.render(@upload)
+    else
+      render_api_error(@upload.rejection_reason || 'このアップロードは無効になっています。', status: :unprocessable_content)
     end
   end
 

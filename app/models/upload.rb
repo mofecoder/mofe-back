@@ -121,19 +121,24 @@ class Upload < ApplicationRecord
 
   # ストレージ上のオブジェクトを確かめて completed にする
   # 申告と違えば rejected にして削除し、false を返す (理由は rejection_reason)
+  # pending 以外ならそのままの状態を返す
   def complete!
-    reason = verification_error
-    if reason
-      reject!(reason)
-      false
-    else
-      update!(status: :completed)
-      true
+    # 同時に完了通知が来ても検証と状態の更新が一度だけになるよう、行をロックする
+    with_lock do
+      next unless pending?
+
+      @rejection_reason = verification_error
+      update!(status: @rejection_reason ? :rejected : :completed)
     end
+    # purge はロック (トランザクション) を抜けてから呼ぶ。
+    # ジョブはコミットを待たずに enqueue されるので、中で呼ぶと attachment が残って見えて削除が飛ばされうる
+    purge_file if rejected?
+    completed?
   end
 
   # rejected にしてストレージのオブジェクトを削除する
   # async: false は rake task などジョブを待てない場所から呼ぶとき
+  # トランザクションの中では呼ばないこと (purge_file を参照)
   def reject!(reason = nil, async: true)
     @rejection_reason = reason
     update!(status: :rejected)
@@ -148,6 +153,9 @@ class Upload < ApplicationRecord
 
   private
 
+  # ActiveJob はトランザクションのコミットを待たずに enqueue する設定
+  # (enqueue_after_transaction_commit = false) なので、トランザクションの外で呼ぶ。
+  # 中で呼ぶと、ジョブが先に走ったときに Blob#purge が外部キー制約の例外を握りつぶし、オブジェクトが残る
   def purge_file(async: true)
     return unless file.attached?
 
