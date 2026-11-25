@@ -7,16 +7,12 @@ class Api::ContestAdminsController < Api::ApplicationController
     user = User.find_by(name: params[:user_name])
 
     unless user
-      render json: {
-        error: '指定されたユーザ名のユーザは存在しません。',
-      }, status: :not_found
+      render_api_error('指定されたユーザ名のユーザは存在しません。', status: :not_found)
       return
     end
 
     if @contest.contest_admins.where(user_id: user.id).exists?
-      render json: {
-        error: '指定されたユーザは既にコンテスト管理者として追加されています。'
-      }, status: :bad_request
+      render_api_error('指定されたユーザは既にコンテスト管理者として追加されています。', status: :bad_request)
       return
     end
 

@@ -81,9 +81,7 @@ class Api::SubmissionsController < Api::ApplicationController
     is_admin_or_writer = policy([:api, submission.problem]).admin_or_writer?
 
     unless policy([:api, submission]).show?
-      render json: {
-        error: 'この提出は非公開です'
-      }, status: :forbidden
+      render_api_error('この提出は非公開です', status: :forbidden)
       return
     end
 
@@ -134,9 +132,7 @@ class Api::SubmissionsController < Api::ApplicationController
     if limit.present?
       limit = limit.floor
       response.set_header('Retry-After', limit)
-      render status: :too_early, json: {
-        error: "提出制限により、#{limit} 秒後までは提出できません。"
-      }
+      render_api_error("提出制限により、#{limit} 秒後までは提出できません。", status: :too_early)
       return
     end
     _submit(problem, request.body.read)
@@ -207,38 +203,41 @@ class Api::SubmissionsController < Api::ApplicationController
     }
   end
 
+  SORT_TABLE = {
+    'date' => %w[created_at],
+    'user' => %w[users.name],
+    'lang' => %w[lang],
+    'score' => %w[point],
+    'status' => %w[status],
+    'executionTime' => %w[execution_time],
+    'executionMemory' => %w[execution_memory],
+  }.freeze
+
+  FILTER_TABLE = {
+    'user' => 'users.name',
+    'task' => 'problems.slug',
+    'status' => 'status',
+  }.freeze
+
   # @param submissions [ActiveRecord::Relation<Submission>]
   def submissions(submissions, problem_ids, options)
-    sort_table = {
-      'date' => %w[created_at],
-      'user' => %w[users.name],
-      'lang' => %w[lang],
-      'score' => %w[point],
-      'status' => %w[status],
-      'executionTime' => %w[execution_time],
-      'executionMemory' => %w[execution_memory],
-    }
-    filter_table = {
-      'user' => 'users.name',
-      'task' => 'problems.slug',
-      'status' => 'status',
-    }
     if options.present?
+      # 旧形式: options=<JSON> ({ sort: [{target, desc}], filter: [{target, value}] })
       options_data = JSON.parse(options)
-      sort_array = options_data['sort'] || []
-      sort_array.each do |obj|
-        if obj['target'] == 'task'
-          desc = obj['desc'] ? 'DESC' : 'ASC'
-          submissions.order!("CHAR_LENGTH(problems.position) #{desc}").order!(position: desc)
-        else
-          sort_table[obj['target']].each { |row| submissions.order!(row => obj['desc'] ? :desc : :asc) }
-        end
-      end
-      filter_array = options_data['filter'] || []
-      filter_array.each do |obj|
-        submissions.where!(filter_table[obj['target']] => obj['value'])
-      end
+      sort = (options_data['sort'] || []).map { |obj| [obj['target'], obj['desc'].present?] }
+      filter = (options_data['filter'] || []).to_h { |obj| [obj['target'], obj['value']] }
+    else
+      # 新形式: sort=-date,user&user=foo&task[]=A&status[]=AC
+      sort = parse_sort_param(params[:sort])
+      filter = FILTER_TABLE.keys.filter_map do |target|
+        value = params[target]
+        # 文字列か文字列の配列のみ受け付ける
+        value = value.grep(String).compact_blank if value.is_a?(Array)
+        [target, value] if value.is_a?(String) || value.is_a?(Array)
+      end.to_h
     end
+    submissions = apply_sort(submissions, sort)
+    submissions = apply_filter(submissions, filter)
 
     all_testcases = get_testcases(problem_ids)
     submissions = submissions.order(created_at: :desc)
@@ -259,6 +258,43 @@ class Api::SubmissionsController < Api::ApplicationController
     end
 
     render json: { data: data, meta: pagination_data }
+  end
+
+  # "-date,user" を [["date", true], ["user", false]] に変換する
+  # @return [Array<Array(String, Boolean)>]
+  def parse_sort_param(sort)
+    return [] unless sort.is_a?(String)
+
+    sort.split(',').map(&:strip).compact_blank.map do |item|
+      item.start_with?('-') ? [item[1..], true] : [item, false]
+    end
+  end
+
+  # @param submissions [ActiveRecord::Relation<Submission>]
+  # @param sort [Array<Array(String, Boolean)>] [target, desc] の配列
+  def apply_sort(submissions, sort)
+    sort.each do |target, desc|
+      if target == 'task'
+        direction = desc ? 'DESC' : 'ASC'
+        submissions = submissions.order(Arel.sql("CHAR_LENGTH(problems.position) #{direction}"), Arel.sql("problems.position #{direction}"))
+      elsif SORT_TABLE.key?(target)
+        # 未知の target は無視する
+        SORT_TABLE[target].each { |column| submissions = submissions.order(column => desc ? :desc : :asc) }
+      end
+    end
+    submissions
+  end
+
+  # @param submissions [ActiveRecord::Relation<Submission>]
+  # @param filter [Hash{String => String, Array<String>}]
+  def apply_filter(submissions, filter)
+    filter.each do |target, value|
+      column = FILTER_TABLE[target]
+      next if column.nil? || value.blank?
+
+      submissions = submissions.where(column => value)
+    end
+    submissions
   end
 
 

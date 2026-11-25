@@ -15,10 +15,11 @@ class V4::ProblemsController < V4::ApplicationController
 
   def create
     authorize Problem
-    if Problem.create(problem_params.merge(writer_user: current_user))
+    @problem = Problem.new(problem_params.merge(writer_user: current_user))
+    if @problem.save
       render json: ProblemBlueprint.render(@problem, view: :problem_detail)
     else
-      render json: { errors: @problem.errors }, status: :unprocessable_content
+      render_validation_error(@problem, status: :unprocessable_content)
     end
   end
 
@@ -28,7 +29,7 @@ class V4::ProblemsController < V4::ApplicationController
     if @problem.update(problem_params)
       render json: ProblemBlueprint.render(@problem, view: :problem_detail)
     else
-      render json: { errors: @problem.errors }, status: :unprocessable_content
+      render_validation_error(@problem, status: :unprocessable_content)
     end
   end
 
@@ -36,16 +37,14 @@ class V4::ProblemsController < V4::ApplicationController
     authorize @problem
 
     if @problem.contest.present?
-      render json: {
-        errors: ['コンテストに所属しているため削除できません。']
-      }, status: :unprocessable_content
+      render_api_error('コンテストに所属しているため削除できません。', status: :unprocessable_content)
       return
     end
 
     if @problem.discard
       render status: :no_content
     else
-      render json: { errors: @problem.errors }, status: :unprocessable_content
+      render_validation_error(@problem, status: :unprocessable_content)
     end
   end
 
