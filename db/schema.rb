@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_162541) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_170000) do
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8mb3", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
   end
@@ -233,6 +233,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_162541) do
     t.index ["tester_user_id"], name: "index_tester_relations_on_tester_user_id"
   end
 
+  create_table "uploads", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "created_at"], name: "index_uploads_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_uploads_on_user_id"
+  end
+
   create_table "users", charset: "utf8mb3", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
@@ -283,6 +293,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_162541) do
   add_foreign_key "testcases", "problems"
   add_foreign_key "tester_relations", "problems"
   add_foreign_key "tester_relations", "users", column: "tester_user_id"
+  add_foreign_key "uploads", "users"
 
   create_view "all_registrations", sql_definition: <<-SQL
       select `registrations`.`id` AS `id`,`registrations`.`contest_id` AS `contest_id`,`registrations`.`open_registration` AS `open_registration`,`registrations`.`created_at` AS `created_at`,`registrations`.`updated_at` AS `updated_at`,`registrations`.`deleted_at` AS `deleted_at`,'individual' AS `type` from `registrations` union select `team_registrations`.`id` AS `id`,`team_registrations`.`contest_id` AS `contest_id`,`team_registrations`.`open_registration` AS `open_registration`,`team_registrations`.`created_at` AS `created_at`,`team_registrations`.`updated_at` AS `updated_at`,`team_registrations`.`deleted_at` AS `deleted_at`,'team' AS `type` from `team_registrations`
