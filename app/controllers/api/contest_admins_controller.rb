@@ -4,21 +4,33 @@ class Api::ContestAdminsController < Api::ApplicationController
   before_action :set_contest
 
   def create
-    user = User.find_by(name: params[:user_name])
+    names = Array(params[:user_names]).map { |name| name.to_s.strip }.reject(&:empty?).uniq
 
-    unless user
-      render_api_error('指定されたユーザ名のユーザは存在しません。', status: :not_found)
+    if names.empty?
+      render_api_error('ユーザ名を指定してください。', status: :bad_request)
       return
     end
 
-    if @contest.contest_admins.where(user_id: user.id).exists?
-      render_api_error('指定されたユーザは既にコンテスト管理者として追加されています。', status: :bad_request)
-      return
+    # DB の照合順序で大文字小文字を区別せず一致する場合があるため、小文字で引き当てる
+    users = User.where(name: names).index_by { |user| user.name.downcase }
+    admin_user_ids = @contest.contest_admins.where(user_id: users.values.map(&:id)).pluck(:user_id).to_set
+
+    added = []
+    errors = []
+    names.each do |name|
+      user = users[name.downcase]
+      if user.nil?
+        errors << { user_name: name, error: '指定されたユーザ名のユーザは存在しません。' }
+      elsif admin_user_ids.include?(user.id)
+        errors << { user_name: name, error: '指定されたユーザは既にコンテスト管理者として追加されています。' }
+      else
+        ContestAdmin.create!(contest_id: @contest.id, user_id: user.id)
+        admin_user_ids << user.id
+        added << name
+      end
     end
 
-    ContestAdmin.create(contest_id: @contest.id, user_id: user.id)
-
-    render status: :created
+    render json: { added: added, errors: errors }
   end
 
   def destroy
