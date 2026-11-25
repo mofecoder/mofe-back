@@ -53,7 +53,7 @@ class Api::TestcasesController < Api::ApplicationController
 
   def create
     unless @problem.testcases.find_by(name: create_params[:name]).nil?
-      render json: { error: 'この名前のテストケースはすでに存在します。 '}, status: 400
+      render_api_error('この名前のテストケースはすでに存在します。', status: :bad_request)
       return
     end
     testcase = @problem.testcases.new(create_params)
@@ -121,7 +121,7 @@ class Api::TestcasesController < Api::ApplicationController
         end
       end
     rescue
-      render json: {error: 'zipファイルの展開に失敗しました。'}, status: :unprocessable_entity
+      render_api_error('zipファイルの展開に失敗しました。', status: :unprocessable_entity)
       return
     ensure
       zip.close
@@ -131,7 +131,7 @@ class Api::TestcasesController < Api::ApplicationController
     message = []
     common_filename = Set.new(inputs.keys & outputs.keys)
     unless ok && common_filename.any?
-      render json: {error: 'zipファイルの形式が正しくありません。'}, status: :bad_request
+      render_api_error('zipファイルの形式が正しくありません。', status: :bad_request)
       return
     end
 

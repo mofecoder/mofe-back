@@ -33,7 +33,7 @@ class Api::ProblemsController < Api::ApplicationController
       if @problem.save
         render json: @problem, serializer: ProblemDetailSerializer, status: :created
       else
-        render json: @problem.errors, status: :unprocessable_entity
+        render_validation_error(@problem, status: :unprocessable_entity)
       end
     end
   end
@@ -46,7 +46,7 @@ class Api::ProblemsController < Api::ApplicationController
     if problem.update(problem_edit_params)
       render json: problem, serializer: ProblemDetailSerializer
     else
-      render json: problem.errors, status: :unprocessable_entity
+      render_validation_error(problem, status: :unprocessable_entity)
     end
   end
 
