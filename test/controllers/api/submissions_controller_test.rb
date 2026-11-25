@@ -335,6 +335,19 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, pagination['pages']
   end
 
+  test "team accepts the sort and filter query params" do
+    mate = create_user('mate')
+    create_team(@contest, @member, mate)
+    create_submission(mate, @problem)
+
+    sign_in_as @member
+    get team_api_contest_submissions_url(contest_slug: @contest.slug), params: { user: 'mate', sort: '-date' }
+    assert_response :success
+
+    names = JSON.parse(response.body)['data'].map { |s| s.dig('user', 'name') }
+    assert_equal ['mate'], names
+  end
+
   # --- show (teammate) ---
 
   test "show returns 200 for a teammate's private submission" do
