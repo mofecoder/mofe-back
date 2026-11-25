@@ -13,49 +13,86 @@ class Api::ContestAdminsControllerTest < ActionDispatch::IntegrationTest
   # --- create ---
 
   test "create returns 401 when not authenticated" do
-    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: @member.name }
+    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [@member.name] }
     assert_response :unauthorized
   end
 
   test "create returns 403 for a member" do
     sign_in_as @member
-    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: @writer.name }
+    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [@writer.name] }
     assert_response :forbidden
   end
 
   test "create returns 403 for a writer" do
     sign_in_as @writer
-    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: @member.name }
+    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [@member.name] }
     assert_response :forbidden
   end
 
   test "create adds a contest admin" do
     sign_in_as @admin
     assert_difference -> { @contest.contest_admins.count }, 1 do
-      post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: @writer.name }
+      post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [@writer.name] }
     end
-    assert_response :created
+    assert_response :ok
+    assert_equal [@writer.name], response.parsed_body['added']
+    assert_empty response.parsed_body['errors']
   end
 
-  test "create returns 404 for an unknown user name" do
+  test "create adds multiple contest admins" do
     sign_in_as @admin
-    post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: 'no_such_user' }
-    assert_response :not_found
+    assert_difference -> { @contest.contest_admins.count }, 2 do
+      post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [@writer.name, @member.name] }
+    end
+    assert_response :ok
+    assert_equal [@writer.name, @member.name], response.parsed_body['added']
+    assert_empty response.parsed_body['errors']
   end
 
-  test "create returns 400 when the user is already a contest admin" do
+  test "create adds only valid users and reports errors for the rest" do
     ContestAdmin.create!(contest: @contest, user: @writer)
 
     sign_in_as @admin
-    assert_no_difference -> { @contest.contest_admins.count } do
-      post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_name: @writer.name }
+    assert_difference -> { @contest.contest_admins.count }, 1 do
+      post api_contest_contest_admins_url(contest_slug: @contest.slug),
+           params: { user_names: ['no_such_user', @writer.name, @member.name] }
     end
+    assert_response :ok
+    assert_equal [@member.name], response.parsed_body['added']
+    errors = response.parsed_body['errors']
+    assert_equal ['no_such_user', @writer.name], errors.map { |e| e['user_name'] }
+    assert_equal '指定されたユーザ名のユーザは存在しません。', errors[0]['error']
+    assert_equal '指定されたユーザは既にコンテスト管理者として追加されています。', errors[1]['error']
+  end
+
+  test "create adds a duplicated user name only once" do
+    sign_in_as @admin
+    assert_difference -> { @contest.contest_admins.count }, 1 do
+      post api_contest_contest_admins_url(contest_slug: @contest.slug),
+           params: { user_names: [@writer.name, " #{@writer.name} ", ''] }
+    end
+    assert_response :ok
+    assert_equal [@writer.name], response.parsed_body['added']
+    assert_empty response.parsed_body['errors']
+  end
+
+  test "create returns 400 when user_names is empty" do
+    sign_in_as @admin
+    assert_no_difference -> { @contest.contest_admins.count } do
+      post api_contest_contest_admins_url(contest_slug: @contest.slug), params: { user_names: [] }, as: :json
+    end
+    assert_response :bad_request
+  end
+
+  test "create returns 400 when user_names is missing" do
+    sign_in_as @admin
+    post api_contest_contest_admins_url(contest_slug: @contest.slug)
     assert_response :bad_request
   end
 
   test "create returns 404 for an unknown contest" do
     sign_in_as @admin
-    post api_contest_contest_admins_url(contest_slug: 'no-such-contest'), params: { user_name: @writer.name }
+    post api_contest_contest_admins_url(contest_slug: 'no-such-contest'), params: { user_names: [@writer.name] }
     assert_response :not_found
   end
 
