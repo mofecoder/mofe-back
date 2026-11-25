@@ -45,6 +45,11 @@ class Api::ContestPolicy < Api::ApplicationPolicy
     signed_in?
   end
 
+  # submissions#team
+  def team_submissions?
+    signed_in? && record.team_registration_of(user).present?
+  end
+
   # submissions#all
   def all_submissions?
     visible_submission_problem_ids.any?
