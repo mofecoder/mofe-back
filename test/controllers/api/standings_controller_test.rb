@@ -68,6 +68,36 @@ class Api::StandingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 100, body['standings'].first.dig('result', 'score')
   end
 
+  # --- index: フラグ ---
+
+  def standing_names(query)
+    get "#{api_contest_standings_url(contest_slug: @contest.slug)}#{query}"
+    assert_response :success
+    JSON.parse(response.body)['standings'].map { |s| s.dig('user', 'name') }
+  end
+
+  test "index excludes open registrations with exclude_open=true" do
+    Registration.create!(user: @member, contest: @contest, open_registration: true)
+    assert_empty standing_names('?exclude_open=true')
+  end
+
+  test "index excludes open registrations with a valueless exclude_open" do
+    Registration.create!(user: @member, contest: @contest, open_registration: true)
+    assert_empty standing_names('?exclude_open')
+  end
+
+  test "index includes open registrations with exclude_open=false" do
+    Registration.create!(user: @member, contest: @contest, open_registration: true)
+    assert_equal [@member.name], standing_names('?exclude_open=false')
+    assert_equal [@member.name], standing_names('?exclude_open=0')
+  end
+
+  test "index shows only teams with team_only=true" do
+    Registration.create!(user: @member, contest: @contest)
+    assert_empty standing_names('?team_only=true')
+    assert_equal [@member.name], standing_names('?team_only=false')
+  end
+
   test "index returns 404 for an unknown contest" do
     get api_contest_standings_url(contest_slug: 'no-such-contest')
     assert_response :not_found
