@@ -10,7 +10,7 @@ class Api::PasswordsController < DeviseTokenAuth::PasswordsController
     if user.errors.empty?
       render json: { message: 'パスワードを変更しました。' }
     else
-      render json: { errors: user.errors }, status: :unprocessable_entity
+      render_validation_error(user, status: :unprocessable_entity)
     end
   end
 
