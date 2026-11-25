@@ -114,6 +114,7 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     put move_url(@writer_problem.slug)
     assert_response :bad_request
+    assert_equal({ 'error' => "パラメータ 'position' が必要です。" }, response.parsed_body)
   end
 
   test "move changes the position and slug for an empty position" do

@@ -41,7 +41,7 @@ class Api::TasksController < Api::ApplicationController
 
     position = params[:position]
     if position.blank?
-      render json: { error: "パラメータ 'position' が必要です。" }, status: :bad_request
+      render_api_error("パラメータ 'position' が必要です。", status: :bad_request)
       return
     end
 
@@ -75,8 +75,9 @@ class Api::TasksController < Api::ApplicationController
     if saved
       head :no_content
     else
-      errors = (task.errors.full_messages + (other&.errors&.full_messages || [])).uniq
-      render json: { error: errors.join(', ') }, status: :unprocessable_content
+      messages = (task.errors.full_messages + (other&.errors&.full_messages || [])).uniq
+      details = task.errors.to_hash.merge(other&.errors&.to_hash || {}) { |_, a, b| (a + b).uniq }
+      render_api_error(messages.join("\n"), status: :unprocessable_content, details: details)
     end
   end
 end
