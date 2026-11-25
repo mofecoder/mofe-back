@@ -91,4 +91,57 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_nil @writer_problem.slug
     assert_nil @writer_problem.position
   end
+
+  # --- move ---
+
+  def move_url(task_slug, position = nil)
+    url = api_contest_task_move_url(contest_slug: @active_contest.slug, task_slug: task_slug)
+    position ? "#{url}?position=#{position}" : url
+  end
+
+  test "move returns 401 when not authenticated" do
+    put move_url(@writer_problem.slug, 'C')
+    assert_response :unauthorized
+  end
+
+  test "move returns 403 for a member" do
+    sign_in_as @member
+    put move_url(@writer_problem.slug, 'C')
+    assert_response :forbidden
+  end
+
+  test "move returns 400 without position" do
+    sign_in_as @admin
+    put move_url(@writer_problem.slug)
+    assert_response :bad_request
+  end
+
+  test "move changes the position and slug for an empty position" do
+    sign_in_as @admin
+    put move_url(@writer_problem.slug, 'C')
+    assert_response :no_content
+
+    @writer_problem.reload
+    assert_equal 'C', @writer_problem.position
+    assert_equal "#{@active_contest.slug}_c", @writer_problem.slug
+  end
+
+  test "move swaps with the problem at the destination" do
+    other = @writer_problem.dup
+    other.update!(
+      slug: "#{@active_contest.slug}_b", name: 'Other Problem', position: 'B',
+      uuid: SecureRandom.uuid, writer_user: @admin
+    )
+
+    sign_in_as @admin
+    put move_url(@writer_problem.slug, 'B')
+    assert_response :no_content
+
+    @writer_problem.reload
+    other.reload
+    assert_equal 'B', @writer_problem.position
+    assert_equal "#{@active_contest.slug}_b", @writer_problem.slug
+    assert_equal 'A', other.position
+    assert_equal "#{@active_contest.slug}_a", other.slug
+  end
 end
