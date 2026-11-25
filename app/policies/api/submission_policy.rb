@@ -10,10 +10,16 @@ class Api::SubmissionPolicy < Api::ApplicationPolicy
   def rejudge?
     return false unless signed_in?
 
+    user.contest_admin?(record.problem.contest_id) || rejudge_as_problem_member?
+  end
+
+  # 問題の writer、または承認済み tester か（ロード済みの tester_relations を使うので SQL を発行しない）
+  def rejudge_as_problem_member?
+    return false unless signed_in?
+
     problem = record.problem
-    user.contest_admin?(problem.contest_id) ||
-      problem.writer_user_id == user.id ||
-      problem.tester_relations.exists?(tester_user_id: user.id)
+    problem.writer_user_id == user.id ||
+      problem.tester_relations.any? { |r| r.tester_user_id == user.id && r.approved }
   end
 
   def toggle_published?
