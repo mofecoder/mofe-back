@@ -33,6 +33,7 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
+  config.x.uploads.public_base_url = 'https://img.example.test'
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.

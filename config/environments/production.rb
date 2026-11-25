@@ -28,8 +28,10 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # アップロードした画像は Cloudflare R2 に置く (config/storage.yml を参照)
+  config.active_storage.service = :r2
+  # Markdown に貼る画像 URL のベース (R2 のカスタムドメイン。この後ろに blob の key を付ける)
+  config.x.uploads.public_base_url = ENV.fetch('UPLOADS_PUBLIC_BASE_URL', 'https://img.mofecoder.com')
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true

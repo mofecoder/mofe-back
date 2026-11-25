@@ -6,6 +6,32 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+# 本番の画像アップロード先 (Cloudflare R2、S3 互換 API)
+# 公開は R2 のカスタムドメイン (img.mofecoder.com) で行うので public: true は付けない。
+# 新しい aws-sdk-s3 の既定のチェックサム計算は R2 で問題が出るため when_required にする。
+r2:
+  service: S3
+  endpoint: https://<%= Rails.application.credentials.dig(:r2, :account_id) %>.r2.cloudflarestorage.com
+  access_key_id: <%= Rails.application.credentials.dig(:r2, :access_key_id) %>
+  secret_access_key: <%= Rails.application.credentials.dig(:r2, :secret_access_key) %>
+  region: auto
+  bucket: <%= Rails.application.credentials.dig(:r2, :bucket) %>
+  request_checksum_calculation: when_required
+  response_checksum_validation: when_required
+
+# 開発用の SeaweedFS (compose.yaml の seaweedfs サービス)
+# キーは開発専用の固定値 (docker/seaweedfs/s3.json と同じ)。
+seaweedfs:
+  service: S3
+  endpoint: http://s3.localhost:8333
+  access_key_id: mofe-dev-access-key
+  secret_access_key: mofe-dev-secret-key
+  region: us-east-1
+  bucket: mofe-dev
+  force_path_style: true
+  request_checksum_calculation: when_required
+  response_checksum_validation: when_required
+
 # Use rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3

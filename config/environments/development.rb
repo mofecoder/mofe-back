@@ -29,8 +29,10 @@ Rails.application.configure do
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # アップロードした画像は開発用の SeaweedFS に置く (config/storage.yml を参照)
+  config.active_storage.service = :seaweedfs
+  # Markdown に貼る画像 URL のベース (この後ろに blob の key を付ける)
+  config.x.uploads.public_base_url = ENV.fetch('UPLOADS_PUBLIC_BASE_URL', 'http://s3.localhost:8333/mofe-dev')
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

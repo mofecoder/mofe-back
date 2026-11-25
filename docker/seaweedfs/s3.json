@@ -1,0 +1,18 @@
+{
+  "identities": [
+    {
+      "name": "mofe_dev",
+      "credentials": [
+        {
+          "accessKey": "mofe-dev-access-key",
+          "secretKey": "mofe-dev-secret-key"
+        }
+      ],
+      "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+    },
+    {
+      "name": "anonymous",
+      "actions": ["Read:mofe-dev"]
+    }
+  ]
+}

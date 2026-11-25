@@ -19,7 +19,10 @@ services:
     ports:
     - "127.0.0.1:3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_started
+      storage-init:
+        condition: service_completed_successfully
     develop:
       watch:
         - action: rebuild
@@ -32,5 +35,38 @@ services:
         - action: rebuild
           path: Gemfile
 
+  # 画像アップロード用の S3 互換ストレージ (本番の Cloudflare R2 の代わり)
+  # ブラウザが署名付き URL へ直接 PUT するのでホストにポートを公開する。
+  # 署名には Host が含まれるため、app コンテナとホストのブラウザの両方から
+  # 同じ名前 (s3.localhost:8333) で届くようにネットワークエイリアスを付けている。
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.53
+    command: server -dir=/data -ip.bind=0.0.0.0 -master.volumeSizeLimitMB=100 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    volumes:
+      - seaweedfs-store:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    ports:
+      - "127.0.0.1:8333:8333"
+    networks:
+      default:
+        aliases:
+          - s3.localhost
+
+  # バケットの作成と CORS の設定を行う (起動のたびに実行され、冪等)
+  storage-init:
+    image: amazon/aws-cli:2.41.2
+    entrypoint: ["sh", "/init/init.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: mofe-dev-access-key
+      AWS_SECRET_ACCESS_KEY: mofe-dev-secret-key
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://seaweedfs:8333
+      BUCKET: mofe-dev
+    volumes:
+      - ./docker/seaweedfs:/init:ro
+    depends_on:
+      - seaweedfs
+
 volumes:
   db-store:
+  seaweedfs-store:
