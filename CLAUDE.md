@@ -148,6 +148,10 @@ v4 コントローラで使う。blueprint は `app/blueprints/` に置く。
 
 ユーザーのロールは enum で `:member`, `:writer`, `:admin` の 3 種類。
 
+### エラー応答
+
+`ApplicationController` の `render_api_error` / `render_validation_error` で `{ error: string, details?: {...} }` の形式で返す (devise_token_auth の `render_error` と名前が衝突するので `render_error` は使わない)。`render_404` / `render_500` に例外を渡しても、例外のメッセージ (SQL やクラス名が入りうる) は返さず既定のメッセージになる。文言を変えたいときは文字列を渡す。
+
 ### CORS
 
 `config/initializers/cors.rb` の Rack::Cors で処理する (プリフライトも Rack::Cors が応答する)。許可する origin は `https://mofecoder.com` で、フロントの開発サーバー `http://localhost:8000` は development 環境だけで許可する。テストは `test/integration/cors_test.rb`。

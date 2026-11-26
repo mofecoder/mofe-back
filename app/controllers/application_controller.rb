@@ -52,13 +52,10 @@ class ApplicationController < ActionController::API
 
   private
 
-  # 例外ならメッセージを、文字列ならそのまま、それ以外は既定のメッセージを返す
+  # 文字列ならそのまま、それ以外 (例外を含む) は既定のメッセージを返す
+  # 例外のメッセージにはクラス名・SQL・内部のパスなどが入りうるので応答に含めない
   def error_message(e, default)
-    case e
-    when Exception then e.message
-    when String then e.presence || default
-    else default
-    end
+    e.is_a?(String) && e.present? ? e : default
   end
 
   def configure_permitted_parameters
