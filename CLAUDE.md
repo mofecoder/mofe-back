@@ -128,6 +128,10 @@ v4 コントローラで使う。blueprint は `app/blueprints/` に置く。
 
 ユーザーのロールは enum で `:member`, `:writer`, `:admin` の 3 種類。
 
+### 無効化している機能
+
+- Slack 連携 (`Api::Slack::SlackController`、writer 権限の付与) は使っていないので、`config/routes.rb` のルートをコメントアウトしている。コントローラは残してある。
+
 ## 主なディレクトリ構成
 
 ```

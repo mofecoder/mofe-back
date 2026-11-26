@@ -23,9 +23,12 @@ Rails.application.routes.draw do
         end
       end
     end
-    namespace :slack do
-      post 'add_writer' => 'slack#add_writer'
-    end
+    # Slack 連携 (writer 権限の付与) は現在使っていないため無効化している。
+    # 外部から叩ける入口を減らすためで、コントローラ (Api::Slack::SlackController) は残してある。
+    # 再び使う場合はここを戻し、Slack の署名検証が有効なことを確認すること。
+    # namespace :slack do
+    #   post 'add_writer' => 'slack#add_writer'
+    # end
     resources :contests, param: :slug, except: [:destroy] do
       resources :submissions, only: [:index, :show] do
         collection do
