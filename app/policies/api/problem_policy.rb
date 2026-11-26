@@ -58,9 +58,7 @@ class Api::ProblemPolicy < Api::ApplicationPolicy
 
   # contests#set_task で「他のユーザの問題」を弾く判定
   def add_to_contest?
-    return false unless signed_in?
-
-    !(writer? && record.writer_user_id != user.id)
+    admin? || (writer? && record.writer_user_id == user.id)
   end
 
   # manage/problems#unset_problems

@@ -20,10 +20,8 @@ class Api::ContestPolicy < Api::ApplicationPolicy
     contest_admin?
   end
 
-  # NOTE: 現行実装はログイン済みなら誰でも実行できる（コンテスト管理者チェックが無い）。
-  # 挙動を変えないためそのまま写している。
   def set_task?
-    signed_in?
+    contest_admin?
   end
 
   def rejudge?

@@ -142,10 +142,25 @@ class Api::ProblemPolicyTest < ActiveSupport::TestCase
     refute Api::ProblemPolicy.new(@writer, @admin_problem).add_to_contest?
   end
 
-  # NOTE: 判定が writer ロールにしか掛かっていないため、admin と member は通る（現行挙動）
-  test "add_to_contest? permits non-writer roles for any problem" do
+  test "add_to_contest? permits a site admin for any problem" do
     assert Api::ProblemPolicy.new(@admin, @writer_problem).add_to_contest?
-    assert Api::ProblemPolicy.new(@member, @admin_problem).add_to_contest?
+    assert Api::ProblemPolicy.new(@admin, @admin_problem).add_to_contest?
+  end
+
+  test "add_to_contest? denies members and anonymous users" do
+    refute Api::ProblemPolicy.new(@member, @admin_problem).add_to_contest?
+    refute Api::ProblemPolicy.new(nil, @writer_problem).add_to_contest?
+  end
+
+  # writer ロールでなければ自分の問題でも追加できない
+  test "add_to_contest? denies a member-role user who owns the problem" do
+    owner = create_user('owner_member_add', role: 'member')
+    problem = Problem.create!(
+      name: 'Member Owned Add', difficulty: 'easy', statement: 's', constraints: 'c',
+      input_format: 'i', output_format: 'o', writer_user: owner
+    )
+
+    refute Api::ProblemPolicy.new(owner, problem).add_to_contest?
   end
 
   # --- unset_problems? ---

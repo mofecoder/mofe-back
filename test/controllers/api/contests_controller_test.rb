@@ -182,11 +182,48 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'Z', @standalone_problem.position
   end
 
-  test "set_task rejects a writer adding another user's problem" do
+  test "set_task returns 403 for a member" do
+    member_problem = Problem.create!(
+      name: 'Member Unset Problem', difficulty: 'easy', statement: 's', constraints: 'c',
+      input_format: 'i', output_format: 'o', writer_user: @member
+    )
+
+    sign_in_as @member
+    put set_task_api_contest_url(@ended_contest),
+        params: { problem_id: member_problem.id, problem_slug: 'member-problem', position: 'Z' }
+    assert_response :forbidden
+
+    assert_nil member_problem.reload.contest_id
+  end
+
+  test "set_task returns 403 for a writer who is not a contest admin even with their own problem" do
+    sign_in_as @writer
+    put set_task_api_contest_url(@ended_contest),
+        params: { problem_id: @standalone_problem.id, problem_slug: 'own-problem', position: 'Z' }
+    assert_response :forbidden
+
+    @standalone_problem.reload
+    assert_nil @standalone_problem.contest_id
+    assert_equal 'standalone-problem', @standalone_problem.slug
+  end
+
+  test "set_task assigns the writer's own problem for a contest admin" do
+    ContestAdmin.create!(contest: @ended_contest, user: @writer)
+
+    sign_in_as @writer
+    put set_task_api_contest_url(@ended_contest),
+        params: { problem_id: @standalone_problem.id, problem_slug: 'own-problem', position: 'Z' }
+    assert_response :no_content
+
+    assert_equal @ended_contest.id, @standalone_problem.reload.contest_id
+  end
+
+  test "set_task rejects a contest admin writer adding another user's problem" do
     other_problem = Problem.create!(
       name: 'Admin Unset Problem', difficulty: 'easy', statement: 's', constraints: 'c',
       input_format: 'i', output_format: 'o', writer_user: @admin
     )
+    ContestAdmin.create!(contest: @ended_contest, user: @writer)
 
     sign_in_as @writer
     put set_task_api_contest_url(@ended_contest),

@@ -66,8 +66,8 @@ class Api::ContestPolicyTest < ActiveSupport::TestCase
 
   # --- コンテスト管理者 ---
 
-  test "update?, manage_show?, remove_task? and move_task? permit contest admins and site admins" do
-    %i[update? manage_show? remove_task? move_task?].each do |query|
+  test "update?, manage_show?, set_task?, remove_task? and move_task? permit contest admins and site admins" do
+    %i[update? manage_show? set_task? remove_task? move_task?].each do |query|
       assert Api::ContestPolicy.new(@admin, @active_contest).public_send(query), query
       assert Api::ContestPolicy.new(contest_admin, @active_contest).public_send(query), query
       refute Api::ContestPolicy.new(@member, @active_contest).public_send(query), query
@@ -80,11 +80,14 @@ class Api::ContestPolicyTest < ActiveSupport::TestCase
     refute Api::ContestPolicy.new(contest_admin, @ended_contest).contest_admin?
   end
 
+  test "set_task? denies a writer who is not a contest admin" do
+    refute Api::ContestPolicy.new(@writer, @active_contest).set_task?
+  end
+
   # --- ログイン済みなら誰でも ---
 
-  # NOTE: set_task はコンテスト管理者チェックが無い（現行挙動をそのまま維持している）
-  test "set_task?, submissions? and register? only require a signed-in user" do
-    %i[set_task? submissions? register? register_team? unregister?].each do |query|
+  test "submissions? and register? only require a signed-in user" do
+    %i[submissions? register? register_team? unregister?].each do |query|
       assert Api::ContestPolicy.new(@member, @active_contest).public_send(query), query
       refute Api::ContestPolicy.new(nil, @active_contest).public_send(query), query
     end
