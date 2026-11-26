@@ -28,7 +28,7 @@ class Api::ClarificationsController < Api::ApplicationController
     clarification.user_id = current_user.id
 
     if create_params[:task]
-      clarification.problem_id = Problem.find_by!(slug: create_params[:task]).id
+      clarification.problem_id = @contest.problems.find_by!(slug: create_params[:task]).id
     end
 
     if clarification.save

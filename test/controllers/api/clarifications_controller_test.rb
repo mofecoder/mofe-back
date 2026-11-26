@@ -133,6 +133,17 @@ class Api::ClarificationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "create returns 404 for a task of another contest" do
+    other_task = problems(:admin_problem) # ended_contest の問題
+
+    sign_in_as @member
+    assert_no_difference -> { Clarification.count } do
+      post api_contest_clarifications_url(contest_slug: @contest.slug),
+           params: { clarification: { question: 'Q', task: other_task.slug } }
+    end
+    assert_response :not_found
+  end
+
   # --- update ---
 
   test "update returns 401 when not authenticated" do
