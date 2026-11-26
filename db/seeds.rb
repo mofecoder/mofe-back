@@ -4,61 +4,61 @@
 # The data can then be loaded with the rails db:seed command (or created alongside the database with db:setup).
 # This file is idempotent — safe to run multiple times.
 
+# seed のユーザーは公開されたパスワードを持つので、本番では流さない
+abort "本番環境では db:seed を実行しないでください" if Rails.env.production?
+
 puts "🌱 Seeding database..."
 
-# Create admin user
-admin_user = User.find_or_initialize_by(name: "admin")
-if admin_user.new_record?
-  admin_user.assign_attributes(
-    email: "admin@example.com",
-    password: "password",
-    password_confirmation: "password",
-    role: "admin",
-    confirmed_at: Time.current
+# seed のユーザーで使うパスワード
+SEED_PASSWORD = "password" unless defined?(SEED_PASSWORD)
+
+# seed のユーザーを作るか、既にあれば seed の値に揃える。
+# メールアドレスで探す (名前は後から変えられるため、名前で探すと別のアカウントを seed のユーザーとみなしてしまう)。
+# 何度流しても、パスワードとロールは seed の値に戻るので、seed のパスワードで必ずログインできる。
+# 名前が他のアカウントに使われているときは今の名前のまま残し、ログインに使う名前を表示する。
+def seed_user(name:, email:, role:, **attributes)
+  user = User.find_or_initialize_by(email: email)
+  created = user.new_record?
+
+  name_taken = User.where.not(id: user.id).where("LOWER(name) = ?", name.downcase).exists?
+  if name_taken && created
+    raise "名前 #{name} は既に他のアカウントで使われているため、#{email} のユーザーを作成できません"
+  end
+  user.name = name unless name_taken
+
+  user.assign_attributes(
+    password: SEED_PASSWORD,
+    password_confirmation: SEED_PASSWORD,
+    role: role,
+    confirmed_at: user.confirmed_at || Time.current
   )
-  admin_user.save!
-  puts "✅ Created admin user: #{admin_user.name}"
-else
-  puts "⏭️  Admin user already exists: #{admin_user.name}"
+  # atcoder_rating などの任意の項目は、作成するときだけ入れる
+  user.assign_attributes(attributes) if created
+  user.save!
+
+  puts "#{created ? '✅ Created' : '🔄 Updated'} #{role} user: #{user.name} (#{email} / #{SEED_PASSWORD})"
+  if name_taken
+    puts "⚠️  名前 #{name} は他のアカウントが使っているため、#{user.name} のままにしました。#{user.name} または #{email} でログインしてください"
+  end
+  user
 end
 
+# Create admin user
+admin_user = seed_user(name: "admin", email: "admin@example.com", role: "admin")
+
 # Create sample users
-users = []
-5.times do |i|
-  user = User.find_or_initialize_by(name: "user#{i + 1}")
-  if user.new_record?
-    user.assign_attributes(
-      email: "user#{i + 1}@example.com",
-      password: "password",
-      password_confirmation: "password",
-      role: "member",
-      atcoder_id: "user#{i + 1}",
-      atcoder_rating: rand(400..2800),
-      confirmed_at: Time.current
-    )
-    user.save!
-    puts "✅ Created user: #{user.name}"
-  else
-    puts "⏭️  User already exists: #{user.name}"
-  end
-  users << user
+users = 5.times.map do |i|
+  seed_user(
+    name: "user#{i + 1}",
+    email: "user#{i + 1}@example.com",
+    role: "member",
+    atcoder_id: "user#{i + 1}",
+    atcoder_rating: rand(400..2800)
+  )
 end
 
 # Create writer user
-writer_user = User.find_or_initialize_by(name: "writer")
-if writer_user.new_record?
-  writer_user.assign_attributes(
-    email: "writer@example.com",
-    password: "password",
-    password_confirmation: "password",
-    role: "writer",
-    confirmed_at: Time.current
-  )
-  writer_user.save!
-  puts "✅ Created writer user: #{writer_user.name}"
-else
-  puts "⏭️  Writer user already exists: #{writer_user.name}"
-end
+writer_user = seed_user(name: "writer", email: "writer@example.com", role: "writer")
 
 # Create sample contests
 past_contest = Contest.find_or_create_by!(slug: "sample-contest-2024") do |c|

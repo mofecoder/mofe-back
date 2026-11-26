@@ -57,6 +57,18 @@ bundle exec rails db:seed        # シードデータを投入
 bundle exec rails db:reset       # drop → create → migrate → seed
 ```
 
+seed (`db/seeds.rb`) は何度流してもよい。作るユーザーのパスワードはすべて `password`。
+
+| 名前 | メールアドレス | ロール |
+|---|---|---|
+| `admin` | `admin@example.com` | admin |
+| `writer` | `writer@example.com` | writer |
+| `user1`〜`user5` | `user1@example.com`〜 | member |
+
+- seed のユーザーはメールアドレスで探す。既にあれば、パスワードとロールを seed の値に戻す。
+- 名前が他のアカウントに使われているときは、今の名前のまま残して警告を出す。そのときはその名前かメールアドレスでログインする。
+- 本番環境では実行できないようにしている。
+
 ### テスト
 
 Minitest (Rails デフォルト) を使う。fixture は `test/fixtures/` にある。
