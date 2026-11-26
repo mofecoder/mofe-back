@@ -10,38 +10,65 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_05_000000) do
-
-  create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8", force: :cascade do |t|
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_170000) do
+  create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8mb3", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
   end
 
-  create_table "clarifications", charset: "utf8", force: :cascade do |t|
+  create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "clarifications", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "contest_id", null: false
     t.bigint "problem_id"
     t.bigint "user_id", null: false
     t.string "question", null: false
     t.string "answer"
     t.boolean "publish", default: false, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["contest_id"], name: "index_clarifications_on_contest_id"
     t.index ["problem_id"], name: "index_clarifications_on_problem_id"
     t.index ["user_id"], name: "index_clarifications_on_user_id"
   end
 
-  create_table "contest_admins", charset: "utf8", force: :cascade do |t|
+  create_table "contest_admins", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "contest_id", null: false
     t.bigint "user_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["contest_id"], name: "index_contest_admins_on_contest_id"
     t.index ["user_id"], name: "index_contest_admins_on_user_id"
   end
 
-  create_table "contests", charset: "utf8", force: :cascade do |t|
+  create_table "contests", charset: "utf8mb3", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name", null: false
     t.string "description", limit: 4096
@@ -56,22 +83,22 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
     t.boolean "permanent", default: false, null: false
     t.string "editorial_url"
     t.boolean "official_mode", default: false, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["slug"], name: "index_contests_on_slug", unique: true
   end
 
-  create_table "posts", charset: "utf8", force: :cascade do |t|
+  create_table "posts", charset: "utf8mb3", force: :cascade do |t|
     t.string "title", null: false
     t.text "content", null: false
     t.string "public_status", default: "private"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
   end
 
-  create_table "problems", charset: "utf8", force: :cascade do |t|
+  create_table "problems", charset: "utf8mb3", force: :cascade do |t|
     t.string "slug"
     t.string "name"
     t.bigint "contest_id"
@@ -88,26 +115,26 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
     t.string "input_format", limit: 1024, null: false
     t.string "output_format", limit: 1024, null: false
     t.string "checker_path"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["contest_id"], name: "index_problems_on_contest_id"
     t.index ["slug"], name: "index_problems_on_slug", unique: true
     t.index ["writer_user_id"], name: "index_problems_on_writer_user_id"
   end
 
-  create_table "registrations", charset: "utf8", force: :cascade do |t|
+  create_table "registrations", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "contest_id", null: false
     t.boolean "open_registration", default: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["contest_id"], name: "index_registrations_on_contest_id"
     t.index ["user_id"], name: "index_registrations_on_user_id"
   end
 
-  create_table "submissions", charset: "utf8", force: :cascade do |t|
+  create_table "submissions", charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id", null: false
     t.bigint "problem_id", null: false
     t.string "path", null: false
@@ -118,95 +145,105 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
     t.text "compile_error"
     t.string "lang", null: false
     t.boolean "public", default: true, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
     t.index ["user_id"], name: "index_submissions_on_user_id"
   end
 
-  create_table "team_registration_users", charset: "utf8", force: :cascade do |t|
+  create_table "team_registration_users", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "team_registration_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["team_registration_id"], name: "index_team_registration_users_on_team_registration_id"
     t.index ["user_id", "team_registration_id"], name: "index_team_registration_users_on_ids", unique: true
     t.index ["user_id"], name: "index_team_registration_users_on_user_id"
   end
 
-  create_table "team_registrations", charset: "utf8", force: :cascade do |t|
+  create_table "team_registrations", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "contest_id", null: false
     t.string "name"
     t.string "passphrase"
     t.boolean "open_registration", default: false, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["contest_id"], name: "index_team_registrations_on_contest_id"
   end
 
-  create_table "testcase_results", charset: "utf8", force: :cascade do |t|
+  create_table "testcase_results", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "submission_id", null: false
     t.bigint "testcase_id", null: false
     t.string "status", limit: 16, null: false
     t.bigint "score"
     t.integer "execution_time", null: false
     t.integer "execution_memory", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["submission_id"], name: "index_testcase_results_on_submission_id"
     t.index ["testcase_id"], name: "index_testcase_results_on_testcase_id"
   end
 
-  create_table "testcase_sets", charset: "utf8", force: :cascade do |t|
+  create_table "testcase_sets", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "problem_id", null: false
     t.string "name", null: false
     t.integer "points", null: false
     t.integer "aggregate_type", default: 0, null: false
     t.boolean "is_sample", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["problem_id"], name: "index_testcase_sets_on_problem_id"
   end
 
-  create_table "testcase_testcase_sets", charset: "utf8", force: :cascade do |t|
+  create_table "testcase_testcase_sets", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "testcase_id", null: false
     t.bigint "testcase_set_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["testcase_id"], name: "index_testcase_testcase_sets_on_testcase_id"
     t.index ["testcase_set_id"], name: "index_testcase_testcase_sets_on_testcase_set_id"
   end
 
-  create_table "testcases", charset: "utf8", force: :cascade do |t|
+  create_table "testcases", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "problem_id", default: 1, null: false
     t.string "name"
     t.text "input", size: :long
     t.text "output", size: :long
     t.string "explanation", limit: 2048
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["problem_id"], name: "index_testcases_on_problem_id"
   end
 
-  create_table "tester_relations", charset: "utf8", force: :cascade do |t|
+  create_table "tester_relations", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "problem_id", null: false
     t.bigint "tester_user_id", null: false
     t.boolean "approved", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["problem_id"], name: "index_tester_relations_on_problem_id"
     t.index ["tester_user_id"], name: "index_tester_relations_on_tester_user_id"
   end
 
-  create_table "users", charset: "utf8", force: :cascade do |t|
+  create_table "uploads", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "created_at"], name: "index_uploads_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_uploads_on_user_id"
+  end
+
+  create_table "users", charset: "utf8mb3", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -230,8 +267,8 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
     t.string "writer_request_code"
     t.string "email"
     t.text "tokens"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -240,6 +277,8 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
     t.index ["uid", "provider"], name: "index_users_on_uid_and_provider", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "contest_admins", "contests"
   add_foreign_key "contest_admins", "users"
   add_foreign_key "problems", "contests"
@@ -254,6 +293,7 @@ ActiveRecord::Schema.define(version: 2024_11_05_000000) do
   add_foreign_key "testcases", "problems"
   add_foreign_key "tester_relations", "problems"
   add_foreign_key "tester_relations", "users", column: "tester_user_id"
+  add_foreign_key "uploads", "users"
 
   create_view "all_registrations", sql_definition: <<-SQL
       select `registrations`.`id` AS `id`,`registrations`.`contest_id` AS `contest_id`,`registrations`.`open_registration` AS `open_registration`,`registrations`.`created_at` AS `created_at`,`registrations`.`updated_at` AS `updated_at`,`registrations`.`deleted_at` AS `deleted_at`,'individual' AS `type` from `registrations` union select `team_registrations`.`id` AS `id`,`team_registrations`.`contest_id` AS `contest_id`,`team_registrations`.`open_registration` AS `open_registration`,`team_registrations`.`created_at` AS `created_at`,`team_registrations`.`updated_at` AS `updated_at`,`team_registrations`.`deleted_at` AS `deleted_at`,'team' AS `type` from `team_registrations`

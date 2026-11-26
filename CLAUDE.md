@@ -24,8 +24,12 @@ docker compose down          # コンテナを停止して削除
 |----------|-------------|--------|
 | app      | Ruby 4.0.6  | 3000   |
 | db       | MySQL 8.0   | 3306   |
+| seaweedfs | SeaweedFS (S3 互換、画像アップロード用) | 8333 |
+| storage-init | aws-cli (バケットと CORS の初期化、起動時に一度だけ実行) | - |
 
 開発用 DB のデフォルト認証情報は `root` / `password`。ホストは `db` (Docker ネットワーク内) または `127.0.0.1` (ホストから)。
+
+画像アップロードの保存先は Active Storage のサービスで切り替える (development は `seaweedfs`、production は `r2`、test は Disk の `test`)。開発環境の S3 エンドポイントは app コンテナとホストのブラウザの両方から `http://s3.localhost:8333` で届く。詳細は README を参照。
 
 ### gem の変更
 

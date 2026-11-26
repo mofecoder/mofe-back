@@ -89,6 +89,11 @@ Rails.application.routes.draw do
 
   namespace :v4 do
     resources :problems
+    resources :uploads, only: %i[index create destroy] do
+      member do
+        post 'complete'
+      end
+    end
   end
 
   match '/' => 'application#render_404', via: [:get, :post, :put, :patch, :delete, :head]

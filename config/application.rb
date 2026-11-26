@@ -31,5 +31,11 @@ module CafecoderBackRails
 
     config.i18n.default_locale = :ja
     config.time_zone = 'Tokyo'
+
+    # 標準のルート (/rails/active_storage/*) は使わない。
+    # direct_uploads は認証なしで blob を作れてしまうため、アップロードは V4::UploadsController を通す。
+    config.active_storage.draw_routes = false
+    # 画像の解析 (サイズの取得など) は使わないので止める
+    config.active_storage.analyzers = []
   end
 end

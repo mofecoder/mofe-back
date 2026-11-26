@@ -64,3 +64,6 @@ gem 'pundit', '~> 2.5'
 gem 'blueprinter', '~> 1.1'
 gem 'oj', '~> 3.16'
 gem 'blueprinter-activerecord', '~> 1.3'
+
+# 画像アップロード (Active Storage の S3 サービス。R2 / SeaweedFS で使う)
+gem 'aws-sdk-s3', '~> 1.0', require: false
