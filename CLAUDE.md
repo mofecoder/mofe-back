@@ -69,6 +69,8 @@ bundle exec rails test test/path/to/file.rb    # 特定のテストファイル�
 bundle exec rails test test/path/to/file.rb:42 # 行番号を指定して特定のテストを実行
 ```
 
+test 環境の `cache_store` は `:memory_store` で、`test/test_helper.rb` が各テストの前に `Rails.cache.clear` している (レート制限をテストするため。`:null_store` だと制限が効かない)。
+
 ### その他
 
 ```sh
@@ -98,6 +100,24 @@ Devise Token Auth。認証にはトークンヘッダー (`access-token`, `uid`,
 - `authenticate_user!` — ログインを要求する
 - `authenticate_admin_user!` — admin ロールを要求する
 - `current_user` — ログイン中の `User` を返す (`current_api_user` に委譲)
+
+ログイン (`POST /api/auth/sign_in`) とサインアップ (`POST /api/auth`) は、devise_token_auth のコントローラを継承した `Api::Auth::SessionsController` / `Api::Auth::RegistrationsController` で処理する。コンテストの参加登録の `Api::RegistrationsController` とは別物。
+
+#### レート制限
+
+Rails 標準の `rate_limit` を使い、カウントは `Rails.cache` に保存する (production は未設定なので既定の FileStore、`tmp/cache`)。
+
+| 対象 | 上限 | 単位 |
+|---|---|---|
+| ログイン | 10 回 / 3 分 | IP |
+| サインアップ | 5 回 / 1 時間 | IP |
+| パスワードリセットの申請 (`Api::PasswordsController#create`) | 5 回 / 1 時間 | IP |
+| パスワードの再設定 (`Api::PasswordsController#update`) | 10 回 / 1 時間 | IP |
+| コンテストの参加登録 (`create` と `team` の合計) | 10 回 / 1 分 | ユーザー |
+
+- 超えると 429 を返す。devise_token_auth の 2 つは `{ success: false, errors: [...] }`、それ以外は `render_api_error` の形式。
+- 1 つのコントローラに `rate_limit` を複数書くときは、カウントが共有されないよう `name:` を付ける。
+- IP 単位の制限は `request.remote_ip` を使うので、前段のプロキシが `X-Forwarded-For` を渡している必要がある。
 
 ### 認可 (Pundit)
 

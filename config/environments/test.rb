@@ -23,7 +23,9 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
-  config.cache_store = :null_store
+  # レート制限 (rate_limit) をテストできるよう、null_store ではなくメモリに保存する
+  # 各テストの前に test_helper で消している
+  config.cache_store = :memory_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable

@@ -1,5 +1,9 @@
 class Api::RegistrationsController < Api::ApplicationController
   before_action :authenticate_user!
+  # 参加登録パスワード・チームのパスフレーズの総当たりを防ぐ (ユーザー単位)
+  # authenticate_user! の後に評価されるので current_user は必ずいる
+  rate_limit to: 10, within: 1.minute, only: %i[create team], by: -> { current_user.id },
+             with: -> { render_api_error('リクエストが多すぎます。しばらく待ってからやり直してください。', status: :too_many_requests) }
 
   def create
     contest = Contest.find_by!(slug: params[:contest_slug])

@@ -13,6 +13,9 @@ class ActiveSupport::TestCase
   fixtures :all
 
   include UploadTestHelper
+
+  # レート制限のカウントなどがテスト間で持ち越されないようにする
+  setup { Rails.cache.clear }
 end
 
 class ActionDispatch::IntegrationTest
