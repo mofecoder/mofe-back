@@ -68,6 +68,47 @@ class Api::StandingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 100, body['standings'].first.dig('result', 'score')
   end
 
+  # --- index: 判定中の扱い ---
+
+  JUDGE_TOKEN = '01HZX0000000000000000000AB'
+
+  def first_problem_cell
+    get api_contest_standings_url(contest_slug: @contest.slug)
+    assert_response :success
+    JSON.parse(response.body)['standings'].first['problems'].first
+  end
+
+  test "index treats a submission with a judge token as in progress even if its status is WA" do
+    Registration.create!(user: @member, contest: @contest)
+    submissions(:member_submission).update_columns(status: 'WA', point: 0, judge_token: JUDGE_TOKEN)
+
+    # 判定中の提出は集計しないので、ペナルティにならない
+    assert_equal({}, first_problem_cell)
+  end
+
+  test "index counts a WA submission without a judge token as before" do
+    Registration.create!(user: @member, contest: @contest)
+    submissions(:member_submission).update_columns(status: 'WA', point: 0, judge_token: nil)
+
+    assert_equal({ 'penalty' => 1 }, first_problem_cell)
+  end
+
+  test "index marks a submission with a judge token as in progress in ICPC mode" do
+    @contest.update_columns(standings_mode: Contest.standings_modes[:icpc])
+    Registration.create!(user: @member, contest: @contest)
+    submissions(:member_submission).update_columns(status: 'WA', point: 0, judge_token: JUDGE_TOKEN)
+
+    assert_equal({ 'is_in_progress' => true }, first_problem_cell)
+  end
+
+  test "index does not mark a finished submission as in progress in ICPC mode" do
+    @contest.update_columns(standings_mode: Contest.standings_modes[:icpc])
+    Registration.create!(user: @member, contest: @contest)
+    submissions(:member_submission).update_columns(status: 'WA', point: 0, judge_token: nil)
+
+    assert_equal({ 'penalty' => 1, 'is_in_progress' => false }, first_problem_cell)
+  end
+
   # --- index: フラグ ---
 
   def standing_names(query)

@@ -8,7 +8,7 @@ class Api::StandingsController < Api::ApplicationController
     submissions = Submission.joins(problem: :contest).preload(:user).preload(:problem)
                         .where('contests.slug': params[:contest_slug])
                         .where(created_at: started_at..contest.end_at)
-                        .select('user_id, problem_id, status, point, submissions.created_at')
+                        .select('user_id, problem_id, status, point, judge_token, submissions.created_at')
                         .order(created_at: :asc)
 
     # @type [Hash]
@@ -251,9 +251,7 @@ class Api::StandingsController < Api::ApplicationController
           next
         end
         tmp = aggregate(s)
-        is_in_progress = s.any? do |sub|
-          %w(WJ WR CP WIP).include?(sub.status)
-        end
+        is_in_progress = s.any? { |sub| judging?(sub) }
         if tmp.nil?
           ls << {
             is_in_progress: is_in_progress
@@ -309,7 +307,7 @@ class Api::StandingsController < Api::ApplicationController
       time = nil
 
       submissions.each do |sub|
-        if %w(WJ WR CP WIP).include?(sub.status)
+        if judging?(sub)
           next
         end
         if %w(IE CE).include?(sub.status)
@@ -336,4 +334,11 @@ class Api::StandingsController < Api::ApplicationController
           penalty: confirmed_pena
       }
     end
+
+  # 判定中かどうか。go-judge の worker は判定の途中で暫定結果 (WA など) を status に書くので、
+  # 判定トークンがあれば status にかかわらず判定中とみなす
+  # @param [Submission] sub
+  def judging?(sub)
+    sub.judge_token.present? || %w(WJ WR CP WIP).include?(sub.status)
+  end
 end

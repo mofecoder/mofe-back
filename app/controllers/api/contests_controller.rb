@@ -159,6 +159,8 @@ class Api::ContestsController < Api::ApplicationController
       TestcaseResult.where(submission_id: submission_ids).delete_all
       Submission.where(id: submission_ids).update_all(
         status: 'WR', point: nil, compile_error: nil, execution_memory: nil, execution_time: nil,
+        # 判定中の worker のトークンを無効にし、以後の書き込みを 0 行にする
+        judge_token: nil, lease_until: nil, judge_attempts: 0,
         updated_at: Time.current
       )
     end

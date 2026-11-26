@@ -293,6 +293,26 @@ class Api::ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, TestcaseResult.where(submission_id: ids).count
   end
 
+  test "rejudge clears the judge token and lease so the worker's later writes are ignored" do
+    submission = create_rejudge_submission(@writer_problem, status: 'WA')
+    submission.update_columns(
+      judge_token: '01HZX0000000000000000000AB', judge_worker: 'judge-1', lease_until: 1.minute.from_now,
+      judge_attempts: 2
+    )
+
+    sign_in_as @admin
+    post api_contest_rejudge_url(contest_slug: @active_contest.slug), params: { submission_ids: [submission.id] }
+    assert_response :no_content
+
+    submission.reload
+    assert_equal 'WR', submission.status
+    assert_nil submission.judge_token
+    assert_nil submission.lease_until
+    assert_equal 0, submission.judge_attempts
+    # どのサーバで判定したかは残す
+    assert_equal 'judge-1', submission.judge_worker
+  end
+
   test "rejudge returns 403 and changes nothing when a submission of another contest is included" do
     own = create_rejudge_submission(@writer_problem)
     foreign = create_rejudge_submission(problems(:admin_problem))
