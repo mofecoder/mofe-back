@@ -148,6 +148,10 @@ v4 コントローラで使う。blueprint は `app/blueprints/` に置く。
 
 ユーザーのロールは enum で `:member`, `:writer`, `:admin` の 3 種類。
 
+### CORS
+
+`config/initializers/cors.rb` の Rack::Cors で処理する (プリフライトも Rack::Cors が応答する)。許可する origin は `https://mofecoder.com` で、フロントの開発サーバー `http://localhost:8000` は development 環境だけで許可する。テストは `test/integration/cors_test.rb`。
+
 ### 無効化している機能
 
 - Slack 連携 (`Api::Slack::SlackController`、writer 権限の付与) は使っていないので、`config/routes.rb` のルートをコメントアウトしている。コントローラは残してある。

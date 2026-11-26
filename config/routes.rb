@@ -1,7 +1,6 @@
 require 'devise_token_auth'
 
 Rails.application.routes.draw do
-  match '*path' => 'preflight_request#preflight', via: :options
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 
   namespace :public do

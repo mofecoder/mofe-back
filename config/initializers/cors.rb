@@ -5,9 +5,14 @@
 
 # Read more: https://github.com/cyu/rack-cors
 
+# 許可するフロントエンドの origin
+# localhost (pnpm dev のフロント) は開発環境だけで許可し、本番では許可しない
+allowed_origins = ['https://mofecoder.com']
+allowed_origins << 'http://localhost:8000' if Rails.env.development?
+
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins 'https://mofecoder.com', 'http://localhost:8000'
+    origins(*allowed_origins)
     resource '*',
       headers: :any,
       expose: %w(access-token uid client expiry),
