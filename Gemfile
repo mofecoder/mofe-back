@@ -29,6 +29,9 @@ gem 'bootsnap', '>= 1.4.2', require: false
 
 group :development, :test do
   gem 'debug', platforms: [:mri, :mingw, :x64_mingw]
+  # 静的解析 / 脆弱性チェック (CI で実行)
+  gem 'brakeman', require: false
+  gem 'bundler-audit', require: false
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
