@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_151037) do
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8mb3", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
   end
@@ -89,6 +89,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_170000) do
     t.index ["slug"], name: "index_contests_on_slug", unique: true
   end
 
+  create_table "judge_workers", id: { type: :string, limit: 64 }, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "hostname", null: false
+    t.string "image_tag", null: false
+    t.string "cpu_model"
+    t.integer "slots", null: false
+    t.integer "bench_ms"
+    t.boolean "accepting", default: true, null: false
+    t.datetime "started_at", null: false
+    t.datetime "heartbeat_at", null: false
+  end
+
   create_table "posts", charset: "utf8mb3", force: :cascade do |t|
     t.string "title", null: false
     t.text "content", null: false
@@ -148,7 +159,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_170000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.string "judge_token", limit: 26
+    t.string "judge_worker", limit: 64
+    t.datetime "lease_until"
+    t.integer "judge_attempts", limit: 1, default: 0, null: false
+    t.index ["judge_token"], name: "index_submissions_on_judge_token", unique: true
+    t.index ["lease_until"], name: "index_submissions_on_lease_until"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
+    t.index ["status", "updated_at"], name: "index_submissions_on_status_and_updated_at"
     t.index ["user_id"], name: "index_submissions_on_user_id"
   end
 
