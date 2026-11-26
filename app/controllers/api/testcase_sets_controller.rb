@@ -3,7 +3,7 @@ class Api::TestcaseSetsController < Api::ApplicationController
   before_action :set_problem
 
   def show
-    render json: TestcaseSet.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample, :aggregate_type])
+    render json: @problem.testcase_sets.find(params[:id]).as_json(only: [:id, :name, :points, :is_sample, :aggregate_type])
   end
 
   def create
@@ -23,7 +23,7 @@ class Api::TestcaseSetsController < Api::ApplicationController
   end
 
   def update
-    set = TestcaseSet.find(params[:id])
+    set = @problem.testcase_sets.find(params[:id])
     param = update_params
     name = param[:name]
 
@@ -43,7 +43,7 @@ class Api::TestcaseSetsController < Api::ApplicationController
   end
 
   def destroy
-    set = TestcaseSet.find(params[:id])
+    set = @problem.testcase_sets.find(params[:id])
     if set.name == 'all' || set.name == 'sample'
       render_api_error("このテストケースは削除できません。", status: :bad_request)
       return

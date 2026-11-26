@@ -119,4 +119,32 @@ class Api::TestcaseSetControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
     assert TestcaseSet.exists?(reserved.id)
   end
+
+  # --- 他の問題のテストケースセット ---
+  # URL の問題 ID が自分の問題でも、セット ID が他人の問題のものなら扱えない
+
+  test "show returns 404 for a testcase set of another problem" do
+    sign_in_as @writer
+    get api_problem_testcase_set_url(problem_id: @problem.id, id: testcase_sets(:two).id)
+    assert_response :not_found
+  end
+
+  test "update returns 404 and leaves a testcase set of another problem unchanged" do
+    other = testcase_sets(:two)
+
+    sign_in_as @writer
+    patch api_problem_testcase_set_url(problem_id: @problem.id, id: other.id),
+          params: { testcase_set: { name: other.name, points: 1 } }
+    assert_response :not_found
+    assert_equal 100, other.reload.points
+  end
+
+  test "destroy returns 404 and does not delete a testcase set of another problem" do
+    other = testcase_sets(:two)
+
+    sign_in_as @writer
+    delete api_problem_testcase_set_url(problem_id: @problem.id, id: other.id)
+    assert_response :not_found
+    assert_nil other.reload.deleted_at
+  end
 end
