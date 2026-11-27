@@ -8,7 +8,12 @@ module Utils::GoogleCloudStorageClient
   # Set the Google API Client logger
   Google::Apis.logger = lgr
 
-  @storage = Google::Cloud::Storage.new(
+  # 開発用: MOFE_GCS_ENDPOINT があれば、認証なしでそこ（fake-gcs-server など）につなぐ。
+  # judge の worker と同じ GCS を見て、手元で提出から判定・出力の表示まで確かめるため
+  @storage = if ENV['MOFE_GCS_ENDPOINT'].present?
+    Google::Cloud::Storage.anonymous(endpoint: "#{ENV['MOFE_GCS_ENDPOINT'].chomp('/')}/") # gem は末尾の / が要る
+  else
+    Google::Cloud::Storage.new(
       project_id: Rails.application.credentials.gcs[:project_id],
       credentials: {
           type: "service_account",
@@ -21,7 +26,8 @@ module Utils::GoogleCloudStorageClient
           auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
           client_x509_cert_url: Rails.application.credentials.gcs[:client_x509_cert_url]
       }
-  )
+    )
+  end
   @source_bucket = @storage.bucket('cafecoder-submit-source')
   @testcase_bucket = @storage.bucket('cafecoder-testcase')
   # デバッグ提出の出力（judge の worker が書き、3日で消える）。起動時にバケットを確かめない
