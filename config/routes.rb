@@ -38,6 +38,8 @@ Rails.application.routes.draw do
         end
         member do
           patch 'toggle_published'
+          # デバッグ提出の出力（S7b）
+          get 'testcase_results/:testcase_result_id/outputs/:stream' => 'submissions#output', as: 'output', format: false
         end
       end
       resources :tasks, param: :slug, only: [:show] do

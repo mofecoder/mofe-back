@@ -379,4 +379,174 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     get api_contest_submission_url(contest_slug: @contest.slug, id: sub.id)
     assert_response :forbidden
   end
+
+  # --- デバッグ提出（S7b） ---
+
+  # Utils::GoogleCloudStorageClient の特異メソッドを一時的に差し替える
+  def stub_gcs(name, impl)
+    client = Utils::GoogleCloudStorageClient
+    original = client.method(name)
+    client.define_singleton_method(name, impl)
+    yield
+  ensure
+    client.define_singleton_method(name, original)
+  end
+
+  def submit(problem, **query)
+    post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: problem.slug, lang: 'cpp', **query),
+         params: 'int main(){}', headers: { 'CONTENT_TYPE' => 'text/plain' }
+  end
+
+  test "create marks a debug submission of the problem writer" do
+    sign_in_as @writer
+    stub_gcs(:upload_source, ->(*) {}) do
+      assert_difference -> { Submission.count }, 2 do
+        submit(@problem, debug: 1)
+        assert_response :success
+        submit(@problem)
+        assert_response :success
+      end
+    end
+    debug, normal = Submission.order(id: :desc).limit(2).to_a.reverse
+    assert_equal 'all', debug.output_capture
+    assert_nil normal.output_capture
+  end
+
+  test "create rejects a debug submission from a participant" do
+    user = create_user('participant')
+    Registration.create!(user: user, contest: @contest)
+    assert @problem.has_permission?(user)
+
+    sign_in_as user
+    assert_no_difference -> { Submission.count } do
+      submit(@problem, debug: 1)
+    end
+    assert_response :forbidden
+  end
+
+  OUTPUTS_META = {
+    prefix: '1/01JTOKEN/1/',
+    streams: {
+      user_stdout: { size: 4, saved: 4, truncated: false },
+      user_stderr: { size: nil, saved: 1_048_576, truncated: true },
+      checker_stderr: { size: nil, saved: nil, truncated: false, error: 'upload' },
+    },
+  }.to_json
+
+  # member の提出（writer_problem、公開）をデバッグ提出にして、結果を1件付ける
+  def debug_result(created_at: Time.current)
+    @member_submission.update_columns(output_capture: 'all', updated_at: 1.minute.from_now)
+    TestcaseResult.create!(
+      submission: @member_submission, testcase: testcases(:one), status: 'WA', score: 0,
+      execution_time: 1, execution_memory: 1, outputs: OUTPUTS_META, created_at: created_at
+    )
+  end
+
+  test "show gives the outputs of a debug submission to the writer" do
+    result = debug_result
+    sign_in_as @writer
+    stub_gcs(:get_source, ->(*) { StringIO.new('int main(){}') }) do
+      get api_contest_submission_url(contest_slug: @contest.slug, id: @member_submission.id)
+    end
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal true, body['debug']
+    tr = body['testcase_results'].first
+    assert_equal result.id, tr['id']
+    assert_equal false, tr.dig('outputs', 'expired')
+    assert_equal(
+      [
+        { 'stream' => 'user_stdout', 'size' => 4, 'saved' => 4, 'truncated' => false, 'error' => nil },
+        { 'stream' => 'user_stderr', 'size' => nil, 'saved' => 1_048_576, 'truncated' => true, 'error' => nil },
+        { 'stream' => 'checker_stderr', 'size' => nil, 'saved' => nil, 'truncated' => false, 'error' => 'upload' },
+      ],
+      tr.dig('outputs', 'streams')
+    )
+  end
+
+  test "testcase results carry no outputs for people who cannot see them" do
+    result = debug_result
+    json = TestcaseResultSerializer.new(result, output_streams: []).as_json
+    assert_not json.key?(:outputs)
+    json = TestcaseResultSerializer.new(result, output_streams: %w[user_stdout]).as_json
+    assert_equal %w[user_stdout], json[:outputs][:streams].map { |x| x[:stream] }
+  end
+
+  test "all marks debug submissions" do
+    @member_submission.update_columns(output_capture: 'all')
+    sign_in_as @admin
+    get all_api_contest_submissions_url(contest_slug: @contest.slug)
+    debug = JSON.parse(response.body)['data'].to_h { |s| [s['id'], s['debug']] }
+    assert_equal({ @member_submission.id => true, @writer_submission.id => false }, debug)
+  end
+
+  def get_output(result, stream, **query)
+    get output_api_contest_submission_url(
+      contest_slug: @contest.slug, id: @member_submission.id, testcase_result_id: result.id, stream: stream, **query
+    )
+  end
+
+  test "output returns the saved bytes to the writer" do
+    result = debug_result
+    sign_in_as @writer
+    names = []
+    stub_gcs(:get_judge_output, ->(name) { names << name; "c\xFFd\n".b }) do
+      get_output(result, 'user_stdout')
+      assert_response :success
+      assert_equal "c\xFFd\n".b, response.body.b
+      assert_match %r{\Atext/plain}, response.media_type
+      assert_match(/\Ainline/, response.headers['Content-Disposition'])
+
+      get_output(result, 'user_stderr', download: 1)
+      assert_response :success
+      assert_match(/\Aattachment/, response.headers['Content-Disposition'])
+      assert_match(/#{@member_submission.id}_testcase_1_user_stderr\.txt/, response.headers['Content-Disposition'])
+    end
+    assert_equal ['1/01JTOKEN/1/user_stdout', '1/01JTOKEN/1/user_stderr'], names
+  end
+
+  test "output returns 403 to the submitter who is not a writer" do
+    result = debug_result
+    sign_in_as @member
+    get_output(result, 'user_stdout')
+    assert_response :forbidden
+  end
+
+  test "output returns 403 to anonymous users" do
+    result = debug_result
+    get_output(result, 'user_stdout')
+    assert_response :forbidden
+  end
+
+  test "output returns 404 for unknown, unsaved or failed streams" do
+    result = debug_result
+    sign_in_as @writer
+    get_output(result, 'secret')
+    assert_response :not_found
+    get_output(result, 'checker_stdout') # 保存していない
+    assert_response :not_found
+    get_output(result, 'checker_stderr') # 保存できなかった
+    assert_response :not_found
+    get output_api_contest_submission_url(
+      contest_slug: @contest.slug, id: @member_submission.id, testcase_result_id: 0, stream: 'user_stdout'
+    )
+    assert_response :not_found
+    get output_api_contest_submission_url(
+      contest_slug: @ended_contest.slug, id: @member_submission.id, testcase_result_id: result.id, stream: 'user_stdout'
+    )
+    assert_response :not_found
+  end
+
+  test "output returns 410 after three days or when GCS no longer has it" do
+    sign_in_as @writer
+    stub_gcs(:get_judge_output, ->(*) { flunk 'GCS を見ない' }) do
+      get_output(debug_result(created_at: 3.days.ago - 1.minute), 'user_stdout')
+      assert_response :gone
+    end
+    stub_gcs(:get_judge_output, ->(*) { nil }) do
+      get_output(debug_result, 'user_stdout')
+      assert_response :gone
+    end
+  end
 end

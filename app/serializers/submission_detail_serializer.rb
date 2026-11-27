@@ -18,7 +18,8 @@ class SubmissionDetailSerializer < SubmissionSerializer
       CollectionSerializer.new(
           object.testcase_results,
           serializer: TestcaseResultSerializer,
-          admin: @instance_options[:admin]
+          admin: @instance_options[:admin],
+          output_streams: @instance_options[:output_streams]
       )
     end
   end

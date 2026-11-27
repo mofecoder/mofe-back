@@ -183,6 +183,65 @@ components:
           nullable: true
         published:
           type: boolean
+        debug:
+          type: boolean
+          description: デバッグ提出（各テストケースの出力を3日間保存する提出）か
+        testcase_results:
+          type: array
+          description: 提出の詳細（GET /contests/{slug}/submissions/{id}）だけ
+          items:
+            $ref: '#/components/schemas/TestcaseResult'
+    TestcaseResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        testcase_name:
+          type: string
+        status:
+          type: string
+        execution_time:
+          type: integer
+        execution_memory:
+          type: integer
+        score:
+          type: integer
+          nullable: true
+          description: 問題の admin / writer / tester だけ
+        outputs:
+          type: object
+          nullable: true
+          description: >-
+            デバッグ提出の出力。見られる人（問題の admin / writer / tester）にだけキーがあり、
+            保存していなければ null。中身は GET .../testcase_results/{testcase_result_id}/outputs/{stream} で取る
+          properties:
+            expired:
+              type: boolean
+              description: 保存期間（3日）を過ぎたか
+            streams:
+              type: array
+              items:
+                type: object
+                properties:
+                  stream:
+                    type: string
+                    enum: [user_stdout, user_stderr, checker_stdout, checker_stderr]
+                  size:
+                    type: integer
+                    nullable: true
+                    description: 元の大きさ（分からなければ null）
+                  saved:
+                    type: integer
+                    nullable: true
+                    description: 保存したバイト数（保存できなかったら null）
+                  truncated:
+                    type: boolean
+                    description: 先頭だけを保存したか（上限はストリーム1つにつき 1 MiB）
+                  error:
+                    type: string
+                    nullable: true
+                    enum: [capture, upload, null]
+                    description: 保存できなかった理由
   responses:
     Unauthorized:
       description: Unauthorized
@@ -912,6 +971,58 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /contests/{slug}/submissions/{id}/testcase_results/{testcase_result_id}/outputs/{stream}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: testcase_result_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: stream
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [user_stdout, user_stderr, checker_stdout, checker_stderr]
+      - name: download
+        in: query
+        required: false
+        description: 指定すると Content-Disposition を attachment にする
+        schema:
+          type: string
+    get:
+      summary: Get an output of a debug submission
+      description: >-
+        デバッグ提出で保存したテストケースの出力を、バイトのまま text/plain で返す。
+        見られるのは問題の admin / writer / tester だけ
+      security:
+        - BffSignature: []
+          BffTimestamp: []
+          UserUid: []
+      responses:
+        '200':
+          description: 保存した出力（先頭 1 MiB まで）
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: 未知のストリームか、保存していない（保存できなかった）
+        '410':
+          description: 保存期間（3日）を過ぎた
+
   /contests/{slug}/tasks/{task_slug}:
     parameters:
       - name: slug
@@ -958,6 +1069,15 @@ paths:
     post:
       summary: Submit a solution
       description: Submits a solution for a task
+      parameters:
+        - name: debug
+          in: query
+          required: false
+          description: >-
+            真ならデバッグ提出（各テストケースの出力を3日間保存する）。
+            問題の admin / writer / tester 以外は 403
+          schema:
+            type: boolean
       security:
         - BffSignature: []
           BffTimestamp: []

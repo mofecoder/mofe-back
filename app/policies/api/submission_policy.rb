@@ -22,6 +22,19 @@ class Api::SubmissionPolicy < Api::ApplicationPolicy
       problem.tester_relations.any? { |r| r.tester_user_id == user.id && r.approved }
   end
 
+  # デバッグ提出の出力のうち、見られるストリームの一覧（S7b）。
+  # 'all'（デバッグ提出）は問題の admin_or_writer? に当たる人だけが全部見られる（提出者本人に限らない）。
+  # 将来 'user'（提出の stdout / stderr だけを一般のユーザーにも見せる）を足すときは、ここに1行足す。
+  # @return [Array<String>]
+  def output_streams
+    case record.output_capture
+    when 'all'
+      admin_or_writer? ? TestcaseResult::OUTPUT_STREAMS : []
+    else
+      []
+    end
+  end
+
   def toggle_published?
     record.problem.check_admin_or_writer_or_tester(user)
   end

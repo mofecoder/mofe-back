@@ -68,6 +68,18 @@ class Api::StandingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 100, body['standings'].first.dig('result', 'score')
   end
 
+  test "index ignores debug submissions" do
+    Registration.create!(user: @member, contest: @contest)
+    submissions(:member_submission).update_columns(output_capture: 'all')
+
+    get api_contest_standings_url(contest_slug: @contest.slug)
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal 0, body['problems'].first['solved']
+    assert_equal({}, body['standings'].first['problems'].first)
+  end
+
   # --- index: 判定中の扱い ---
 
   JUDGE_TOKEN = '01HZX0000000000000000000AB'

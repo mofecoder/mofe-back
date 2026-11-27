@@ -145,4 +145,39 @@ class Api::SubmissionPolicyTest < ActiveSupport::TestCase
 
     refute Api::ProblemPolicy.new(mate, @writer_submission.problem).admin_or_writer?
   end
+
+  # --- output_streams（デバッグ提出の出力。S7b） ---
+
+  ALL_STREAMS = %w[user_stdout user_stderr checker_stdout checker_stderr].freeze
+
+  test "output_streams is empty for a normal submission even for the writer" do
+    assert_empty Api::SubmissionPolicy.new(@writer, @writer_submission).output_streams
+    assert_empty Api::SubmissionPolicy.new(@admin, @member_submission).output_streams
+  end
+
+  test "output_streams gives every stream of a debug submission to the writer and admins" do
+    @member_submission.update_columns(output_capture: 'all')
+    assert_equal ALL_STREAMS, Api::SubmissionPolicy.new(@writer, @member_submission).output_streams
+    assert_equal ALL_STREAMS, Api::SubmissionPolicy.new(@admin, @member_submission).output_streams
+  end
+
+  test "output_streams gives nothing to the submitter who is not a writer, or to anonymous users" do
+    @member_submission.update_columns(output_capture: 'all')
+    assert_empty Api::SubmissionPolicy.new(@member, @member_submission).output_streams
+    assert_empty Api::SubmissionPolicy.new(nil, @member_submission).output_streams
+  end
+
+  test "output_streams follows approved testers" do
+    @writer_submission.update_columns(output_capture: 'all')
+    tester = create_user('tester')
+    relation = TesterRelation.create!(problem: @writer_submission.problem, tester_user_id: tester.id, approved: false)
+    assert_empty Api::SubmissionPolicy.new(tester, @writer_submission.reload).output_streams
+    relation.update!(approved: true)
+    assert_equal ALL_STREAMS, Api::SubmissionPolicy.new(tester, @writer_submission.reload).output_streams
+  end
+
+  test "output_streams ignores unknown capture values" do
+    @member_submission.update_columns(output_capture: 'user')
+    assert_empty Api::SubmissionPolicy.new(@writer, @member_submission).output_streams
+  end
 end

@@ -8,6 +8,7 @@ class Api::StandingsController < Api::ApplicationController
     submissions = Submission.joins(problem: :contest).preload(:user).preload(:problem)
                         .where('contests.slug': params[:contest_slug])
                         .where(created_at: started_at..contest.end_at)
+                        .where(output_capture: nil) # デバッグ提出は順位に入れない（S7b）
                         .select('user_id, problem_id, status, point, judge_token, submissions.created_at')
                         .order(created_at: :asc)
 

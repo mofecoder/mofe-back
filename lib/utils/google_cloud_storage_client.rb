@@ -24,6 +24,8 @@ module Utils::GoogleCloudStorageClient
   )
   @source_bucket = @storage.bucket('cafecoder-submit-source')
   @testcase_bucket = @storage.bucket('cafecoder-testcase')
+  # デバッグ提出の出力（judge の worker が書き、3日で消える）。起動時にバケットを確かめない
+  @output_bucket = @storage.bucket(ENV.fetch('MOFE_GCS_OUTPUT_BUCKET', 'mofe-judge-output'), skip_lookup: true)
 
   def self.upload_source(file_name, file_content)
     @source_bucket.create_file(StringIO.new(file_content), file_name)
@@ -57,5 +59,14 @@ module Utils::GoogleCloudStorageClient
   # @return [String]
   def self.get_output(uuid, name)
     @testcase_bucket.file("#{uuid}/output/#{name}").download.read.force_encoding("UTF-8")
+  end
+
+  # デバッグ提出の出力（バイトのまま）。無ければ nil
+  # @return [String, nil]
+  def self.get_judge_output(name)
+    file = @output_bucket.file(name)
+    file&.download&.string
+  rescue Google::Cloud::NotFoundError
+    nil
   end
 end

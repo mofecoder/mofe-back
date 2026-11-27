@@ -1,6 +1,6 @@
 class Api::SubmissionsController < Api::ApplicationController
   include Pagination
-  before_action :authenticate_user!, except: [:all, :show, :toggle_published]
+  before_action :authenticate_user!, except: [:all, :show, :toggle_published, :output]
 
   def index
     if current_user.nil?
@@ -108,7 +108,54 @@ class Api::SubmissionsController < Api::ApplicationController
            result_count: r_count,
            testcase_count: t_count,
            testcase_sets: testcase_set_results,
+           output_streams: policy([:api, submission]).output_streams,
            permission: submission.problem.check_admin_or_writer_or_tester(current_user)
+  end
+
+  # デバッグ提出の出力（S7b）。text/plain でバイトのまま返す（?download=1 で attachment）。
+  # 見られない → 403、未知のストリーム・保存していない → 404、期限切れ・GCS に無い → 410
+  def output
+    skip_authorization
+
+    submission = Submission.find(params[:id])
+    if submission.problem.contest&.slug != params[:contest_slug]
+      render status: :not_found
+      return
+    end
+
+    stream = params[:stream]
+    unless TestcaseResult::OUTPUT_STREAMS.include?(stream)
+      render_api_error('不明な出力です', status: :not_found)
+      return
+    end
+    unless policy([:api, submission]).output_streams.include?(stream)
+      render_api_error('この出力は見られません', status: :forbidden)
+      return
+    end
+
+    result = submission.testcase_results_raw.find_by(id: params[:testcase_result_id])
+    meta = result&.outputs_meta
+    info = meta&.dig('streams', stream)
+    if info.nil? || info['error'].present?
+      render_api_error('この出力は保存されていません', status: :not_found)
+      return
+    end
+    if result.outputs_expired?
+      render_api_error('出力の保存期間（3日）を過ぎました', status: :gone)
+      return
+    end
+
+    data = Utils::GoogleCloudStorageClient.get_judge_output("#{meta['prefix']}#{stream}")
+    if data.nil?
+      render_api_error('出力の保存期間（3日）を過ぎました', status: :gone)
+      return
+    end
+
+    name = "#{submission.id}_#{result.testcase&.name || result.testcase_id}_#{stream}.txt"
+    send_data data,
+              type: 'text/plain; charset=utf-8',
+              disposition: params[:download].present? ? 'attachment' : 'inline',
+              filename: name
   end
 
   def create
@@ -120,6 +167,13 @@ class Api::SubmissionsController < Api::ApplicationController
     problem = Problem.find_by!(slug: params[:task_slug])
     authorize [:api, problem], :submit?
 
+    # デバッグ提出（各テストケースの出力を保存する）は問題を作る人だけ（S7b）
+    debug = ActiveModel::Type::Boolean.new.cast(params[:debug]) || false
+    if debug && !policy([:api, problem]).admin_or_writer?
+      render_api_error('デバッグ提出はできません', status: :forbidden)
+      return
+    end
+
     limit = check_submit_limit(problem)
 
     if limit.present?
@@ -128,7 +182,7 @@ class Api::SubmissionsController < Api::ApplicationController
       render_api_error("提出制限により、#{limit} 秒後までは提出できません。", status: :too_early)
       return
     end
-    _submit(problem, request.body.read)
+    _submit(problem, request.body.read, debug: debug)
   end
 
   def toggle_published
@@ -333,7 +387,8 @@ class Api::SubmissionsController < Api::ApplicationController
   end
 
   # @param [Problem] problem
-  def _submit(problem, source)
+  # @param [Boolean] debug デバッグ提出（judge の worker が各テストケースの出力を保存する）
+  def _submit(problem, source, debug: false)
     save_path = make_path
 
     submission = current_user.submissions.new
@@ -342,6 +397,7 @@ class Api::SubmissionsController < Api::ApplicationController
     submission.lang = params[:lang]
     submission.status = 'WJ'
     submission.public = !problem.check_admin_or_writer_or_tester(current_user)
+    submission.output_capture = 'all' if debug
 
     Utils::GoogleCloudStorageClient::upload_source(save_path, source)
     submission.save!

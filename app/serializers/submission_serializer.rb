@@ -1,6 +1,6 @@
 class SubmissionSerializer < ActiveModel::Serializer
   attributes :id, :user, :task, :status, :point, :public,
-             :execution_time, :execution_memory, :lang, :timestamp, :judge_status
+             :execution_time, :execution_memory, :lang, :timestamp, :judge_status, :debug
 
   def user
     {
@@ -12,6 +12,11 @@ class SubmissionSerializer < ActiveModel::Serializer
     ContestTaskSerializer::new(
         object.problem
     )
+  end
+
+  # デバッグ提出か（各テストケースの出力を保存する提出。S7b）
+  def debug
+    object.output_capture == 'all'
   end
 
   def timestamp
