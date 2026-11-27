@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_26_151037) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_28_120000) do
   create_table "__diesel_schema_migrations", primary_key: "version", id: { type: :string, limit: 50 }, charset: "utf8mb3", force: :cascade do |t|
     t.timestamp "run_on", default: -> { "CURRENT_TIMESTAMP" }, null: false
   end
@@ -163,6 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_151037) do
     t.string "judge_worker", limit: 64
     t.datetime "lease_until"
     t.integer "judge_attempts", limit: 1, default: 0, null: false
+    t.string "output_capture", limit: 16
     t.index ["judge_token"], name: "index_submissions_on_judge_token", unique: true
     t.index ["lease_until"], name: "index_submissions_on_lease_until"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
@@ -202,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_151037) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.text "outputs"
     t.index ["submission_id"], name: "index_testcase_results_on_submission_id"
     t.index ["testcase_id"], name: "index_testcase_results_on_testcase_id"
   end
