@@ -400,11 +400,13 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
   test "create marks a debug submission of the problem writer" do
     sign_in_as @writer
     stub_gcs(:upload_source, ->(*) {}) do
-      assert_difference -> { Submission.count }, 2 do
-        submit(@problem, debug: 1)
-        assert_response :success
-        submit(@problem)
-        assert_response :success
+      with_judge_languages('both') do
+        assert_difference -> { Submission.count }, 2 do
+          submit(@problem, debug: 1)
+          assert_response :success
+          submit(@problem)
+          assert_response :success
+        end
       end
     end
     debug, normal = Submission.order(id: :desc).limit(2).to_a.reverse
@@ -424,22 +426,62 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  # 提出できるのは active な言語の key だけ（S8。alias と旧言語は受け付けない）
+  # 提出できるのは active な項目の key だけ（S8。alias と旧言語は受け付けない）。
+  # 新旧のジャッジの並行運用（S8b）では、MOFE_JUDGE_LANGUAGES で旧ジャッジの言語と新しい言語を選ぶ。
   [
-    ['an unknown lang', 'cpp'],
-    ['an inactive language', 'python:3.11.4'],
-    ['an alias of an active language', 'cpp23_gcc:12.2.0'],
-    ['an empty lang', ''],
-  ].each do |desc, lang|
-    test "create rejects #{desc}" do
+    ['old', 'an unknown lang', 'cpp'],
+    ['old', 'an inactive language', 'python:3.11.4'],
+    ['old', 'a new language', 'cpp23'],
+    ['old', 'an empty lang', ''],
+    ['both', 'an unknown lang', 'cpp'],
+    ['both', 'an inactive language', 'cpp17_gcc10'],
+    ['new', 'an inactive language', 'python:3.11.4'],
+    ['new', 'an alias of an active language', 'cpp23_gcc:12.2.0'],
+    ['new', 'an empty lang', ''],
+  ].each do |mode, desc, lang|
+    test "create rejects #{desc} in #{mode}" do
       sign_in_as @writer
       stub_gcs(:upload_source, ->(*) { flunk 'ソースをアップロードしてはいけない' }) do
-        assert_no_difference -> { Submission.count } do
-          submit(@problem, lang: lang)
+        with_judge_languages(mode) do
+          assert_no_difference -> { Submission.count } do
+            submit(@problem, lang: lang)
+          end
         end
       end
       assert_response :unprocessable_content
       assert_equal 'この言語では提出できません。', JSON.parse(response.body)['error']
+    end
+  end
+
+  [
+    ['old', 'cpp23_gcc:12.2.0'],
+    ['both', 'cpp23'],
+    ['both', 'cpp23_gcc:12.2.0'],
+    ['new', 'cpp23'],
+  ].each do |mode, lang|
+    test "create accepts #{lang} in #{mode}" do
+      sign_in_as @writer
+      stub_gcs(:upload_source, ->(*) {}) do
+        with_judge_languages(mode) { submit(@problem, lang: lang) }
+      end
+      assert_response :success
+      assert_equal lang, Submission.order(:id).last.lang
+    end
+  end
+
+  # 旧ジャッジは出力を保存しないので、旧ジャッジの言語ではデバッグ提出できない（S8b）
+  %w[old both].each do |mode|
+    test "create rejects a debug submission in a language of the legacy judge in #{mode}" do
+      sign_in_as @writer
+      stub_gcs(:upload_source, ->(*) { flunk 'ソースをアップロードしてはいけない' }) do
+        with_judge_languages(mode) do
+          assert_no_difference -> { Submission.count } do
+            submit(@problem, lang: 'cpp23_gcc:12.2.0', debug: 1)
+          end
+        end
+      end
+      assert_response :unprocessable_content
+      assert_equal '旧ジャッジの言語ではデバッグ提出できません。', JSON.parse(response.body)['error']
     end
   end
 
@@ -455,7 +497,7 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
   test "create stores the key of an active language" do
     sign_in_as @writer
     stub_gcs(:upload_source, ->(*) {}) do
-      submit(@problem, lang: 'python')
+      with_judge_languages('new') { submit(@problem, lang: 'python') }
     end
     assert_response :success
     assert_equal 'python', Submission.order(:id).last.lang

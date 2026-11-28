@@ -16,6 +16,9 @@ services:
     - .:/app
     environment:
       DATABASE_HOST: db
+      # 新旧のジャッジの並行運用で出す言語（old / both / new。空なら old）。
+      # `MOFE_JUDGE_LANGUAGES=both docker compose up -d app` で切り替える
+      MOFE_JUDGE_LANGUAGES: ${MOFE_JUDGE_LANGUAGES:-}
     ports:
     - "127.0.0.1:3000:3000"
     depends_on:

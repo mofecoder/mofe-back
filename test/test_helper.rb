@@ -13,6 +13,7 @@ class ActiveSupport::TestCase
   fixtures :all
 
   include UploadTestHelper
+  include JudgeLanguagesHelper
 
   # レート制限のカウントなどがテスト間で持ち越されないようにする
   setup { Rails.cache.clear }

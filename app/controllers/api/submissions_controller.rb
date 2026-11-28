@@ -179,6 +179,12 @@ class Api::SubmissionsController < Api::ApplicationController
       return
     end
 
+    # 旧ジャッジは出力を保存しないので、旧ジャッジの言語ではデバッグ提出させない（S8b）
+    if debug && Language.legacy?(params[:lang])
+      render_api_error('旧ジャッジの言語ではデバッグ提出できません。', status: :unprocessable_content)
+      return
+    end
+
     limit = check_submit_limit(problem)
 
     if limit.present?
