@@ -1,0 +1,737 @@
+[
+  {
+    "key": "cpp23",
+    "name": "C++23 (g++ 15.3.0)",
+    "mime": "text/x-c++src",
+    "active": true,
+    "libraries": "<a href=\"https://github.com/atcoder/ac-library/releases/tag/v1.5.1\" target=\"_blank\">AtCoder Library v1.5.1</a>",
+    "aliases": [
+      {
+        "lang": "cpp23_gcc:12.2.0",
+        "name": "C++23 (g++ 12.2.0)"
+      }
+    ],
+    "compile_command": "/opt/gcc/bin/g++ Main.cpp -O2 -lm -std=gnu++23 -I/opt/ac-library -I/opt/testlib -DONLINE_JUDGE -Wall -Wextra -o Main",
+    "run_command": "./Main"
+  },
+  {
+    "key": "cpp20",
+    "name": "C++20 (g++ 15.3.0)",
+    "mime": "text/x-c++src",
+    "active": true,
+    "libraries": "<a href=\"https://github.com/atcoder/ac-library/releases/tag/v1.5.1\" target=\"_blank\">AtCoder Library v1.5.1</a>",
+    "aliases": [
+      {
+        "lang": "cpp20_gcc:12.2.0",
+        "name": "C++20 (g++ 12.2.0)"
+      }
+    ],
+    "compile_command": "/opt/gcc/bin/g++ Main.cpp -O2 -lm -std=gnu++20 -I/opt/ac-library -I/opt/testlib -DONLINE_JUDGE -Wall -Wextra -o Main",
+    "run_command": "./Main"
+  },
+  {
+    "key": "c17",
+    "name": "C17 (gcc 15.3.0)",
+    "mime": "text/x-csrc",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "c17_gcc:12.2.0",
+        "name": "C17 (gcc 12.2.0)"
+      }
+    ],
+    "compile_command": "/opt/gcc/bin/gcc Main.c -O2 -lm -std=gnu17 -DONLINE_JUDGE -Wall -Wextra -o Main",
+    "run_command": "./Main"
+  },
+  {
+    "key": "fortran",
+    "name": "Fortran (gfortran 15.3.0)",
+    "mime": "text/x-fortran",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "fortran:12.2.0",
+        "name": "Fortran (gfortran 12.2.0)"
+      }
+    ],
+    "compile_command": "/opt/gcc/bin/gfortran -O2 Main.f90 -o Main",
+    "run_command": "./Main"
+  },
+  {
+    "key": "python",
+    "name": "Python (CPython 3.15.2)",
+    "mime": "text/x-python",
+    "active": true,
+    "libraries": "ac-library-python, numpy 2.5.5, scipy 1.18.1, networkx 3.7, sympy 1.14.0, sortedcontainers 2.4.0, bitarray 3.12.4",
+    "aliases": [
+      {
+        "lang": "python:3.12.4",
+        "name": "Python (CPython 3.12.4)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/opt/python/bin/python3 Main.py"
+  },
+  {
+    "key": "pypy3",
+    "name": "PyPy3 (3.12-v8.0.1)",
+    "mime": "text/x-python",
+    "active": true,
+    "libraries": "ac-library-python, networkx 3.7, sympy 1.14.0, sortedcontainers 2.4.0, bitarray 3.12.4",
+    "aliases": [
+      {
+        "lang": "pypy310:7.3.16",
+        "name": "PyPy3 (3.10-7.3.16)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/opt/pypy/bin/pypy3 Main.py"
+  },
+  {
+    "key": "java",
+    "name": "Java (Temurin 27.0.1.1)",
+    "mime": "text/x-java",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "java:17.0.11",
+        "name": "Java (OpenJDK 17.0.11)"
+      }
+    ],
+    "compile_command": "javac -J-XX:+UseSerialGC Main.java && jar cfe Main.jar Main *.class",
+    "run_command": "/opt/java/bin/java -Xss512m -XX:+UseSerialGC -jar Main.jar"
+  },
+  {
+    "key": "kotlin",
+    "name": "Kotlin (2.4.21, Temurin 27.0.1.1)",
+    "mime": "text/plain",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "kotlin:2.0.0",
+        "name": "Kotlin (2.0.0, JRE 17.0.11)"
+      }
+    ],
+    "compile_command": "/opt/kotlin/bin/kotlinc Main.kt -include-runtime -d Main.jar",
+    "run_command": "/opt/java/bin/java -Xss512m -XX:+UseSerialGC -jar Main.jar"
+  },
+  {
+    "key": "go",
+    "name": "Go (1.27.4)",
+    "mime": "text/x-go",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "go:1.22.5",
+        "name": "Go (1.22.5)"
+      }
+    ],
+    "compile_command": "/opt/go/bin/go build -o Main Main.go",
+    "run_command": "./Main"
+  },
+  {
+    "key": "csharp",
+    "name": "C# (.NET 11.0.100)",
+    "mime": "text/x-csharp",
+    "active": true,
+    "libraries": "ac-library-csharp 4.1.4",
+    "aliases": [
+      {
+        "lang": "cs_dotnet:8.0",
+        "name": "C# (.NET 8.0.302)"
+      }
+    ],
+    "compile_command": "/opt/dotnet/dotnet publish -c Release -o . --no-restore -v q --nologo -p:UseSharedCompilation=false -nodeReuse:false",
+    "run_command": "./Main"
+  },
+  {
+    "key": "rust",
+    "name": "Rust (1.100.0)",
+    "mime": "text/x-rustsrc",
+    "active": true,
+    "libraries": "edition 2024。crate: ac-library-rs 0.2.0, once_cell 1.21.4, static_assertions 1.1.0, varisat 0.2.2, memoise 0.3.2, argio 0.2.0, bitvec 1.1.1, counter 0.7.1, hashbag 0.1.13, pathfinding 4.16.0, recur-fn 2.2.0, indexing 0.4.1, amplify 4.9.0, amplify_derive 4.0.1, amplify_num 0.5.4, easy-ext 1.0.3, multimap 0.10.1, btreemultimap 0.1.1, bstr 1.14.0, az 1.3.0, glidesort 0.1.2, tap 1.0.1, omniswap 0.1.0, multiversion 0.9.2, num 0.4.3, num-bigint 0.5.1, num-complex 0.4.6, num-integer 0.1.47, num-iter 0.1.46, num-rational 0.4.2, num-traits 0.2.19, num-derive 0.5.1, ndarray 0.17.2, nalgebra 0.35.0, alga 0.9.3, libm 0.2.16, rand 0.10.4, getrandom 0.4.3, rand_chacha 0.10.0, rand_core 0.10.1, rand_hc 0.5.1, rand_pcg 0.10.3, rand_distr 0.6.0, petgraph 0.8.3, indexmap 2.14.2, regex 1.13.2, lazy_static 1.5.1, ordered-float 5.5.1, ascii 1.1.0, permutohedron 0.2.4, superslice 1.0.0, itertools 0.15.0, itertools-num 0.1.3, maplit 1.0.2, either 1.19.0, im-rc 15.1.0, fixedbitset 0.5.9, bitset-fixed 0.1.0, proconio 0.6.0, text_io 0.1.13, rustc-hash 2.1.3, smallvec 1.16.6",
+    "aliases": [
+      {
+        "lang": "rust:1.79.0",
+        "name": "Rust (1.79.0)"
+      }
+    ],
+    "compile_command": "/opt/rust/bin/rustc @/opt/rust-deps/args -C linker=/opt/gcc/bin/gcc Main.rs -o Main",
+    "run_command": "./Main"
+  },
+  {
+    "key": "ruby",
+    "name": "Ruby (4.0.10, YJIT)",
+    "mime": "text/x-ruby",
+    "active": true,
+    "libraries": "rbtree 0.4.7, sorted_set 1.1.0, ac-library-rb 1.2.0",
+    "aliases": [
+      {
+        "lang": "ruby:3.3.2",
+        "name": "Ruby (3.3.2)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/opt/ruby/bin/ruby --yjit Main.rb"
+  },
+  {
+    "key": "nim",
+    "name": "Nim (2.4.2)",
+    "mime": "text/plain",
+    "active": true,
+    "libraries": "<a href=\"https://github.com/zer0-star/Nim-ACL\" target=\"_blank\">Nim-ACL</a>",
+    "aliases": [
+      {
+        "lang": "nim:2.0.8",
+        "name": "Nim (2.0.8)"
+      }
+    ],
+    "compile_command": "/opt/nim/bin/nim cpp -d:release --opt:speed --multimethods:on --hints:off --path:/opt/nim-acl/src --nimcache:/tmp/nimcache -o:Main Main.nim",
+    "run_command": "./Main"
+  },
+  {
+    "key": "crystal",
+    "name": "Crystal (1.22.3)",
+    "mime": "text/x-crystal",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "crystal:1.12.2",
+        "name": "Crystal (1.12.2)"
+      }
+    ],
+    "compile_command": "/opt/crystal/bin/crystal build --release --no-debug --no-color -o Main Main.cr",
+    "run_command": "./Main"
+  },
+  {
+    "key": "perl",
+    "name": "Perl (5.44.0)",
+    "mime": "text/x-perl",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "perl:5.36.0",
+        "name": "Perl (5.36.0)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/opt/perl/bin/perl -X Main.pl"
+  },
+  {
+    "key": "raku",
+    "name": "Raku (Rakudo 2026.11)",
+    "mime": "text/plain",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "raku:2022.12",
+        "name": "Raku (2022.12)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/opt/raku/bin/raku Main.raku"
+  },
+  {
+    "key": "bash",
+    "name": "Bash (5.2.37)",
+    "mime": "text/x-sh",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "bash:5.2.15",
+        "name": "Bash (5.2.15)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/bin/bash Main.sh"
+  },
+  {
+    "key": "text",
+    "name": "Text (cat 9.7)",
+    "mime": "text/plain",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "text_cat:9.1",
+        "name": "Text (cat 9.1)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/bin/cat Main.txt"
+  },
+  {
+    "key": "dc",
+    "name": "dc (1.4.1)",
+    "mime": "text/plain",
+    "active": true,
+    "libraries": "",
+    "aliases": [
+      {
+        "lang": "dc:1.4.1",
+        "name": "dc (1.4.1)"
+      }
+    ],
+    "compile_command": null,
+    "run_command": "/usr/bin/dc Main.dc"
+  },
+  {
+    "key": "python:3.11.4",
+    "name": "Python (CPython 3.11.4)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "go:1.20.6",
+    "name": "Go (1.20.6)",
+    "mime": "text/x-go",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "ruby:3.2.2",
+    "name": "Ruby (3.2.2)",
+    "mime": "text/x-ruby",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "rust:1.71.0",
+    "name": "Rust (1.71.0)",
+    "mime": "text/x-rustsrc",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "java:17.0.7",
+    "name": "Java (OpenJDK 17.0.7)",
+    "mime": "text/x-java",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cs_dotnet:7.0",
+    "name": "C# (.NET 7.0.305)",
+    "mime": "text/x-csharp",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "nim:1.6.14",
+    "name": "Nim (1.6.14)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "kotlin:1.9.0",
+    "name": "Kotlin (1.9.0c)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "crystal:1.8.2",
+    "name": "Crystal (1.8.2)",
+    "mime": "text/x-crystal",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "perl:5.38.2",
+    "name": "Perl (5.38.2)",
+    "mime": "text/x-perl",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "pypy310:7.3.12",
+    "name": "PyPy3 (3.10-7.3.12)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "text_cat:8.32",
+    "name": "Text (cat 8.32)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp17_gcc:10.2.0",
+    "name": "C++17 (g++ 10.2.0)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp17-acl_gcc:10.2.0",
+    "name": "C++17 ACL (g++ 10.2.0 with AC Library v1.1)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp20_gcc:10.2.0",
+    "name": "C++20 (g++ 10.2.0)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "c17_gcc:10.2.0",
+    "name": "C17 (gcc 10.2.0)",
+    "mime": "text/x-csrc",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "java:11.0.9",
+    "name": "Java11 (11.0.9)",
+    "mime": "text/x-java",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "python:3.9.0",
+    "name": "Python (3.9.0)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "pypy3:7.3.3",
+    "name": "PyPy3 (7.3.3)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cs_dotnet:5.0",
+    "name": "C# (.NET 5.0)",
+    "mime": "text/x-csharp",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cs_mono:6.12.0.90",
+    "name": "C# Mono (6.12.0)",
+    "mime": "text/x-csharp",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "rust:1.48.0",
+    "name": "Rust (1.48.0)",
+    "mime": "text/x-rustsrc",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "ruby:2.7.2",
+    "name": "Ruby (2.7.2)",
+    "mime": "text/x-ruby",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "kotlin:1.4.10",
+    "name": "Kotlin (1.4.10)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "go:1.15.5",
+    "name": "Go (1.15)",
+    "mime": "text/x-go",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "nim:1.4.0",
+    "name": "Nim (1.4.0)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "fortran:10.2.0",
+    "name": "Fortran (GNU Fortran 10.2.0)",
+    "mime": "text/x-fortran",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "crystal:0.35.1",
+    "name": "Crystal (0.35.1)",
+    "mime": "text/x-crystal",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "text_cat:8.30",
+    "name": "Text (cat)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "perl:5.30.0",
+    "name": "Perl (5.30.0)",
+    "mime": "text/x-perl",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "raku:2020.10",
+    "name": "Raku (2020.10)",
+    "mime": "text/plain",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "bash:5.0.17",
+    "name": "Bash (5.0.17)",
+    "mime": "text/x-sh",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp17_gcc10",
+    "name": "C++17 (g++ 10.0.1)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp20_gcc10",
+    "name": "C++20 (g++ 10.0.1)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "c17_gcc10",
+    "name": "C17 (gcc 10.0.1)",
+    "mime": "text/x-csrc",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "python38",
+    "name": "Python3 (3.8.2)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cs_dotnet31",
+    "name": "C# (.NET Core 3.1)",
+    "mime": "text/x-csharp",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cs_mono6",
+    "name": "C# (Mono 6.8.0)",
+    "mime": "text/x-csharp",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "java11",
+    "name": "Java11 (11.0.6)",
+    "mime": "text/x-java",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "go_115",
+    "name": "Go (1.15)",
+    "mime": "text/x-go",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp17_gcc10_acl",
+    "name": "C++17 (g++ 10.0.1 with AC Library v1.1)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "go_114",
+    "name": "Go (1.14)",
+    "mime": "text/x-go",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "cpp17_gcc7",
+    "name": "C++17 (g++ 7.4.0)",
+    "mime": "text/x-c++src",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "c11_gcc7",
+    "name": "C11 (gcc 7.4.0)",
+    "mime": "text/x-csrc",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  },
+  {
+    "key": "python36",
+    "name": "Python3 (3.6.9)",
+    "mime": "text/x-python",
+    "active": false,
+    "libraries": "",
+    "aliases": [],
+    "compile_command": null,
+    "run_command": null
+  }
+]

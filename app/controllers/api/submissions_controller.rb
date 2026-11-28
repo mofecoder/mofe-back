@@ -174,6 +174,11 @@ class Api::SubmissionsController < Api::ApplicationController
       return
     end
 
+    unless Language.submittable?(params[:lang])
+      render_api_error('この言語では提出できません。', status: :unprocessable_content)
+      return
+    end
+
     limit = check_submit_limit(problem)
 
     if limit.present?

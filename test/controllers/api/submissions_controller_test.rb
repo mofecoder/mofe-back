@@ -238,7 +238,7 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
 
   test "create returns 401 when not authenticated" do
     post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: @problem.slug),
-         params: { lang: 'cpp' }
+         params: { lang: 'cpp23' }
     assert_response :unauthorized
   end
 
@@ -256,7 +256,7 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as user
     assert_no_difference -> { Submission.count } do
       post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: @problem.slug),
-           params: { lang: 'cpp' }
+           params: { lang: 'cpp23' }
     end
     assert_response :forbidden
   end
@@ -392,8 +392,8 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
     client.define_singleton_method(name, original)
   end
 
-  def submit(problem, **query)
-    post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: problem.slug, lang: 'cpp', **query),
+  def submit(problem, lang: 'cpp23', **query)
+    post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: problem.slug, lang: lang, **query),
          params: 'int main(){}', headers: { 'CONTENT_TYPE' => 'text/plain' }
   end
 
@@ -422,6 +422,43 @@ class Api::SubmissionsControllerTest < ActionDispatch::IntegrationTest
       submit(@problem, debug: 1)
     end
     assert_response :forbidden
+  end
+
+  # 提出できるのは active な言語の key だけ（S8。alias と旧言語は受け付けない）
+  [
+    ['an unknown lang', 'cpp'],
+    ['an inactive language', 'python:3.11.4'],
+    ['an alias of an active language', 'cpp23_gcc:12.2.0'],
+    ['an empty lang', ''],
+  ].each do |desc, lang|
+    test "create rejects #{desc}" do
+      sign_in_as @writer
+      stub_gcs(:upload_source, ->(*) { flunk 'ソースをアップロードしてはいけない' }) do
+        assert_no_difference -> { Submission.count } do
+          submit(@problem, lang: lang)
+        end
+      end
+      assert_response :unprocessable_content
+      assert_equal 'この言語では提出できません。', JSON.parse(response.body)['error']
+    end
+  end
+
+  test "create rejects a submission without lang" do
+    sign_in_as @writer
+    assert_no_difference -> { Submission.count } do
+      post api_contest_task_submit_url(contest_slug: @contest.slug, task_slug: @problem.slug),
+           params: 'int main(){}', headers: { 'CONTENT_TYPE' => 'text/plain' }
+    end
+    assert_response :unprocessable_content
+  end
+
+  test "create stores the key of an active language" do
+    sign_in_as @writer
+    stub_gcs(:upload_source, ->(*) {}) do
+      submit(@problem, lang: 'python')
+    end
+    assert_response :success
+    assert_equal 'python', Submission.order(:id).last.lang
   end
 
   OUTPUTS_META = {

@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       registrations: 'api/auth/registrations'
     }
     get 'top' => 'top_page#index'
+    get 'languages' => 'languages#index'
     namespace :manage do
       resources :contests, param: :slug, only: [:index, :show]
       resources :problems, param: :slug, only: [] do
